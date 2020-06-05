@@ -1,20 +1,45 @@
 # LiveSwitch Mux CLI
 
+![build](https://github.com/liveswitch/liveswitch-mux/workflows/build/badge.svg) ![license](https://img.shields.io/badge/License-MIT-yellow.svg) ![release](https://img.shields.io/github/v/release/liveswitch/liveswitch-mux.svg)
+
 The LiveSwitch Mux CLI combines your individual LiveSwitch Media Server recordings together into single files - one per session.
 
 Each time the tool is run, it scans your recordings directory and looks for completed sessions. A completed session is defined as a collection of completed recordings that overlap. If an overlapping recording is still active, that session is *not* considered complete.
 
 Sessions are scoped to the application ID and channel ID. Recordings with different channel IDs or application IDs are *not* part of the same session.
 
-## Requirements
+## Building
 
-1. ffmpeg (minimum version 4.2.1)
-1. .NET Core (minimum version 3.1 LTS)
+Use `dotnet publish` to create a single, self-contained file for a specific platform/architecture:
+
+### Windows
+```
+dotnet publish -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o win
+```
+
+### macOS
+```
+dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o osx
+```
+
+### Linux
+```
+dotnet publish -r linux-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o linux
+```
+
+Alternatively, use `dotnet build` to create a platform-agnostic bundle (the .NET Core runtime must be installed):
+
+```
+dotnet build
+```
+
+Using this approach will generate a library instead of an executable. Use `dotnet lsmux.dll` instead of `lsmux` to run it.
+
 
 ## Usage
 
 ```
-dotnet lsmux.dll [options]
+lsmux [options]
 ```
 
 ```
@@ -92,19 +117,19 @@ dotnet lsmux.dll [options]
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
 
 ```
-dotnet lsmux.dll --input-path /path/to/my/recordings
+lsmux --input-path /path/to/my/recordings
 ```
 
 The `output-path` can be set as well. If not set, the `input-path` will be used:
 
 ```
-dotnet lsmux.dll --input-path /my/input/path --output-path /my/output/path
+lsmux --input-path /my/input/path --output-path /my/output/path
 ```
 
 There are several other options available to control the behaviour and output of the muxer. For example, to create an audio-only mix with `no-video` for `channel-id` "bar" in `application-id` "foo":
 
 ```
-dotnet lsmux.dll --no-video --application-id foo --channel-id bar
+lsmux --no-video --application-id foo --channel-id bar
 ```
 
 Several `layout` options are available:
@@ -117,19 +142,19 @@ Several `layout` options are available:
 The `width` and `height` can also be set to the desired size, along with the `frame-rate` in frames per second:
 
 ```
-dotnet lsmux.dll --layout hgrid --width 1280 --height 720 --frame-rate 60
+lsmux --layout hgrid --width 1280 --height 720 --frame-rate 60
 ```
 
 The `margin` between videos is configurable, as is the `background-color`, which can be any [color value](https://ffmpeg.org/ffmpeg-utils.html#Color) supported by ffmpeg. You may opt to `crop` the videos, which will increase the size of each individual recording to use all available layout space and then crop the edges as needed, while still honouring the `margin`. Layouts can be `dynamic` as well, adapting throughout the mix to changes in video size and count:
 
 ```
-dotnet lsmux.dll --margin 5 --background-color blue --crop --dynamic
+lsmux --margin 5 --background-color blue --crop --dynamic
 ```
 
 You can set the `audio-codec` or `video-codec` used in the output files. Any of the [audio encoders](https://www.ffmpeg.org/ffmpeg-codecs.html#Audio-Encoders) or [video encoders](https://www.ffmpeg.org/ffmpeg-codecs.html#Video-Encoders) supported by ffmpeg are allowed, along with any codec-specific options you want to set:
 
 ```
-dotnet lsmux.dll --audio-codec aac --video-codec "libx264 -crf 18 -preset medium"
+lsmux --audio-codec aac --video-codec "libx264 -crf 18 -preset medium"
 ```
 
 ## JavaScript Layouts
@@ -137,7 +162,7 @@ dotnet lsmux.dll --audio-codec aac --video-codec "libx264 -crf 18 -preset medium
 The `js` layout can be used to do custom JavaScript-based layout calculations by providing a path to a `js-file`:
 
 ```
-dotnet lsmux.dll --layout js --js-file /path/to/my/layout.js
+lsmux --layout js --js-file /path/to/my/layout.js
 ```
 
 Your file must contain a JavaScript function called `layout` with the following signature:
