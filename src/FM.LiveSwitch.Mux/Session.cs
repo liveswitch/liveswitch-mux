@@ -272,34 +272,62 @@ namespace FM.LiveSwitch.Mux
 
             // build filter chains
             var filterChains = GetAudioFilterChains(recordings, options);
+            var filterChainFileName = $"{ProcessOutputFileName(options.OutputFileName)}_audio.filter";
+            var filterChainFile = Path.Combine(GetOutputPath(options), filterChainFileName);
+            try
+            {
+                // pull together the final arguments list
+                var arguments = new List<string>
+                {
+                    "-y" // overwrite output files without asking
+                };
+                arguments.AddRange(recordings.Select(x => $"-i {x.AudioFile}"));
+                if (filterChains.Length > 0)
+                {
+                    try
+                    {
+                        System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
+                        arguments.Add($@"-filter_complex_script {filterChainFile}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Could not create temporary filter chain file '{filterChainFileName}': {ex}");
+                        Console.Error.WriteLine($"Filter chain will be passed as command-line argument.");
+                        arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
+                    }
+                }
+                arguments.Add($@"-map ""[aout]""");
+                if (options.AudioCodec != null)
+                {
+                    arguments.Add($"-codec:a {options.AudioCodec}");
+                }
+                arguments.Add(AudioFile);
 
-            // pull together the final arguments list
-            var arguments = new List<string>
-            {
-                "-y" // overwrite output files without asking
-            };
-            arguments.AddRange(recordings.Select(x => $"-i {x.AudioFile}"));
-            if (filterChains.Length > 0)
-            {
-                arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
+                var outputPath = Path.GetDirectoryName(AudioFile);
+                if (!Directory.Exists(outputPath))
+                {
+                    Directory.CreateDirectory(outputPath);
+                }
+
+                // run it
+                await FFmpeg(string.Join(" ", arguments));
+
+                return AudioFileExists;
             }
-            arguments.Add($@"-map ""[aout]""");
-            if (options.AudioCodec != null)
+            finally
             {
-                arguments.Add($"-codec:a {options.AudioCodec}");
+                try
+                {
+                    if (System.IO.File.Exists(filterChainFile))
+                    {
+                        System.IO.File.Delete(filterChainFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Could not delete temporary filter chain file '{filterChainFileName}': {ex}");
+                }
             }
-            arguments.Add(AudioFile);
-
-            var outputPath = Path.GetDirectoryName(AudioFile);
-            if (!Directory.Exists(outputPath))
-            {
-                Directory.CreateDirectory(outputPath);
-            }
-
-            // run it
-            await FFmpeg(string.Join(" ", arguments));
-
-            return AudioFileExists;
         }
 
         private string[] GetAudioFilterChains(Recording[] recordings, MuxOptions options)
@@ -490,34 +518,62 @@ namespace FM.LiveSwitch.Mux
 
             // build filter chains
             var filterChains = GetVideoFilterChains(chunks.ToArray(), options);
+            var filterChainFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video.filter";
+            var filterChainFile = Path.Combine(GetOutputPath(options), filterChainFileName);
+            try
+            {
+                // construct argument list
+                var arguments = new List<string>
+                {
+                    "-y" // overwrite output files without asking
+                };
+                arguments.AddRange(recordings.Select(x => $"-i {x.VideoFile}"));
+                if (filterChains.Length > 0)
+                {
+                    try
+                    {
+                        System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
+                        arguments.Add($@"-filter_complex_script {filterChainFile}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Could not create temporary filter chain file '{filterChainFileName}': {ex}");
+                        Console.Error.WriteLine($"Filter chain will be passed as command-line argument.");
+                        arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
+                    }
+                }
+                arguments.Add($@"-map ""[vout]""");
+                if (options.VideoCodec != null)
+                {
+                    arguments.Add($"-codec:v {options.VideoCodec}");
+                }
+                arguments.Add(VideoFile);
 
-            // construct argument list
-            var arguments = new List<string>
-            {
-                "-y" // overwrite output files without asking
-            };
-            arguments.AddRange(recordings.Select(x => $"-i {x.VideoFile}"));
-            if (filterChains.Length > 0)
-            {
-                arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
+                var outputPath = Path.GetDirectoryName(VideoFile);
+                if (!Directory.Exists(outputPath))
+                {
+                    Directory.CreateDirectory(outputPath);
+                }
+
+                // run it
+                await FFmpeg(string.Join(" ", arguments));
+
+                return VideoFileExists;
             }
-            arguments.Add($@"-map ""[vout]""");
-            if (options.VideoCodec != null)
+            finally
             {
-                arguments.Add($"-codec:v {options.VideoCodec}");
+                try
+                {
+                    if (System.IO.File.Exists(filterChainFile))
+                    {
+                        System.IO.File.Delete(filterChainFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Could not delete temporary filter chain file '{filterChainFileName}': {ex}");
+                }
             }
-            arguments.Add(VideoFile);
-
-            var outputPath = Path.GetDirectoryName(VideoFile);
-            if (!Directory.Exists(outputPath))
-            {
-                Directory.CreateDirectory(outputPath);
-            }
-
-            // run it
-            await FFmpeg(string.Join(" ", arguments));
-
-            return VideoFileExists;
         }
 
         private string[] GetVideoFilterChains(VideoChunk[] chunks, MuxOptions options)
