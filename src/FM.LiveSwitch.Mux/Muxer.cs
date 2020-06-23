@@ -152,7 +152,7 @@ namespace FM.LiveSwitch.Mux
                                 }
                             }
 
-                            if (WriteMetadata(session))
+                            if (session.WriteMetadata(Options))
                             {
                                 metadataFiles.Add(session.MetadataFile);
                             }
@@ -281,21 +281,6 @@ namespace FM.LiveSwitch.Mux
                 Console.Error.WriteLine($"Could not delete {file}. {ex}");
             }
             return false;
-        }
-
-        private bool WriteMetadata(Session session)
-        {
-            session.MetadataFile = Path.Combine(Path.GetDirectoryName(session.File), $"{Path.GetFileNameWithoutExtension(session.File)}.json");
-
-            var outputPath = Path.GetDirectoryName(session.MetadataFile);
-            if (!Directory.Exists(outputPath))
-            {
-                Directory.CreateDirectory(outputPath);
-            }
-
-            File.WriteAllText(session.MetadataFile, JsonConvert.SerializeObject(session));
-
-            return session.MetadataFileExists;
         }
     }
 }

@@ -217,6 +217,11 @@ namespace FM.LiveSwitch.Mux
             }
             arguments.Add(File);
 
+            if (options.DryRun)
+            {
+                return true;
+            }
+
             var outputPath = Path.GetDirectoryName(File);
             if (!Directory.Exists(outputPath))
             {
@@ -309,6 +314,11 @@ namespace FM.LiveSwitch.Mux
                     arguments.Add($"-codec:a {options.AudioCodec}");
                 }
                 arguments.Add(AudioFile);
+
+                if (options.DryRun)
+                {
+                    return true;
+                }
 
                 var outputPath = Path.GetDirectoryName(AudioFile);
                 if (!Directory.Exists(outputPath))
@@ -578,6 +588,11 @@ namespace FM.LiveSwitch.Mux
                 }
                 arguments.Add(VideoFile);
 
+                if (options.DryRun)
+                {
+                    return true;
+                }
+
                 var outputPath = Path.GetDirectoryName(VideoFile);
                 if (!Directory.Exists(outputPath))
                 {
@@ -791,6 +806,40 @@ namespace FM.LiveSwitch.Mux
             catch (Win32Exception wex)
             {
                 throw new Exception($"Could not start {command}. Is ffmpeg installed and available on your PATH?", wex);
+            }
+        }
+
+        public bool WriteMetadata(MuxOptions options)
+        {
+            MetadataFile = Path.Combine(Path.GetDirectoryName(File), $"{Path.GetFileNameWithoutExtension(File)}.json");
+
+            var outputPath = Path.GetDirectoryName(MetadataFile);
+            if (!Directory.Exists(outputPath))
+            {
+                Directory.CreateDirectory(outputPath);
+            }
+
+            var file = File;
+            var audioFile = AudioFile;
+            var videoFile = VideoFile;
+            try
+            {
+                if (options.DryRun)
+                {
+                    File = null;
+                    AudioFile = null;
+                    VideoFile = null;
+                }
+
+                System.IO.File.WriteAllText(MetadataFile, JsonConvert.SerializeObject(this));
+
+                return MetadataFileExists;
+            }
+            finally
+            {
+                File = file;
+                AudioFile = audioFile;
+                VideoFile = videoFile;
             }
         }
     }

@@ -91,5 +91,8 @@ namespace FM.LiveSwitch.Mux
 
         [Option("save-filter-files", Required = false, HelpText = "Do not delete the filter files. Ignored if --no-filter-files is set.")]
         public bool SaveFilterFiles { get; set; }
+
+        [Option("dry-run", Required = false, HelpText = "Do a dry-run with no muxing.")]
+        public bool DryRun { get; set; }
     }
 }
