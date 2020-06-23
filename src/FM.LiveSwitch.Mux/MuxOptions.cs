@@ -85,5 +85,11 @@ namespace FM.LiveSwitch.Mux
 
         [Option("trim-last", Default = false, Required = false, HelpText = "Trim audio from the last participant after all other participants have left. Requires the --no-video flag.")]
         public bool TrimLast { get; set; }
+
+        [Option("no-filter-files", Required = false, HelpText = "Do not use files for the filters. Pass the filters as arguments.")]
+        public bool NoFilterFiles { get; set; }
+
+        [Option("save-filter-files", Required = false, HelpText = "Do not delete the filter files. Ignored if --no-filter-files is set.")]
+        public bool SaveFilterFiles { get; set; }
     }
 }

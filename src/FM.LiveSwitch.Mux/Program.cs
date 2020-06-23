@@ -38,7 +38,7 @@ namespace FM.LiveSwitch.Mux
 
                 result.WithNotParsed(errors =>
                 {
-                    var helpText = HelpText.AutoBuild(result);
+                    var helpText = HelpText.AutoBuild(result, 96);
                     helpText.Copyright = "Copyright (C) 2019 Frozen Mountain Software Ltd.";
                     helpText.AddEnumValuesToHelpText = true;
                     helpText.AddOptions(result);

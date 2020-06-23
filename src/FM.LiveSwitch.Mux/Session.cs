@@ -286,8 +286,15 @@ namespace FM.LiveSwitch.Mux
                 {
                     try
                     {
-                        System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
-                        arguments.Add($@"-filter_complex_script {filterChainFile}");
+                        if (options.NoFilterFiles)
+                        {
+                            arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
+                        }
+                        else
+                        {
+                            System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
+                            arguments.Add($@"-filter_complex_script {filterChainFile}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -318,7 +325,7 @@ namespace FM.LiveSwitch.Mux
             {
                 try
                 {
-                    if (System.IO.File.Exists(filterChainFile))
+                    if (System.IO.File.Exists(filterChainFile) && !options.SaveFilterFiles)
                     {
                         System.IO.File.Delete(filterChainFile);
                     }
@@ -473,8 +480,21 @@ namespace FM.LiveSwitch.Mux
 
             // convert event timeline into chunks
             var chunks = new List<VideoChunk>();
+            var lastChunk = (VideoChunk)null;
             foreach (var @event in events)
             {
+                // blank chunk mid-session
+                if (chunks.Count > 0 && lastChunk == null)
+                {
+                    chunks.Add(new VideoChunk
+                    {
+                        StartTimestamp = chunks.Last().StopTimestamp,
+                        StopTimestamp = @event.Timestamp,
+                        Layout = Layout.Calculate(options.Layout, new LayoutInput[0], layoutOutput, options.JavaScriptFile),
+                        Segments = new VideoSegment[0]
+                    });
+                }
+
                 var chunk = (VideoChunk)null;
                 if (chunks.Count == 0)
                 {
@@ -484,6 +504,8 @@ namespace FM.LiveSwitch.Mux
                 {
                     chunk = chunks.Last().Next(@event);
                 }
+
+                lastChunk = chunk;
 
                 if (chunk != null)
                 {
@@ -532,8 +554,15 @@ namespace FM.LiveSwitch.Mux
                 {
                     try
                     {
-                        System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
-                        arguments.Add($@"-filter_complex_script {filterChainFile}");
+                        if (options.NoFilterFiles)
+                        {
+                            arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
+                        }
+                        else
+                        {
+                            System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
+                            arguments.Add($@"-filter_complex_script {filterChainFile}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -564,7 +593,7 @@ namespace FM.LiveSwitch.Mux
             {
                 try
                 {
-                    if (System.IO.File.Exists(filterChainFile))
+                    if (System.IO.File.Exists(filterChainFile) && !options.SaveFilterFiles)
                     {
                         System.IO.File.Delete(filterChainFile);
                     }
