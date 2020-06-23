@@ -104,6 +104,11 @@ namespace FM.LiveSwitch.Mux
                     }
                     foreach (var session in channel.CompletedSessions)
                     {
+                        if (Options.SessionId != null && Options.SessionId != session.Id)
+                        {
+                            continue;
+                        }
+
                         Console.Error.WriteLine();
                         Console.Error.WriteLine($"Channel {channel.Id} from application {application.Id} is ready for muxing ({session.StartTimestamp} to {session.StopTimestamp}).");
 

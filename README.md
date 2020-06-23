@@ -98,17 +98,19 @@ lsmux [options]
   --js-file              For JS layout, the JavaScript file path. Defaults to layout.js in the
                          input path.
 
-  --trim-first           (Default: false) Trim audio from the first participant before any other
-                         participants have joined. Requires the --no-video flag.
+  --trim-first           Trim audio from the first participant before any other participants
+                         have joined. Requires the --no-video flag.
 
-  --trim-last            (Default: false) Trim audio from the last participant after all other
-                         participants have left. Requires the --no-video flag.
+  --trim-last            Trim audio from the last participant after all other participants have
+                         left. Requires the --no-video flag.
 
   --no-filter-files      Do not use files for the filters. Pass the filters as arguments.
 
   --save-filter-files    Do not delete the filter files. Ignored if --no-filter-files is set.
 
   --dry-run              Do a dry-run with no muxing.
+
+  --session-id           The session ID to mux, obtained from a dry-run.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
