@@ -19,7 +19,7 @@ namespace FM.LiveSwitch.Mux
             get
             {
                 // sha(connectionId:connectionId:..)
-                var input = $"{string.Join(":", CompletedConnections.Select(x => x.Id))}";
+                var input = $"{string.Join(":", CompletedConnections.Select(x => x.Id).OrderBy(x => x))}";
                 using (var sha = new SHA1Managed())
                 {
                     return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(input))).Replace("-", "").ToLower();
@@ -35,6 +35,8 @@ namespace FM.LiveSwitch.Mux
 
         [JsonIgnore]
         public string VideoFileName { get; set; }
+
+        public string Id { get { return Hash; } }
 
         public string ChannelId { get; private set; }
 
