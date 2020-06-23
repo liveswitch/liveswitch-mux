@@ -43,75 +43,70 @@ lsmux [options]
 ```
 
 ```
-  -i, --input-path      The input path, i.e. the recording path used by the
-                        media server. Defaults to the current directory.
+  -i, --input-path       The input path, i.e. the recording path used by the media server.
+                         Defaults to the current directory.
 
-  -o, --output-path     The output path for muxed sessions. Defaults to the
-                        input path.
+  -o, --output-path      The output path for muxed sessions. Defaults to the input path.
 
-  -s, --strategy        (Default: AutoDetect) The recording strategy used by the
-                        media server. Valid values: AutoDetect, Hierarchical,
-                        Flat
+  -s, --strategy         (Default: AutoDetect) The recording strategy used by the media server.
+                         Valid values: AutoDetect, Hierarchical, Flat
 
-  -l, --layout          (Default: HGrid) The video layout to use. Valid values:
-                        HStack, VStack, HGrid, VGrid, JS
+  -l, --layout           (Default: HGrid) The video layout to use. Valid values: HStack, VStack,
+                         HGrid, VGrid, JS
 
-  -m, --margin          (Default: 0) The margin, in pixels, to insert between
-                        videos in the layout.
+  -m, --margin           (Default: 0) The margin, in pixels, to insert between videos in the
+                         layout.
 
-  -w, --width           (Default: 1920) The pixel width of the output video.
+  -w, --width            (Default: 1920) The pixel width of the output video.
 
-  -h, --height          (Default: 1080) The pixel height of the output video.
+  -h, --height           (Default: 1080) The pixel height of the output video.
 
-  -f, --frame-rate      (Default: 30) The frames per second of the output video.
+  -f, --frame-rate       (Default: 30) The frames per second of the output video.
 
-  --background-color    (Default: 000000) The background colour.
+  --background-color     (Default: 000000) The background colour.
 
-  --audio-codec         (Default: libopus) The output audio codec and options.
+  --audio-codec          (Default: libopus) The output audio codec and options.
 
-  --video-codec         (Default: libvpx -auto-alt-ref 0) The output video codec
-                        and options.
+  --video-codec          (Default: libvpx -auto-alt-ref 0) The output video codec and options.
 
-  --audio-container     (Default: mka) The output audio container (file
-                        extension).
+  --audio-container      (Default: mka) The output audio container (file extension).
 
-  --video-container     (Default: mkv) The output video container (file
-                        extension).
+  --video-container      (Default: mkv) The output video container (file extension).
 
-  --dynamic             Dynamically update the video layout as recordings start
-                        and stop.
+  --dynamic              Dynamically update the video layout as recordings start and stop.
 
-  --crop                Crop video in order to use all available layout space.
+  --crop                 Crop video in order to use all available layout space.
 
-  --no-audio            Do not mux audio.
+  --no-audio             Do not mux audio.
 
-  --no-video            Do not mux video.
+  --no-video             Do not mux video.
 
-  --move-inputs         Move input files to the output path.
+  --move-inputs          Move input files to the output path.
 
-  --delete-inputs       Delete input files from the input path.
+  --delete-inputs        Delete input files from the input path.
 
-  --no-prompt           Do not prompt before deleting.
+  --no-prompt            Do not prompt before deleting.
 
-  --application-id      The application ID to mux.
+  --application-id       The application ID to mux.
 
-  --channel-id          The channel ID to mux.
+  --channel-id           The channel ID to mux.
 
-  --output-file-name    (Default: session_{startTimestamp}_to_{stopTimestamp})
-                        The output file name template. Uses curly-brace syntax
-                        (e.g. {channelId}). Valid variables: applicationId,
-                        channelId, startTimestamp, stopTimestamp
+  --output-file-name     (Default: session_{startTimestamp}_to_{stopTimestamp}) The output file
+                         name template. Uses curly-brace syntax (e.g. {channelId}). Valid
+                         variables: applicationId, channelId, startTimestamp, stopTimestamp
 
-  --js-file             For JS layout, the JavaScript file path. Defaults to
-                        layout.js in the input path.
+  --js-file              For JS layout, the JavaScript file path. Defaults to layout.js in the
+                         input path.
 
-  --trim-first          (Default: false) Trim audio from the first participant
-                        before any other participants have joined. Requires the
-                        --no-video flag.
+  --trim-first           (Default: false) Trim audio from the first participant before any other
+                         participants have joined. Requires the --no-video flag.
 
-  --trim-last           (Default: false) Trim audio from the last participant
-                        after all other participants have left. Requires the
-                        --no-video flag.
+  --trim-last            (Default: false) Trim audio from the last participant after all other
+                         participants have left. Requires the --no-video flag.
+
+  --no-filter-files      Do not use files for the filters. Pass the filters as arguments.
+
+  --save-filter-files    Do not delete the filter files. Ignored if --no-filter-files is set.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
