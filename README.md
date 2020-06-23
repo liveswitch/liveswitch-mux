@@ -107,6 +107,8 @@ lsmux [options]
   --no-filter-files      Do not use files for the filters. Pass the filters as arguments.
 
   --save-filter-files    Do not delete the filter files. Ignored if --no-filter-files is set.
+
+  --dry-run              Do a dry-run with no muxing.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
