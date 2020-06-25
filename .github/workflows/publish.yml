@@ -21,24 +21,45 @@ jobs:
         dotnet-version: 3.1.101
     - name: Install dependencies
       run: dotnet restore
-    - name: Build for Windows
+    - name: Build executable for Windows
       run: dotnet publish -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/win-x64
-    - name: Build for macOS
+    - name: Build executable for macOS
       run: dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/osx-x64
-    - name: Build for Linux
+    - name: Build executable for Linux
       run: dotnet publish -r linux-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/linux-x64
-    - name: Upload Windows artifacts
+    - name: Build library for Windows
+      run: dotnet publish -r win-x64 -c Release -o artifacts/win-library-x64
+    - name: Build library for macOS
+      run: dotnet publish -r osx-x64 -c Release -o artifacts/osx-library-x64
+    - name: Build library for Linux
+      run: dotnet publish -r linux-x64 -c Release -o artifacts/linux-library-x64
+    - name: Upload Windows executable
       uses: actions/upload-artifact@v2
       with:
         name: win-x64
         path: artifacts/win-x64
-    - name: Upload macOS artifacts
+    - name: Upload macOS executable
       uses: actions/upload-artifact@v2
       with:
         name: osx-x64
         path: artifacts/osx-x64
-    - name: Upload Linux artifacts
+    - name: Upload Linux executable
       uses: actions/upload-artifact@v2
       with:
         name: linux-x64
         path: artifacts/linux-x64
+    - name: Upload Windows library
+      uses: actions/upload-artifact@v2
+      with:
+        name: win-library-x64
+        path: artifacts/win-library-x64
+    - name: Upload macOS library
+      uses: actions/upload-artifact@v2
+      with:
+        name: osx-library-x64
+        path: artifacts/osx-library-x64
+    - name: Upload Linux library
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-library-x64
+        path: artifacts/linux-library-x64
