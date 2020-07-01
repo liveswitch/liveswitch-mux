@@ -69,6 +69,11 @@ namespace FM.LiveSwitch.Mux
         {
             get
             {
+                if (VideoSegments == null)
+                {
+                    return null;
+                }
+
                 var lastSegment = (VideoSegment)null;
                 var videoEvents = new List<VideoEvent>();
                 foreach (var segment in VideoSegments)
@@ -102,6 +107,12 @@ namespace FM.LiveSwitch.Mux
                 });
                 return videoEvents.ToArray();
             }
+        }
+
+        public string GetAudioResampleFilterChain(string inputTag, string outputTag)
+        {
+            // sync to timestamps using stretching, squeezing, filling and trimming
+            return $"{inputTag}aresample=async=1{outputTag}";
         }
 
         public string GetAudioDelayFilterChain(DateTime sessionStartTimestamp, string inputTag, string outputTag)

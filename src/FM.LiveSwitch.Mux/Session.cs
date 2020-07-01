@@ -389,8 +389,12 @@ namespace FM.LiveSwitch.Mux
             {
                 // initialize tag
                 var recordingTag = recording.AudioTag;
+                var resampleTag = $"[aresample_{recording.AudioIndex}]";
                 var delayTag = $"[adelay_{recording.AudioIndex}]";
                 var trimTag = $"[atrim_{recording.AudioIndex}]";
+
+                // resample
+                filterChains.Add(recording.GetAudioResampleFilterChain(recordingTag, recordingTag = delayTag));
 
                 // delay
                 filterChains.Add(recording.GetAudioDelayFilterChain(StartTimestamp, recordingTag, recordingTag = delayTag));
