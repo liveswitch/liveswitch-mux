@@ -394,7 +394,7 @@ namespace FM.LiveSwitch.Mux
                 var trimTag = $"[atrim_{recording.AudioIndex}]";
 
                 // resample
-                filterChains.Add(recording.GetAudioResampleFilterChain(recordingTag, recordingTag = delayTag));
+                filterChains.Add(recording.GetAudioResampleFilterChain(recordingTag, recordingTag = resampleTag));
 
                 // delay
                 filterChains.Add(recording.GetAudioDelayFilterChain(StartTimestamp, recordingTag, recordingTag = delayTag));
@@ -659,10 +659,14 @@ namespace FM.LiveSwitch.Mux
 
                     // initialize tags
                     var segmentTag = recording.VideoTag;
+                    var fpsTag = $"[vfps_{chunkIndex}_{segmentIndex}]";
                     var trimTag = $"[vtrim_{chunkIndex}_{segmentIndex}]";
                     var scaleTag = $"[vscale_{chunkIndex}_{segmentIndex}]";
                     var cropTag = $"[vcrop_{chunkIndex}_{segmentIndex}]";
                     var overlayTag = $"[voverlay_{chunkIndex}_{segmentIndex}]";
+
+                    // fps
+                    filterChains.Add(chunk.GetFpsFilterChain(options.FrameRate, segmentTag, segmentTag = fpsTag));
 
                     // trim
                     filterChains.Add(chunk.GetTrimFilterChain(recording, segmentTag, segmentTag = trimTag));
@@ -685,8 +689,7 @@ namespace FM.LiveSwitch.Mux
             }
 
             // concatenate the chunks
-            filterChains.Add($"{string.Join(string.Empty, chunkTags)}concat=n={chunkTags.Count}[vconcat]");
-            filterChains.Add($"[vconcat]fps={options.FrameRate}[vout]");
+            filterChains.Add($"{string.Join(string.Empty, chunkTags)}concat=n={chunkTags.Count}[vout]");
 
             return filterChains.ToArray();
         }
