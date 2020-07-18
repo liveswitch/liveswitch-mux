@@ -27,6 +27,11 @@ namespace FM.LiveSwitch.Mux
             return $"{inputTag}trim=start={(StartTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds + recording.VideoDelay}:end={(StopTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds + recording.VideoDelay},setpts=PTS-STARTPTS{outputTag}";
         }
 
+        public string GetFpsFilterChain(int frameRate, string inputTag, string outputTag)
+        {
+            return $"{inputTag}fps=fps={frameRate}{outputTag}";
+        }
+
         public static VideoChunk First(VideoEvent @event)
         {
             if (@event.Type != VideoEventType.Add)
