@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using System;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -96,6 +97,6 @@ namespace FM.LiveSwitch.Mux
         public bool DryRun { get; set; }
 
         [Option("session-id", HelpText = "The session ID to mux, obtained from a dry-run.")]
-        public string SessionId { get; set; }
+        public Guid? SessionId { get; set; }
     }
 }
