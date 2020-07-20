@@ -1,11 +1,24 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FM.LiveSwitch.Mux
 {
     public class Recording
     {
+        public Guid Id
+        {
+            get
+            {
+                // md5(startTimestampTicks:connectionId)
+                var input = $"{StartTimestamp.Ticks}:{Connection.Id}";
+                using var md5 = MD5.Create();
+                return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
+        }
+
         public DateTime StartTimestamp { get; set; }
 
         public DateTime StopTimestamp { get; set; }
