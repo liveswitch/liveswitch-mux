@@ -12,8 +12,27 @@ namespace FM.LiveSwitch.Mux
         {
             get
             {
-                // md5(startTimestampTicks:connectionId)
-                var input = $"{StartTimestamp.Ticks}:{Connection.Id}";
+                var input = $"{AudioId}:{VideoId}";
+                using var md5 = MD5.Create();
+                return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
+        }
+
+        public Guid? AudioId
+        {
+            get
+            {
+                var input = $"{AudioStartTimestamp?.Ticks}:{Connection.Id}:audio";
+                using var md5 = MD5.Create();
+                return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
+        }
+
+        public Guid? VideoId
+        {
+            get
+            {
+                var input = $"{VideoStartTimestamp?.Ticks}:{Connection.Id}:video";
                 using var md5 = MD5.Create();
                 return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
             }

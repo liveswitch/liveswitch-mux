@@ -26,8 +26,7 @@ namespace FM.LiveSwitch.Mux
         { 
             get
             {
-                // md5(startTimestampTicks:connectionId:connectionId:..)
-                var input = $"{StartTimestamp.Ticks}:{string.Join(":", CompletedConnections.Select(x => x.Id).OrderBy(x => x))}";
+                var input = string.Join(":", CompletedRecordings.Select(x => x.Id).OrderBy(x => x));
                 using var md5 = MD5.Create();
                 return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
             } 
