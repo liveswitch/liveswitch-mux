@@ -75,7 +75,7 @@ namespace FM.LiveSwitch.Mux
         [Option("channel-id", HelpText = "The channel ID to mux.")]
         public string ChannelId { get; set; }
 
-        [Option("output-file-name", Default = "session_{startTimestamp}_to_{stopTimestamp}", HelpText = "The output file name template. Uses curly-brace syntax (e.g. {channelId}). Valid variables: applicationId, channelId, startTimestamp, stopTimestamp")]
+        [Option("output-file-name", Default = "session_{startTimestamp}_to_{stopTimestamp}_{sessionId}", HelpText = "The output file name template. Uses curly-brace syntax (e.g. {channelId}). Valid variables: applicationId, channelId, sessionId, startTimestamp, stopTimestamp")]
         public string OutputFileName { get; set; }
 
         [Option("js-file", HelpText = "For JS layout, the JavaScript file path. Defaults to layout.js in the input path.")]

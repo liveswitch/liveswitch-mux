@@ -237,6 +237,7 @@ namespace FM.LiveSwitch.Mux
             return outputFileName
                 .Replace("{applicationId}", ApplicationId)
                 .Replace("{channelId}", ChannelId)
+                .Replace("{sessionId}", Id.ToString())
                 .Replace("{startTimestamp}", StartTimestamp.ToString(Iso8601FileSafeFormat))
                 .Replace("{stopTimestamp}", StopTimestamp.ToString(Iso8601FileSafeFormat));
         }
