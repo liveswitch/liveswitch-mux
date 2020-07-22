@@ -91,9 +91,10 @@ lsmux [options]
 
   --channel-id           The channel ID to mux.
 
-  --output-file-name     (Default: session_{startTimestamp}_to_{stopTimestamp}) The output file
-                         name template. Uses curly-brace syntax (e.g. {channelId}). Valid
-                         variables: applicationId, channelId, startTimestamp, stopTimestamp
+  --output-file-name     (Default: session_{startTimestamp}_to_{stopTimestamp}_{sessionId}) The
+                         output file name template. Uses curly-brace syntax (e.g. {channelId}).
+                         Valid variables: applicationId, channelId, sessionId, startTimestamp,
+                         stopTimestamp
 
   --js-file              For JS layout, the JavaScript file path. Defaults to layout.js in the
                          input path.
