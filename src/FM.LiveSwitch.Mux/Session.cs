@@ -14,20 +14,6 @@ namespace FM.LiveSwitch.Mux
     public class Session
     {
         [JsonIgnore]
-        public string Hash
-        {
-            get
-            {
-                // sha(connectionId:connectionId:..)
-                var input = $"{string.Join(":", CompletedConnections.Select(x => x.Id).OrderBy(x => x))}";
-                using (var sha = new SHA1Managed())
-                {
-                    return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(input))).Replace("-", "").ToLower();
-                }
-            }
-        }
-
-        [JsonIgnore]
         public string FileName { get; set; }
 
         [JsonIgnore]
@@ -36,7 +22,15 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public string VideoFileName { get; set; }
 
-        public string Id { get { return Hash; } }
+        public Guid Id
+        { 
+            get
+            {
+                var input = string.Join(":", CompletedRecordings.Select(x => x.Id).OrderBy(x => x));
+                using var md5 = MD5.Create();
+                return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            } 
+        }
 
         public string ChannelId { get; private set; }
 
@@ -243,6 +237,7 @@ namespace FM.LiveSwitch.Mux
             return outputFileName
                 .Replace("{applicationId}", ApplicationId)
                 .Replace("{channelId}", ChannelId)
+                .Replace("{sessionId}", Id.ToString())
                 .Replace("{startTimestamp}", StartTimestamp.ToString(Iso8601FileSafeFormat))
                 .Replace("{stopTimestamp}", StopTimestamp.ToString(Iso8601FileSafeFormat));
         }

@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using System;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -74,7 +75,7 @@ namespace FM.LiveSwitch.Mux
         [Option("channel-id", HelpText = "The channel ID to mux.")]
         public string ChannelId { get; set; }
 
-        [Option("output-file-name", Default = "session_{startTimestamp}_to_{stopTimestamp}", HelpText = "The output file name template. Uses curly-brace syntax (e.g. {channelId}). Valid variables: applicationId, channelId, startTimestamp, stopTimestamp")]
+        [Option("output-file-name", Default = "session_{startTimestamp}_to_{stopTimestamp}_{sessionId}", HelpText = "The output file name template. Uses curly-brace syntax (e.g. {channelId}). Valid variables: applicationId, channelId, sessionId, startTimestamp, stopTimestamp")]
         public string OutputFileName { get; set; }
 
         [Option("js-file", HelpText = "For JS layout, the JavaScript file path. Defaults to layout.js in the input path.")]
@@ -96,6 +97,6 @@ namespace FM.LiveSwitch.Mux
         public bool DryRun { get; set; }
 
         [Option("session-id", HelpText = "The session ID to mux, obtained from a dry-run.")]
-        public string SessionId { get; set; }
+        public Guid? SessionId { get; set; }
     }
 }
