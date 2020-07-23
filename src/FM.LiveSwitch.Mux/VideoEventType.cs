@@ -6,7 +6,7 @@
         // we sort same-timestamp events in
         // ascending order by type
         Add = 1,
-        Replace = 2,
+        Update = 2,
         Remove = 3,
     }
 }

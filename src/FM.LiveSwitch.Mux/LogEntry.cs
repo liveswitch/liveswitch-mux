@@ -9,6 +9,7 @@ namespace FM.LiveSwitch.Mux
     {
         public const string TypeStartRecording = "startRecording";
         public const string TypeStopRecording = "stopRecording";
+        public const string TypeUpdateRecording = "updateRecording";
 
         public string Type { get; set; }
 

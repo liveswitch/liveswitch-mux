@@ -18,6 +18,16 @@ namespace FM.LiveSwitch.Mux
 
         public double? VideoDelay { get; set; }
 
+        public string ConnectionTag { get; set; }
+
+        public bool? AudioMuted { get; set; }
+
+        public bool? VideoMuted { get; set; }
+
+        public bool? AudioDisabled { get; set; }
+
+        public bool? VideoDisabled { get; set; }
+
         public bool IsEquivalent(LogEntryData other)
         {
             return other != null &&
@@ -27,7 +37,12 @@ namespace FM.LiveSwitch.Mux
                 other.VideoFirstFrameTimestamp == VideoFirstFrameTimestamp &&
                 other.AudioLastFrameTimestamp == AudioLastFrameTimestamp &&
                 other.VideoLastFrameTimestamp == VideoLastFrameTimestamp &&
-                other.VideoDelay == VideoDelay;
+                other.VideoDelay == VideoDelay &&
+                other.ConnectionTag == ConnectionTag &&
+                other.AudioMuted == AudioMuted &&
+                other.VideoMuted == VideoMuted &&
+                other.AudioDisabled == AudioDisabled &&
+                other.VideoDisabled == VideoDisabled;
         }
     }
 }

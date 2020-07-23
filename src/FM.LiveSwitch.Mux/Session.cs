@@ -438,7 +438,14 @@ namespace FM.LiveSwitch.Mux
             var recordings = CompletedRecordings.Where(x => x.VideoFileExists).ToArray();
             foreach (var recording in recordings)
             {
-                recording.VideoSegments = await ParseVideoSegments(recording);
+                if (options.DryRun)
+                {
+                    recording.SetVideoSegments();
+                }
+                else
+                {
+                    recording.SetVideoSegments(await ParseVideoSegments(recording));
+                }
             }
 
             recordings = recordings.Where(x => x.VideoSegments.Length > 0).ToArray();
@@ -650,7 +657,11 @@ namespace FM.LiveSwitch.Mux
 
                     // scale bounds to segment
                     view.Bounds = new Rectangle(Point.Zero, segment.Size);
-                    view.ScaleBounds(options.Crop);
+
+                    if (segment.Size != Size.Empty)
+                    {
+                        view.ScaleBounds(options.Crop);
+                    }
 
                     // initialize tags
                     var segmentTag = recording.VideoTag;

@@ -23,6 +23,24 @@ namespace FM.LiveSwitch.Mux
             return new Size(Width, Height);
         }
 
+        public override bool Equals(object obj)
+        {
+            var size = obj as Size?;
+            if (size == null)
+            {
+                return false;
+            }
+            return Equals(size.Value);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = 13;
+            hash = (hash * 7) + Width.GetHashCode();
+            hash = (hash * 7) + Height.GetHashCode();
+            return hash;
+        }
+
         public bool Equals(Size size)
         {
             return size.Width == Width && size.Height == Height;
@@ -34,6 +52,15 @@ namespace FM.LiveSwitch.Mux
         }
 
         public static Size Empty = new Size(0, 0);
+
+        public static bool operator ==(Size size1, Size size2)
+        {
+            return size1.Equals(size2);
+        }
+        public static bool operator !=(Size size1, Size size2)
+        {
+            return !size1.Equals(size2);
+        }
 
         public static Size operator *(Size size, double value)
         {
