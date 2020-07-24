@@ -6,6 +6,8 @@ namespace FM.LiveSwitch.Mux
     {
         public string ConnectionId { get; set; }
 
+        public string ConnectionTag { get; set; }
+
         public string ClientId { get; set; }
 
         public string DeviceId { get; set; }
@@ -14,15 +16,28 @@ namespace FM.LiveSwitch.Mux
 
         public Size Size { get; set; }
 
+        public bool AudioMuted { get; set; }
+
+        public bool VideoMuted { get; set; }
+
+        public bool AudioDisabled { get; set; }
+
+        public bool VideoDisabled { get; set; }
+
         public dynamic ToDynamic()
         {
             return new
             {
                 connectionId = ConnectionId,
+                connectionTag = ConnectionTag,
                 clientId = ClientId,
                 deviceId = DeviceId,
                 userId = UserId,
-                size = Size.ToDynamic()
+                size = Size.ToDynamic(),
+                audioMuted = AudioMuted,
+                videoMuted = VideoMuted,
+                audioDisabled = AudioDisabled,
+                videoDisabled = VideoDisabled
             };
         }
 
@@ -44,10 +59,15 @@ namespace FM.LiveSwitch.Mux
             return new LayoutInput
             {
                 ConnectionId = lookup.ContainsKey("connectionId") ? value.connectionId as string : null,
+                ConnectionTag = lookup.ContainsKey("connectionTag") ? value.connectionTag as string : null,
                 ClientId = lookup.ContainsKey("clientId") ? value.clientId as string : null,
                 DeviceId = lookup.ContainsKey("deviceId") ? value.deviceId as string : null,
                 UserId = lookup.ContainsKey("userId") ? value.userId as string : null,
-                Size = size.Value
+                Size = size.Value,
+                AudioMuted = (lookup.ContainsKey("audioMuted") ? value.audioMuted as bool? : null) == true,
+                VideoMuted = (lookup.ContainsKey("videoMuted") ? value.videoMuted as bool? : null) == true,
+                AudioDisabled = (lookup.ContainsKey("audioDisabled") ? value.audioDisabled as bool? : null) == true,
+                VideoDisabled = (lookup.ContainsKey("videoDisabled") ? value.videoDisabled as bool? : null) == true,
             };
         }
     }

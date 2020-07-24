@@ -79,6 +79,18 @@ namespace FM.LiveSwitch.Mux
                 {
                     StartTimestamp = logEntry.Timestamp;
                 }
+
+                ActiveRecording.Update(logEntry);
+            }
+            else if (logEntry.Type == LogEntry.TypeUpdateRecording)
+            {
+                if (ActiveRecording == null)
+                {
+                    // not recording, shouldn't happen
+                    return false;
+                }
+
+                ActiveRecording.Update(logEntry);
             }
             else if (logEntry.Type == LogEntry.TypeStopRecording)
             {
@@ -87,6 +99,8 @@ namespace FM.LiveSwitch.Mux
                     // not recording, shouldn't happen
                     return false;
                 }
+
+                ActiveRecording.Update(logEntry, true);
 
                 ActiveRecording.StopTimestamp = logEntry.Timestamp;
                 ActiveRecording.AudioFile = logEntry.Data?.AudioFile;

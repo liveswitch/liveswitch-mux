@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -123,7 +124,7 @@ namespace FM.LiveSwitch.Mux
                     {
                         videoEvents.Add(new VideoEvent
                         {
-                            Type = VideoEventType.Replace,
+                            Type = VideoEventType.Update,
                             Timestamp = segment.StartTimestamp,
                             LastSegment = lastSegment,
                             Segment = segment
@@ -139,6 +140,136 @@ namespace FM.LiveSwitch.Mux
                 });
                 return videoEvents.ToArray();
             }
+        }
+
+        [JsonIgnore]
+        public RecordingUpdate[] Updates { get { return _Updates.ToArray(); } }
+
+        private List<RecordingUpdate> _Updates = new List<RecordingUpdate>();
+
+        public void Update(LogEntry logEntry, bool final = false)
+        {
+            var data = logEntry.Data;
+            if (data != null)
+            {
+                if (_Updates.Any())
+                {
+                    _Updates.Last().StopTimestamp = logEntry.Timestamp;
+                }
+
+                if (!final)
+                {
+                    _Updates.Add(new RecordingUpdate
+                    {
+                        StartTimestamp = logEntry.Timestamp,
+                        ConnectionTag = data.ConnectionTag,
+                        AudioMuted = data.AudioMuted == true,
+                        VideoMuted = data.VideoMuted == true,
+                        AudioDisabled = data.AudioDisabled == true,
+                        VideoDisabled = data.VideoDisabled == true,
+                    });
+                }
+            }
+        }
+
+        public void SetVideoSegments(VideoSegment[] parsedVideoSegments = null)
+        {
+            var videoSegments = new List<VideoSegment>();
+            if (parsedVideoSegments == null || parsedVideoSegments.Length == 0)
+            {
+                // dry run
+                if (Updates.Length == 0)
+                {
+                    videoSegments.Add(new VideoSegment
+                    {
+                        Recording = this,
+                        Size = Size.Empty,
+                        StartTimestamp = StartTimestamp,
+                        StopTimestamp = StopTimestamp
+                    });
+                }
+                else
+                {
+                    foreach (var update in Updates)
+                    {
+                        videoSegments.Add(new VideoSegment
+                        {
+                            Recording = this,
+                            Size = Size.Empty,
+                            StartTimestamp = update.StartTimestamp,
+                            StopTimestamp = update.StopTimestamp,
+                            AudioDisabled = update.AudioDisabled,
+                            VideoDisabled = update.VideoDisabled,
+                            AudioMuted = update.AudioMuted,
+                            VideoMuted = update.VideoMuted,
+                            ConnectionTag = update.ConnectionTag
+                        });
+                    }
+                }
+            }
+            else
+            {
+                if (Updates.Length == 0)
+                {
+                    videoSegments.AddRange(parsedVideoSegments);
+                }
+                else
+                {
+                    // identify video range
+                    var minTicks = parsedVideoSegments.First().StartTimestamp.Ticks;
+                    var maxTicks = parsedVideoSegments.Last().StopTimestamp.Ticks;
+
+                    // get all unique timestamps
+                    var timestampSet = new HashSet<DateTime>();
+                    foreach (var update in Updates)
+                    {
+                        // filter updates outside video range
+                        timestampSet.Add(new DateTime(Math.Min(Math.Max(update.StartTimestamp.Ticks, minTicks), maxTicks)));
+                        timestampSet.Add(new DateTime(Math.Min(Math.Max(update.StopTimestamp.Ticks, minTicks), maxTicks)));
+                    }
+                    foreach (var parsedVideoSegment in parsedVideoSegments)
+                    {
+                        timestampSet.Add(parsedVideoSegment.StartTimestamp);
+                        timestampSet.Add(parsedVideoSegment.StopTimestamp);
+                    }
+
+                    // sort timestamps
+                    var timestamps = timestampSet.OrderBy(x => x).ToArray();
+                    {
+                        var updateIndex = 0;
+                        var update = Updates[updateIndex];
+                        var parsedVideoSegmentIndex = 0;
+                        var parsedVideoSegment = parsedVideoSegments[parsedVideoSegmentIndex];
+                        for (var i = 0; i < timestamps.Length - 1; i++)
+                        {
+                            var timestamp = timestamps[i];
+
+                            // next video segment
+                            while (timestamp >= parsedVideoSegment.StopTimestamp)
+                            {
+                                parsedVideoSegmentIndex++;
+                                parsedVideoSegment = parsedVideoSegments[parsedVideoSegmentIndex];
+                            }
+
+                            // next update
+                            while (timestamp >= update.StopTimestamp)
+                            {
+                                updateIndex++;
+                                update = Updates[updateIndex];
+                            }
+
+                            var videoSegment = parsedVideoSegment.Clone(update);
+                            videoSegment.StartTimestamp = timestamp;
+                            if (videoSegments.Any())
+                            {
+                                videoSegments.Last().StopTimestamp = timestamp;
+                            }
+                            videoSegments.Add(videoSegment);
+                        }
+                    }
+                }
+            }
+            VideoSegments = videoSegments.ToArray();
         }
 
         public string GetAudioResampleFilterChain(string inputTag, string outputTag)

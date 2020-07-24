@@ -69,7 +69,7 @@ namespace FM.LiveSwitch.Mux
                         Segments = segments,
                         StartTimestamp = @event.Timestamp
                     };
-                case VideoEventType.Replace:
+                case VideoEventType.Update:
                     return new VideoChunk
                     {
                         Segments = Segments.Where(x => x != @event.LastSegment).Concat(new[] { @event.Segment }).ToArray(),
