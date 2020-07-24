@@ -27,7 +27,7 @@ namespace FM.LiveSwitch.Mux.Test
                     Timestamp = start,
                     Data = new LogEntryData
                     {
-                        Tag = "0"
+                        ConnectionTag = "0"
                     }
                 });
                 recording.Update(new LogEntry
@@ -38,7 +38,7 @@ namespace FM.LiveSwitch.Mux.Test
                     {
                         AudioMuted = true,
                         AudioDisabled = true,
-                        Tag = "2"
+                        ConnectionTag = "2"
                     }
                 });
                 recording.Update(new LogEntry
@@ -47,7 +47,7 @@ namespace FM.LiveSwitch.Mux.Test
                     Timestamp = start.AddMinutes(3.5),
                     Data = new LogEntryData
                     {
-                        Tag = "3.5"
+                        ConnectionTag = "3.5"
                     }
                 });
                 recording.Update(new LogEntry
@@ -58,7 +58,7 @@ namespace FM.LiveSwitch.Mux.Test
                     {
                         VideoMuted = true,
                         VideoDisabled = true,
-                        Tag = "4.25"
+                        ConnectionTag = "4.25"
                     }
                 });
                 recording.Update(new LogEntry
@@ -67,7 +67,7 @@ namespace FM.LiveSwitch.Mux.Test
                     Timestamp = start.AddMinutes(4.75),
                     Data = new LogEntryData
                     {
-                        Tag = "4.75"
+                        ConnectionTag = "4.75"
                     }
                 });
                 recording.Update(new LogEntry
@@ -76,7 +76,7 @@ namespace FM.LiveSwitch.Mux.Test
                     Timestamp = start.AddMinutes(5),
                     Data = new LogEntryData
                     {
-                        Tag = "4.75"
+                        ConnectionTag = "4.75"
                     }
                 }, true);
             }
