@@ -13,23 +13,23 @@ Sessions are scoped to the application ID and channel ID. Recordings with differ
 Use `dotnet publish` to create a single, self-contained file for a specific platform/architecture:
 
 ### Windows
-```
+```shell
 dotnet publish -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o win
 ```
 
 ### macOS
-```
+```shell
 dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o osx
 ```
 
 ### Linux
-```
+```shell
 dotnet publish -r linux-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o linux
 ```
 
 Alternatively, use `dotnet build` to create a platform-agnostic bundle (the .NET Core runtime must be installed):
 
-```
+```shell
 dotnet build
 ```
 
@@ -38,11 +38,11 @@ Using this approach will generate a library instead of an executable. Use `dotne
 
 ## Usage
 
-```
+```shell
 lsmux [options]
 ```
 
-```
+```shell
   -i, --input-path       The input path, i.e. the recording path used by the media server.
                          Defaults to the current directory.
 
@@ -116,19 +116,19 @@ lsmux [options]
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
 
-```
+```shell
 lsmux --input-path /path/to/my/recordings
 ```
 
 The `output-path` can be set as well. If not set, the `input-path` will be used:
 
-```
+```shell
 lsmux --input-path /my/input/path --output-path /my/output/path
 ```
 
 There are several other options available to control the behaviour and output of the muxer. For example, to create an audio-only mix with `no-video` for `channel-id` "bar" in `application-id` "foo":
 
-```
+```shell
 lsmux --no-video --application-id foo --channel-id bar
 ```
 
@@ -141,19 +141,19 @@ Several `layout` options are available:
 
 The `width` and `height` can also be set to the desired size, along with the `frame-rate` in frames per second:
 
-```
+```shell
 lsmux --layout hgrid --width 1280 --height 720 --frame-rate 60
 ```
 
 The `margin` between videos is configurable, as is the `background-color`, which can be any [color value](https://ffmpeg.org/ffmpeg-utils.html#Color) supported by ffmpeg. You may opt to `crop` the videos, which will increase the size of each individual recording to use all available layout space and then crop the edges as needed, while still honouring the `margin`. Layouts can be `dynamic` as well, adapting throughout the mix to changes in video size and count:
 
-```
+```shell
 lsmux --margin 5 --background-color blue --crop --dynamic
 ```
 
 You can set the `audio-codec` or `video-codec` used in the output files. Any of the [audio encoders](https://www.ffmpeg.org/ffmpeg-codecs.html#Audio-Encoders) or [video encoders](https://www.ffmpeg.org/ffmpeg-codecs.html#Video-Encoders) supported by ffmpeg are allowed, along with any codec-specific options you want to set:
 
-```
+```shell
 lsmux --audio-codec aac --video-codec "libx264 -crf 18 -preset medium"
 ```
 
@@ -161,13 +161,13 @@ lsmux --audio-codec aac --video-codec "libx264 -crf 18 -preset medium"
 
 The `js` layout can be used to do custom JavaScript-based layout calculations by providing a path to a `js-file`:
 
-```
+```shell
 lsmux --layout js --js-file /path/to/my/layout.js
 ```
 
 Your file must contain a JavaScript function called `layout` with the following signature:
 
-```
+```javascript
 /**
  * @param {Input[]} inputs  The layout inputs.
  * @param {Output}  output  The layout output.
@@ -185,7 +185,7 @@ The `layout` function is responsible for returning an array of frames (origin/si
 
 For example, to arrange the input videos in a circle:
 
-```
+```javascript
 /**
  * Apply a circular layout.
  */
@@ -221,13 +221,18 @@ function layout(inputs, output) {
 
 The type definitions are as follows:
 
-```
+```typescript
 interface Input {
   connectionId: string;
   clientId: string;
   deviceId: string;
   userId: string;
   size: Size;
+  connectionTag: string;
+  audioMuted: boolean;
+  audioDisabled: boolean;
+  videoMuted: boolean;
+  videoDisabled: boolean;
 }
 
 interface Output {
@@ -258,14 +263,15 @@ interface Size {
 General log output is written to `stderr`, while `stdout` is reserved for a list of JSON metadata files - one for each session, e.g.:
 
 ```
-/path/to/my/recordings/2019-12-25_07-59-37_to_2019-12-25_09-08-43.json
-/path/to/my/recordings/2019-12-25_08-02-34_to_2019-12-25_09-03-38.json
+/path/to/my/recordings/session_2019-12-25_07-59-37_to_2019-12-25_09-08-43_1758af02-c9bc-dc5a-1eef-41c1130a8c41.json
+/path/to/my/recordings/session_2019-12-25_08-02-34_to_2019-12-25_09-03-38_1758af02-c9bc-dc5a-1eef-41c1130a8c41.json
 ```
 
 Each JSON metadata file includes details about the clients, connections, and recordings that make up the session, including the input and output files, e.g.:
 
-```
+```json
 {
+  "id": "1758af02-c9bc-dc5a-1eef-41c1130a8c41",
   "channelId": "bar",
   "applicationId": "foo",
   "startTimestamp": "2019-12-15T00:50:14.4373839Z",
@@ -287,18 +293,31 @@ Each JSON metadata file includes details about the clients, connections, and rec
           "stopTimestamp": "2019-12-15T00:50:26.6333831Z",
           "recordings": [
             {
+              "id": "92b91c41-f460-07a0-0a84-ddc666e61639",
+              "audioId": "7a950878-0e12-83cc-179f-67978969046e",
+              "videoId": "7f43ebd7-58ce-fc1d-c162-a2586db2d530",
               "startTimestamp": "2019-12-15T00:50:14.4373839Z",
               "stopTimestamp": "2019-12-15T00:50:26.6333831Z",
-              "audioFile": "0-f05064e61ab84543a5218fd10b3a4256-0-audio.mka",
-              "videoFile": "0-f05064e61ab84543a5218fd10b3a4256-0-video.mkv",
+              "audioStartTimestamp": "2019-12-15T00:50:14.4373839Z",
+              "audioStopTimestamp": "2019-12-15T00:50:26.6333831Z",
+              "videoStartTimestamp": "2019-12-15T00:50:14.4373839Z",
+              "videoStopTimestamp": "2019-12-15T00:50:26.6333831Z",
+              "audioFile": "/path/to/my/recordings/f05064e61ab84543a5218fd10b3a4256-0.mka",
+              "videoFile": "/path/to/my/recordings/f05064e61ab84543a5218fd10b3a4256-0.mkv",
+              "logFile": "/path/to/my/recordings/f05064e61ab84543a5218fd10b3a4256-0.json",
+              "videoDelay": 0.0,
               "videoSegments": [
                 {
                   "size": {
                     "width": 640,
                     "height": 480
                   },
-                  "firstTimestamp": "2019-12-15T00:50:14.4373839Z",
-                  "lastTimestamp": "2019-12-15T00:50:26.0603839Z"
+                  "audioMuted": false,
+                  "audioDisabled": false,
+                  "videoMuted": false,
+                  "videoDisabled": false,
+                  "startTimestamp": "2019-12-15T00:50:14.4373839Z",
+                  "stopTimestamp": "2019-12-15T00:50:26.0603839Z"
                 }
               ]
             }
@@ -319,34 +338,55 @@ Each JSON metadata file includes details about the clients, connections, and rec
           "stopTimestamp": "2019-12-15T00:50:26.1053812Z",
           "recordings": [
             {
+              "id": "ecdae899-28c1-4210-81e9-9ff34c53f75d",
+              "audioId": "5f4d14d4-ef97-4f33-b52b-8d72fd8b9aa3",
+              "videoId": "be37fb0d-4a22-4ca2-93ea-c72a66d16b40",
               "startTimestamp": "2019-12-15T00:50:15.4083855Z",
               "stopTimestamp": "2019-12-15T00:50:26.1053812Z",
-              "audioFile": "0-3d406343a148458bafdd3de873bb5a01-0-audio.mka",
-              "videoFile": "0-3d406343a148458bafdd3de873bb5a01-0-video.mkv",
+              "audioStartTimestamp": "2019-12-15T00:50:15.4083855Z",
+              "audioStopTimestamp": "2019-12-15T00:50:26.1053812Z",
+              "videoStartTimestamp": "2019-12-15T00:50:15.4083855Z",
+              "videoStopTimestamp": "2019-12-15T00:50:26.1053812Z",
+              "audioFile": "/path/to/my/recordings/3d406343a148458bafdd3de873bb5a01-0.mka",
+              "videoFile": "/path/to/my/recordings/3d406343a148458bafdd3de873bb5a01-0.mkv",
+              "logFile": "/path/to/my/recordings/3d406343a148458bafdd3de873bb5a01-0.json",
+              "videoDelay": 0.0,
               "videoSegments": [
                 {
                   "size": {
                     "width": 320,
                     "height": 240
                   },
-                  "firstTimestamp": "2019-12-15T00:50:15.4083855Z",
-                  "lastTimestamp": "2019-12-15T00:50:19.2643855Z"
+                  "audioMuted": false,
+                  "audioDisabled": false,
+                  "videoMuted": false,
+                  "videoDisabled": false,
+                  "startTimestamp": "2019-12-15T00:50:15.4083855Z",
+                  "stopTimestamp": "2019-12-15T00:50:19.2643855Z"
                 },
                 {
                   "size": {
                     "width": 480,
                     "height": 360
                   },
-                  "firstTimestamp": "2019-12-15T00:50:19.2973855Z",
-                  "lastTimestamp": "2019-12-15T00:50:23.2643855Z"
+                  "audioMuted": false,
+                  "audioDisabled": false,
+                  "videoMuted": false,
+                  "videoDisabled": false,
+                  "startTimestamp": "2019-12-15T00:50:19.2973855Z",
+                  "stopTimestamp": "2019-12-15T00:50:23.2643855Z"
                 },
                 {
                   "size": {
                     "width": 640,
                     "height": 480
                   },
-                  "firstTimestamp": "2019-12-15T00:50:23.2963855Z",
-                  "lastTimestamp": "2019-12-15T00:50:24.4283855Z"
+                  "audioMuted": false,
+                  "audioDisabled": false,
+                  "videoMuted": false,
+                  "videoDisabled": false,
+                  "startTimestamp": "2019-12-15T00:50:23.2963855Z",
+                  "stopTimestamp": "2019-12-15T00:50:24.4283855Z"
                 }
               ]
             }
@@ -367,18 +407,32 @@ Each JSON metadata file includes details about the clients, connections, and rec
           "stopTimestamp": "2019-12-15T00:50:27.4008816Z",
           "recordings": [
             {
+              "id": "73b810d7-e3ce-4929-be04-88ae5d2da6ac",
+              "audioId": "aad8aed4-a4d1-4020-bce7-89e226ea5874",
+              "videoId": "1ae41ed7-e6a0-4a02-aaa3-a62390b8359f",
               "startTimestamp": "2019-12-15T00:50:20.0703811Z",
               "stopTimestamp": "2019-12-15T00:50:27.4008816Z",
-              "audioFile": "0-4e1b23826d7749438ab944b997a4ac2e-0-audio.mka",
-              "videoFile": "0-4e1b23826d7749438ab944b997a4ac2e-0-video.mkv",
+              "audioStartTimestamp": "2019-12-15T00:50:20.0703811Z",
+              "audioStopTimestamp": "2019-12-15T00:50:27.4008816Z",
+              "videoStartTimestamp": "2019-12-15T00:50:20.0703811Z",
+              "videoStopTimestamp": "2019-12-15T00:50:27.4008816Z",
+              "audioFile": "/path/to/my/recordings/4e1b23826d7749438ab944b997a4ac2e-0.mka",
+              "videoFile": "/path/to/my/recordings/4e1b23826d7749438ab944b997a4ac2e-0.mkv",
+              "logFile": "/path/to/my/recordings/4e1b23826d7749438ab944b997a4ac2e-0.json",
+              "videoDelay": 0.0,
               "videoSegments": [
                 {
                   "size": {
-                    "width": 640,
-                    "height": 480
+                    "width": 1920,
+                    "height": 1080
                   },
-                  "firstTimestamp": "2019-12-15T00:50:20.0703811Z",
-                  "lastTimestamp": "2019-12-15T00:50:27.1563811Z"
+                  "connectionTag": "screen",
+                  "audioMuted": false,
+                  "audioDisabled": false,
+                  "videoMuted": false,
+                  "videoDisabled": false,
+                  "startTimestamp": "2019-12-15T00:50:20.0703811Z",
+                  "stopTimestamp": "2019-12-15T00:50:27.1563811Z"
                 }
               ]
             }
