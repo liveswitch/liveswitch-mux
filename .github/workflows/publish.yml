@@ -21,6 +21,8 @@ jobs:
         dotnet-version: 3.1.101
     - name: Install dependencies
       run: dotnet restore
+    - name: Run tests
+      run: dotnet test src/FM.LiveSwitch.Mux.Test/FM.LiveSwitch.Mux.Test.csproj
     - name: Build for Windows
       run: dotnet publish src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/win-x64
     - name: Build for macOS
