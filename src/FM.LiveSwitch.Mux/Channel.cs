@@ -60,7 +60,7 @@ namespace FM.LiveSwitch.Mux
             ApplicationId = applicationId;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var clientId = logEntry.ClientId;
             if (clientId == null)
@@ -73,7 +73,7 @@ namespace FM.LiveSwitch.Mux
                 _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId);
             }
 
-            var result = client.ProcessLogEntry(logEntry);
+            var result = client.ProcessLogEntry(logEntry, options);
 
             if (Completed)
             {

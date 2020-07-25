@@ -197,6 +197,12 @@ namespace FM.LiveSwitch.Mux
                 inputArguments.Add($"-i {VideoFile}");
             }
 
+            if (inputArguments.Count == 0)
+            {
+                Console.Error.WriteLine("No media files found.");
+                return false;
+            }
+
             // pull together the final arguments list
             var arguments = new List<string>
             {

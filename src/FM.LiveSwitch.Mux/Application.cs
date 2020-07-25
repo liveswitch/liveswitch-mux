@@ -21,7 +21,7 @@ namespace FM.LiveSwitch.Mux
             Id = id;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var channelId = logEntry.ChannelId;
             if (channelId == null)
@@ -34,7 +34,7 @@ namespace FM.LiveSwitch.Mux
                 _Channels[channelId] = channel = new Channel(channelId, Id);
             }
 
-            return channel.ProcessLogEntry(logEntry);
+            return channel.ProcessLogEntry(logEntry, options);
         }
     }
 }

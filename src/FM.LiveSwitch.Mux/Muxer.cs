@@ -85,7 +85,7 @@ namespace FM.LiveSwitch.Mux
             var context = new Context();
             foreach (var logEntry in logEntries)
             {
-                context.ProcessLogEntry(logEntry);
+                context.ProcessLogEntry(logEntry, Options);
             }
 
             // process the results

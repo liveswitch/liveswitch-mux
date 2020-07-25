@@ -13,7 +13,7 @@ namespace FM.LiveSwitch.Mux
 
         private Dictionary<string, Application> _Applications = new Dictionary<string, Application>();
 
-        public bool ProcessLogEntry(LogEntry logEntry)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var applicationId = logEntry.ApplicationId;
             if (applicationId == null)
@@ -26,7 +26,7 @@ namespace FM.LiveSwitch.Mux
                 _Applications[applicationId] = application = new Application(applicationId);
             }
 
-            return application.ProcessLogEntry(logEntry);
+            return application.ProcessLogEntry(logEntry, options);
         }
     }
 }

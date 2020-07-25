@@ -77,7 +77,7 @@ namespace FM.LiveSwitch.Mux
             ApplicationId = applicationId;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var connectionId = logEntry.ConnectionId;
             if (connectionId == null)
@@ -93,7 +93,7 @@ namespace FM.LiveSwitch.Mux
                 };
             }
 
-            return connection.ProcessLogEntry(logEntry);
+            return connection.ProcessLogEntry(logEntry, options);
         }
     }
 }

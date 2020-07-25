@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace FM.LiveSwitch.Mux
@@ -58,7 +59,7 @@ namespace FM.LiveSwitch.Mux
             ApplicationId = applicationId;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             if (logEntry.Type == LogEntry.TypeStartRecording)
             {
@@ -111,12 +112,22 @@ namespace FM.LiveSwitch.Mux
                 {
                     ActiveRecording.AudioStartTimestamp = logEntry.Data?.AudioFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
                     ActiveRecording.AudioStopTimestamp = logEntry.Data?.AudioLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
+
+                    if (!Path.IsPathRooted(ActiveRecording.AudioFile))
+                    {
+                        ActiveRecording.AudioFile = Path.Combine(options.InputPath, ActiveRecording.AudioFile);
+                    }
                 }
 
                 if (ActiveRecording.VideoFile != null)
                 {
                     ActiveRecording.VideoStartTimestamp = logEntry.Data?.VideoFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
                     ActiveRecording.VideoStopTimestamp = logEntry.Data?.VideoLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
+
+                    if (!Path.IsPathRooted(ActiveRecording.VideoFile))
+                    {
+                        ActiveRecording.VideoFile = Path.Combine(options.InputPath, ActiveRecording.VideoFile);
+                    }
                 }
 
                 _Recordings.Add(ActiveRecording);
