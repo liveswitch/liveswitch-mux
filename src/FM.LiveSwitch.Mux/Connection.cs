@@ -106,7 +106,6 @@ namespace FM.LiveSwitch.Mux
                 ActiveRecording.StopTimestamp = logEntry.Timestamp;
                 ActiveRecording.AudioFile = logEntry.Data?.AudioFile;
                 ActiveRecording.VideoFile = logEntry.Data?.VideoFile;
-                ActiveRecording.VideoDelay = logEntry.Data?.VideoDelay ?? 0D;
 
                 if (ActiveRecording.AudioFile != null)
                 {
@@ -130,10 +129,32 @@ namespace FM.LiveSwitch.Mux
                     }
                 }
 
+                var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
+                if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoFile != null)
+                {
+                    if (videoDelay < 0)
+                    {
+                        ActiveRecording.AudioStartTimestamp = ActiveRecording.AudioStartTimestamp.Value.AddSeconds(videoDelay);
+                        ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStopTimestamp.Value.AddSeconds(videoDelay);
+
+                        ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.AudioStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
+                        ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.AudioStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
+                    }
+                    else
+                    {
+                        ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(-videoDelay);
+                        ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(-videoDelay);
+
+                        ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.VideoStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
+                        ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.VideoStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
+                    }
+                }
+
+                StartTimestamp = ActiveRecording.StartTimestamp;
+                StopTimestamp = ActiveRecording.StopTimestamp;
+
                 _Recordings.Add(ActiveRecording);
                 ActiveRecording = null;
-
-                StopTimestamp = logEntry.Timestamp;
             }
             return true;
         }

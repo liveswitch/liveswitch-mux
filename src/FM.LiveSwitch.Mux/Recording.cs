@@ -60,8 +60,6 @@ namespace FM.LiveSwitch.Mux
 
         public string LogFile { get; set; }
 
-        public double VideoDelay { get; set; }
-
         [JsonIgnore]
         public bool AudioFileExists
         {
