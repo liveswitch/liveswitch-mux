@@ -25,6 +25,8 @@ namespace FM.LiveSwitch.Mux.Test
             var deviceId = "deviceId";
             var userId = "userId";
 
+            var options = new MuxOptions();
+
             var context = new Context();
             context.ProcessLogEntry(new LogEntry
             {
@@ -36,7 +38,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Type = LogEntry.TypeStartRecording,
                 Timestamp = start,
                 UserId = userId,
-            });
+            }, options);
             context.ProcessLogEntry(new LogEntry
             {
                 ApplicationId = applicationId,
@@ -57,7 +59,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Type = LogEntry.TypeStopRecording,
                 Timestamp = stop,
                 UserId = userId,
-            });
+            }, options);
 
             var audioStart = start;
             var videoStart = start;
