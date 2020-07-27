@@ -24,7 +24,7 @@ namespace FM.LiveSwitch.Mux
 
         public string GetTrimFilterChain(Recording recording, string inputTag, string outputTag)
         {
-            return $"{inputTag}trim=start={(StartTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds + recording.VideoDelay}:end={(StopTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds + recording.VideoDelay},setpts=PTS-STARTPTS{outputTag}";
+            return $"{inputTag}trim=start={(StartTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds}:end={(StopTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds},setpts=PTS-STARTPTS{outputTag}";
         }
 
         public string GetFpsFilterChain(int frameRate, string inputTag, string outputTag)
