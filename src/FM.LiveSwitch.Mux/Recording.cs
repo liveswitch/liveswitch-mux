@@ -60,6 +60,10 @@ namespace FM.LiveSwitch.Mux
 
         public string LogFile { get; set; }
 
+        public string AudioCodec { get; set; }
+
+        public string VideoCodec { get; set; }
+
         [JsonIgnore]
         public bool AudioFileExists
         {

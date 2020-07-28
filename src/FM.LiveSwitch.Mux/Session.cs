@@ -276,6 +276,11 @@ namespace FM.LiveSwitch.Mux
             {
                 recording.AudioIndex = recordingIndex++;
                 recording.AudioTag = $"[{recording.AudioIndex}:a]";
+
+                if (!options.DryRun)
+                {
+                    recording.AudioCodec = await GetAudioCodec(recording);
+                }
             }
 
             // build filter chains
@@ -289,7 +294,16 @@ namespace FM.LiveSwitch.Mux
                 {
                     "-y" // overwrite output files without asking
                 };
-                arguments.AddRange(recordings.Select(x => $"-i {x.AudioFile}"));
+                arguments.AddRange(recordings.Select(recording =>
+                {
+                    if (recording.AudioCodec == "opus")
+                    {
+                        // 'opus' doesn't support SILK, but 'libopus' does,
+                        // so prefer that when decoding to avoid audio loss
+                        return $"-codec:a libopus -i {recording.AudioFile}";
+                    }
+                    return $"-i {recording.AudioFile}";
+                }));
                 if (filterChains.Length > 0)
                 {
                     try
@@ -450,6 +464,7 @@ namespace FM.LiveSwitch.Mux
                 }
                 else
                 {
+                    recording.VideoCodec = await GetVideoCodec(recording);
                     recording.SetVideoSegments(await ParseVideoSegments(recording));
                 }
             }
@@ -573,7 +588,10 @@ namespace FM.LiveSwitch.Mux
                 {
                     "-y" // overwrite output files without asking
                 };
-                arguments.AddRange(recordings.Select(x => $"-i {x.VideoFile}"));
+                arguments.AddRange(recordings.Select(recording =>
+                {
+                    return $"-i {recording.VideoFile}";
+                }));
                 if (filterChains.Length > 0)
                 {
                     try
@@ -704,6 +722,26 @@ namespace FM.LiveSwitch.Mux
             filterChains.Add($"{string.Join(string.Empty, chunkTags)}concat=n={chunkTags.Count}[vout]");
 
             return filterChains.ToArray();
+        }
+
+        public async Task<string> GetAudioCodec(Recording recording)
+        {
+            var lines = await FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}");
+            if (lines.Length == 0)
+            {
+                return null;
+            }
+            return lines[0].Trim();
+        }
+
+        public async Task<string> GetVideoCodec(Recording recording)
+        {
+            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}");
+            if (lines.Length == 0)
+            {
+                return null;
+            }
+            return lines[0].Trim();
         }
 
         public async Task<VideoSegment[]> ParseVideoSegments(Recording recording)
