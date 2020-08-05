@@ -251,7 +251,7 @@ namespace FM.LiveSwitch.Mux
 
         private string Move(string file, MuxOptions options)
         {
-            var newFile = file.Replace(options.InputPath, options.OutputPath);
+            var newFile = file.Replace(options.InputPath, options.OutputPath, StringComparison.InvariantCultureIgnoreCase);
 
             var outputPath = Path.GetDirectoryName(newFile);
             if (!Directory.Exists(outputPath))
