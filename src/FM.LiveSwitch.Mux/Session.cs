@@ -261,6 +261,19 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
+        private string GetTempPath(MuxOptions options)
+        {
+            switch (options.Strategy)
+            {
+                case StrategyType.Hierarchical:
+                    return Path.Combine(options.TempPath, ApplicationId, ChannelId);
+                case StrategyType.Flat:
+                    return options.TempPath;
+                default:
+                    throw new Exception("Unrecognized strategy.");
+            }
+        }
+
         private async Task<bool> MuxAudio(MuxOptions options)
         {
             // set output file name
@@ -286,7 +299,7 @@ namespace FM.LiveSwitch.Mux
             // build filter chains
             var filterChains = GetAudioFilterChains(recordings, options);
             var filterChainFileName = $"{ProcessOutputFileName(options.OutputFileName)}_audio.filter";
-            var filterChainFile = Path.Combine(GetOutputPath(options), filterChainFileName);
+            var filterChainFile = Path.Combine(GetTempPath(options), filterChainFileName);
             try
             {
                 // pull together the final arguments list
@@ -314,6 +327,12 @@ namespace FM.LiveSwitch.Mux
                         }
                         else
                         {
+                            var filterChainFilePath = Path.GetDirectoryName(filterChainFile);
+                            if (!Directory.Exists(filterChainFilePath))
+                            {
+                                Directory.CreateDirectory(filterChainFilePath);
+                            }
+
                             System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
                             arguments.Add($@"-filter_complex_script {filterChainFile}");
                         }
@@ -352,7 +371,7 @@ namespace FM.LiveSwitch.Mux
             {
                 try
                 {
-                    if (System.IO.File.Exists(filterChainFile) && !options.SaveFilterFiles)
+                    if (System.IO.File.Exists(filterChainFile) && !options.SaveTempFiles)
                     {
                         System.IO.File.Delete(filterChainFile);
                     }
@@ -578,46 +597,116 @@ namespace FM.LiveSwitch.Mux
             }
 
             // build filter chains
-            var filterChains = GetVideoFilterChains(chunks.ToArray(), options);
-            var filterChainFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video.filter";
-            var filterChainFile = Path.Combine(GetOutputPath(options), filterChainFileName);
+            var filterChainsAndTags = GetVideoFilterChainsAndTags(chunks.ToArray(), options);
+
+            // each filter chain represents a single chunk
+            var chunkFiles = new List<string>();
+            for (var i = 0; i < filterChainsAndTags.Length; i++)
+            {
+                var filterChainAndTag = filterChainsAndTags[i];
+                var filterChain = filterChainAndTag.Item1;
+                var filterTag = filterChainAndTag.Item2;
+
+                var chunkFilterChainFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video_chunk_{i}.filter";
+                var chunkFilterChainFile = Path.Combine(GetTempPath(options), chunkFilterChainFileName);
+                var chunkFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video_chunk_{i}.mkv";
+                var chunkFile = Path.Combine(GetTempPath(options), chunkFileName);
+
+                chunkFiles.Add(chunkFile);
+
+                try
+                {
+                    // construct argument list
+                    var arguments = new List<string>
+                    {
+                        "-y" // overwrite output files without asking
+                    };
+                    arguments.AddRange(recordings.Select(recording =>
+                    {
+                        return $"-i {recording.VideoFile}";
+                    }));
+                    try
+                    {
+                        if (options.NoFilterFiles)
+                        {
+                            arguments.Add($@"-filter_complex ""{filterChain}""");
+                        }
+                        else
+                        {
+                            var chunkFilterChainFilePath = Path.GetDirectoryName(chunkFilterChainFile);
+                            if (!Directory.Exists(chunkFilterChainFilePath))
+                            {
+                                Directory.CreateDirectory(chunkFilterChainFilePath);
+                            }
+
+                            System.IO.File.WriteAllText(chunkFilterChainFile, filterChain);
+                            arguments.Add($@"-filter_complex_script {chunkFilterChainFile}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Could not create temporary chunk filter chain file '{chunkFilterChainFileName}': {ex}");
+                        Console.Error.WriteLine($"Chunk filter chain will be passed as command-line argument.");
+                        arguments.Add($@"-filter_complex ""{filterChain}""");
+                    }
+                    arguments.Add($@"-map ""{filterTag}""");
+                    if (options.VideoCodec != null)
+                    {
+                        arguments.Add($"-codec:v {options.VideoCodec}");
+                    }
+                    arguments.Add(chunkFile);
+
+                    if (options.DryRun)
+                    {
+                        return true;
+                    }
+
+                    var outputPath = Path.GetDirectoryName(chunkFile);
+                    if (!Directory.Exists(outputPath))
+                    {
+                        Directory.CreateDirectory(outputPath);
+                    }
+
+                    // run it
+                    await FFmpeg(string.Join(" ", arguments));
+                }
+                finally
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(chunkFilterChainFile) && !options.SaveTempFiles)
+                        {
+                            System.IO.File.Delete(chunkFilterChainFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Could not delete temporary chunk filter chain file '{chunkFilterChainFileName}': {ex}");
+                    }
+                }
+            }
+
+            var chunkListFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video_chunks.list";
+            var chunkListFile = Path.Combine(GetTempPath(options), chunkListFileName);
+            var chunkListFilePath = Path.GetDirectoryName(chunkListFile);
+            if (!Directory.Exists(chunkListFilePath))
+            {
+                Directory.CreateDirectory(chunkListFilePath);
+            }
+
+            System.IO.File.WriteAllText(chunkListFile, string.Join(Environment.NewLine, chunkFiles.Select(chunkFile => $"file '{chunkFile}'")));
+
             try
             {
                 // construct argument list
                 var arguments = new List<string>
                 {
-                    "-y" // overwrite output files without asking
+                    "-y", // overwrite output files without asking
+                    "-safe 0",
+                    "-f concat",
                 };
-                arguments.AddRange(recordings.Select(recording =>
-                {
-                    return $"-i {recording.VideoFile}";
-                }));
-                if (filterChains.Length > 0)
-                {
-                    try
-                    {
-                        if (options.NoFilterFiles)
-                        {
-                            arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
-                        }
-                        else
-                        {
-                            System.IO.File.WriteAllText(filterChainFile, string.Join(";", filterChains));
-                            arguments.Add($@"-filter_complex_script {filterChainFile}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"Could not create temporary filter chain file '{filterChainFileName}': {ex}");
-                        Console.Error.WriteLine($"Filter chain will be passed as command-line argument.");
-                        arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
-                    }
-                }
-                arguments.Add($@"-map ""[vout]""");
-                if (options.VideoCodec != null)
-                {
-                    arguments.Add($"-codec:v {options.VideoCodec}");
-                }
+                arguments.Add($"-i {chunkListFile}");
+                arguments.Add("-c copy");
                 arguments.Add(VideoFile);
 
                 if (options.DryRun)
@@ -640,35 +729,48 @@ namespace FM.LiveSwitch.Mux
             {
                 try
                 {
-                    if (System.IO.File.Exists(filterChainFile) && !options.SaveFilterFiles)
+                    if (System.IO.File.Exists(chunkListFile) && !options.SaveTempFiles)
                     {
-                        System.IO.File.Delete(filterChainFile);
+                        System.IO.File.Delete(chunkListFile);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Could not delete temporary filter chain file '{filterChainFileName}': {ex}");
+                    Console.Error.WriteLine($"Could not delete temporary chunk list file '{chunkListFile}': {ex}");
+                }
+
+                foreach (var chunkFile in chunkFiles)
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(chunkFile) && !options.SaveTempFiles)
+                        {
+                            System.IO.File.Delete(chunkFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Could not delete temporary chunk file '{chunkFile}': {ex}");
+                    }
                 }
             }
         }
 
-        private string[] GetVideoFilterChains(VideoChunk[] chunks, MuxOptions options)
+        private ValueTuple<string, string>[] GetVideoFilterChainsAndTags(VideoChunk[] chunks, MuxOptions options)
         {
-            // build filter chains
-            var filterChains = new List<string>();
-
             // process each chunk
-            var chunkTags = new List<string>();
+            var filterChainsAndTags = new List<ValueTuple<string, string>>();
             for (var chunkIndex = 0; chunkIndex < chunks.Length; chunkIndex++)
             {
                 var chunk = chunks[chunkIndex];
+                var chunkFilterChains = new List<string>();
 
                 // initialize tag
                 var colorTag = $"[vcolor_{chunkIndex}]";
                 var chunkTag = colorTag;
 
                 // color
-                filterChains.Add(chunk.GetColorFilterChain(options.BackgroundColor, colorTag));
+                chunkFilterChains.Add(chunk.GetColorFilterChain(options.BackgroundColor, colorTag));
 
                 // process each chunk segment
                 var segments = chunk.Segments;
@@ -696,32 +798,28 @@ namespace FM.LiveSwitch.Mux
                     var overlayTag = $"[voverlay_{chunkIndex}_{segmentIndex}]";
 
                     // fps
-                    filterChains.Add(chunk.GetFpsFilterChain(options.FrameRate, segmentTag, segmentTag = fpsTag));
+                    chunkFilterChains.Add(chunk.GetFpsFilterChain(options.FrameRate, segmentTag, segmentTag = fpsTag));
 
                     // trim
-                    filterChains.Add(chunk.GetTrimFilterChain(recording, segmentTag, segmentTag = trimTag));
+                    chunkFilterChains.Add(chunk.GetTrimFilterChain(recording, segmentTag, segmentTag = trimTag));
 
                     // then scale
-                    filterChains.Add(view.GetSizeFilterChain(segmentTag, segmentTag = scaleTag));
+                    chunkFilterChains.Add(view.GetSizeFilterChain(segmentTag, segmentTag = scaleTag));
 
                     // then crop (optional)
                     if (options.Crop)
                     {
-                        filterChains.Add(view.GetCropFilterChain(segmentTag, segmentTag = cropTag));
+                        chunkFilterChains.Add(view.GetCropFilterChain(segmentTag, segmentTag = cropTag));
                     }
 
                     // then overlay
-                    filterChains.Add(view.GetOverlayChain(options.Crop, chunkTag, segmentTag, chunkTag = overlayTag));
+                    chunkFilterChains.Add(view.GetOverlayChain(options.Crop, chunkTag, segmentTag, chunkTag = overlayTag));
                 }
 
-                // keep track of each chunk's final tag
-                chunkTags.Add(chunkTag);
+                filterChainsAndTags.Add((string.Join(";", chunkFilterChains), chunkTag));
             }
 
-            // concatenate the chunks
-            filterChains.Add($"{string.Join(string.Empty, chunkTags)}concat=n={chunkTags.Count}[vout]");
-
-            return filterChains.ToArray();
+            return filterChainsAndTags.ToArray();
         }
 
         public async Task<string> GetAudioCodec(Recording recording)
@@ -872,12 +970,6 @@ namespace FM.LiveSwitch.Mux
         {
             MetadataFile = Path.Combine(Path.GetDirectoryName(File), $"{Path.GetFileNameWithoutExtension(File)}.json");
 
-            var outputPath = Path.GetDirectoryName(MetadataFile);
-            if (!Directory.Exists(outputPath))
-            {
-                Directory.CreateDirectory(outputPath);
-            }
-
             var file = File;
             var audioFile = AudioFile;
             var videoFile = VideoFile;
@@ -888,6 +980,12 @@ namespace FM.LiveSwitch.Mux
                     File = null;
                     AudioFile = null;
                     VideoFile = null;
+                }
+
+                var metadataFilePath = Path.GetDirectoryName(MetadataFile);
+                if (!Directory.Exists(metadataFilePath))
+                {
+                    Directory.CreateDirectory(metadataFilePath);
                 }
 
                 System.IO.File.WriteAllText(MetadataFile, JsonConvert.SerializeObject(this));

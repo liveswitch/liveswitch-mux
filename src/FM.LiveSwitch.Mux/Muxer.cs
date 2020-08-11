@@ -1,9 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
@@ -24,13 +22,19 @@ namespace FM.LiveSwitch.Mux
             if (Options.InputPath == null)
             {
                 Options.InputPath = Environment.CurrentDirectory;
-                Console.Error.WriteLine($"Input path not specified. Using: {Options.InputPath}");
+                Console.Error.WriteLine($"Input path defaulting to: {Options.InputPath}");
             }
 
             if (Options.OutputPath == null)
             {
                 Options.OutputPath = Options.InputPath;
-                Console.Error.WriteLine($"Output path not specified. Using: {Options.OutputPath}");
+                Console.Error.WriteLine($"Output path defaulting to: {Options.OutputPath}");
+            }
+
+            if (Options.TempPath == null)
+            {
+                Options.TempPath = Options.InputPath;
+                Console.Error.WriteLine($"Temp path defaulting to: {Options.TempPath}");
             }
 
             if (Options.Layout == LayoutType.JS)
@@ -38,7 +42,7 @@ namespace FM.LiveSwitch.Mux
                 if (Options.JavaScriptFile == null)
                 {
                     Options.JavaScriptFile = Path.Combine(Options.InputPath, "layout.js");
-                    Console.Error.WriteLine($"JavaScript file not specified. Using: {Options.JavaScriptFile}");
+                    Console.Error.WriteLine($"JavaScript file defaulting to: {Options.JavaScriptFile}");
                 }
 
                 if (!FileUtility.Exists(Options.JavaScriptFile))

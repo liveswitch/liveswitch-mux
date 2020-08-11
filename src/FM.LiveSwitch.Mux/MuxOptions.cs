@@ -15,6 +15,9 @@ namespace FM.LiveSwitch.Mux
         [Option('o', "output-path", HelpText = "The output path for muxed sessions. Defaults to the input path.")]
         public string OutputPath { get; set; }
 
+        [Option('t', "temp-path", HelpText = "The path for temporary intermediate files. Defaults to the input path.")]
+        public string TempPath { get; set; }
+
         [Option('s', "strategy", Default = StrategyType.AutoDetect, HelpText = "The recording strategy used by the media server.")]
         public StrategyType Strategy { get; set; }
 
@@ -90,8 +93,8 @@ namespace FM.LiveSwitch.Mux
         [Option("no-filter-files", HelpText = "Do not use files for the filters. Pass the filters as arguments.")]
         public bool NoFilterFiles { get; set; }
 
-        [Option("save-filter-files", HelpText = "Do not delete the filter files. Ignored if --no-filter-files is set.")]
-        public bool SaveFilterFiles { get; set; }
+        [Option("save-temp-files", HelpText = "Do not delete the temporary intermediate files.")]
+        public bool SaveTempFiles { get; set; }
 
         [Option("dry-run", HelpText = "Do a dry-run with no muxing.")]
         public bool DryRun { get; set; }

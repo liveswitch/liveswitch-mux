@@ -42,76 +42,78 @@ Using this approach will generate a library instead of an executable. Use `dotne
 lsmux [options]
 ```
 
-```shell
-  -i, --input-path       The input path, i.e. the recording path used by the media server.
-                         Defaults to the current directory.
+```
+  -i, --input-path      The input path, i.e. the recording path used by the media server.
+                        Defaults to the current directory.
 
-  -o, --output-path      The output path for muxed sessions. Defaults to the input path.
+  -o, --output-path     The output path for muxed sessions. Defaults to the input path.
 
-  -s, --strategy         (Default: AutoDetect) The recording strategy used by the media server.
-                         Valid values: AutoDetect, Hierarchical, Flat
+  -t, --temp-path       The path for temporary intermediate files. Defaults to the input path.
 
-  -l, --layout           (Default: HGrid) The video layout to use. Valid values: HStack, VStack,
-                         HGrid, VGrid, JS
+  -s, --strategy        (Default: AutoDetect) The recording strategy used by the media server.
+                        Valid values: AutoDetect, Hierarchical, Flat
 
-  -m, --margin           (Default: 0) The margin, in pixels, to insert between videos in the
-                         layout.
+  -l, --layout          (Default: HGrid) The video layout to use. Valid values: HStack, VStack,
+                        HGrid, VGrid, JS
 
-  -w, --width            (Default: 1920) The pixel width of the output video.
+  -m, --margin          (Default: 0) The margin, in pixels, to insert between videos in the
+                        layout.
 
-  -h, --height           (Default: 1080) The pixel height of the output video.
+  -w, --width           (Default: 1920) The pixel width of the output video.
 
-  -f, --frame-rate       (Default: 30) The frames per second of the output video.
+  -h, --height          (Default: 1080) The pixel height of the output video.
 
-  --background-color     (Default: 000000) The background colour.
+  -f, --frame-rate      (Default: 30) The frames per second of the output video.
 
-  --audio-codec          (Default: libopus) The output audio codec and options.
+  --background-color    (Default: 000000) The background colour.
 
-  --video-codec          (Default: libvpx -auto-alt-ref 0) The output video codec and options.
+  --audio-codec         (Default: libopus) The output audio codec and options.
 
-  --audio-container      (Default: mka) The output audio container (file extension).
+  --video-codec         (Default: libvpx -auto-alt-ref 0) The output video codec and options.
 
-  --video-container      (Default: mkv) The output video container (file extension).
+  --audio-container     (Default: mka) The output audio container (file extension).
 
-  --dynamic              Dynamically update the video layout as recordings start and stop.
+  --video-container     (Default: mkv) The output video container (file extension).
 
-  --crop                 Crop video in order to use all available layout space.
+  --dynamic             Dynamically update the video layout as recordings start and stop.
 
-  --no-audio             Do not mux audio.
+  --crop                Crop video in order to use all available layout space.
 
-  --no-video             Do not mux video.
+  --no-audio            Do not mux audio.
 
-  --move-inputs          Move input files to the output path.
+  --no-video            Do not mux video.
 
-  --delete-inputs        Delete input files from the input path.
+  --move-inputs         Move input files to the output path.
 
-  --no-prompt            Do not prompt before deleting.
+  --delete-inputs       Delete input files from the input path.
 
-  --application-id       The application ID to mux.
+  --no-prompt           Do not prompt before deleting.
 
-  --channel-id           The channel ID to mux.
+  --application-id      The application ID to mux.
 
-  --output-file-name     (Default: session_{startTimestamp}_to_{stopTimestamp}_{sessionId}) The
-                         output file name template. Uses curly-brace syntax (e.g. {channelId}).
-                         Valid variables: applicationId, channelId, sessionId, startTimestamp,
-                         stopTimestamp
+  --channel-id          The channel ID to mux.
 
-  --js-file              For JS layout, the JavaScript file path. Defaults to layout.js in the
-                         input path.
+  --output-file-name    (Default: session_{startTimestamp}_to_{stopTimestamp}_{sessionId}) The
+                        output file name template. Uses curly-brace syntax (e.g. {channelId}).
+                        Valid variables: applicationId, channelId, sessionId, startTimestamp,
+                        stopTimestamp
 
-  --trim-first           Trim audio from the first participant before any other participants
-                         have joined. Requires the --no-video flag.
+  --js-file             For JS layout, the JavaScript file path. Defaults to layout.js in the
+                        input path.
 
-  --trim-last            Trim audio from the last participant after all other participants have
-                         left. Requires the --no-video flag.
+  --trim-first          Trim audio from the first participant before any other participants have
+                        joined. Requires the --no-video flag.
 
-  --no-filter-files      Do not use files for the filters. Pass the filters as arguments.
+  --trim-last           Trim audio from the last participant after all other participants have
+                        left. Requires the --no-video flag.
 
-  --save-filter-files    Do not delete the filter files. Ignored if --no-filter-files is set.
+  --no-filter-files     Do not use files for the filters. Pass the filters as arguments.
 
-  --dry-run              Do a dry-run with no muxing.
+  --save-temp-files     Do not delete the temporary intermediate files.
 
-  --session-id           The session ID to mux, obtained from a dry-run.
+  --dry-run             Do a dry-run with no muxing.
+
+  --session-id          The session ID to mux, obtained from a dry-run.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.

@@ -17,6 +17,17 @@ namespace FM.LiveSwitch.Mux
 
         public Layout Layout { get; set; }
 
+        public VideoChunk Clone()
+        {
+            return new VideoChunk
+            {
+                StartTimestamp = StartTimestamp,
+                StopTimestamp = StopTimestamp,
+                Segments = Segments,
+                Layout = Layout
+            };
+        }
+
         public string GetColorFilterChain(string color, string outputTag)
         {
             return $"color={color}:size={Layout.Size.Width}x{Layout.Size.Height}:duration={Duration.TotalSeconds}{outputTag}";
