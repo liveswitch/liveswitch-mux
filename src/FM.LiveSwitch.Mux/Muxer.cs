@@ -243,7 +243,14 @@ namespace FM.LiveSwitch.Mux
                         {
                             if (filePath.EndsWith(".json") || filePath.EndsWith(".json.rec"))
                             {
-                                logEntries.AddRange(await LogUtility.GetEntries(filePath));
+                                try
+                                {
+                                    logEntries.AddRange(await LogUtility.GetEntries(filePath));
+                                }
+                                catch (FileNotFoundException)
+                                {
+                                    Console.Error.WriteLine($"Could not read from {filePath} as it no longer exists. Is another process running that could have removed it?");
+                                }
                             }
                         }
                         return logEntries.ToArray();
