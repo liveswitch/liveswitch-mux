@@ -49,17 +49,15 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
-        private static bool IsLocked(IOException exception)
+        private static bool IsLocked(IOException ex)
         {
-            int errorCode = exception.HResult & 0xffff;
-            switch (errorCode)
-            {
-                case 0x20: // ERROR_SHARING_VIOLATION
-                case 0x21: // ERROR_LOCK_VIOLATION
-                    return true;
-                default:
-                    return false;
-            }
+            return !(ex is DirectoryNotFoundException ||
+                     ex is DriveNotFoundException ||
+                     ex is EndOfStreamException ||
+                     ex is FileLoadException ||
+                     ex is FileNotFoundException ||
+                     ex is PathTooLongException
+                    );
         }
 
         public static bool Exists(string path)
