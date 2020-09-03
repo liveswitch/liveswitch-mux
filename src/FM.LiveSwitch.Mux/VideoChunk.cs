@@ -30,12 +30,12 @@ namespace FM.LiveSwitch.Mux
 
         public string GetColorFilterChain(string color, string outputTag)
         {
-            return $"color={color}:size={Layout.Size.Width}x{Layout.Size.Height}:duration={Duration.TotalSeconds:.###}{outputTag}";
+            return $"color={color}:size={Layout.Size.Width}x{Layout.Size.Height}:duration={Duration.TotalSeconds.Round(3)}{outputTag}";
         }
 
         public string GetTrimFilterChain(Recording recording, string inputTag, string outputTag)
         {
-            return $"{inputTag}trim=start={(StartTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds:.###}:end={(StopTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds:.###},setpts=PTS-STARTPTS{outputTag}";
+            return $"{inputTag}trim=start={(StartTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds.Round(3)}:end={(StopTimestamp - recording.VideoStartTimestamp.Value).TotalSeconds.Round(3)},setpts=PTS-STARTPTS{outputTag}";
         }
 
         public string GetFpsFilterChain(int frameRate, string inputTag, string outputTag)
