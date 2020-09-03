@@ -295,7 +295,7 @@ namespace FM.LiveSwitch.Mux
         /// <returns></returns>
         public string GetAudioStartTrimFilterChain(string inputTag, string outputTag, double trim)
         {
-            return $"{inputTag}atrim=start={trim},asetpts=PTS-STARTPTS{outputTag}";
+            return $"{inputTag}atrim=start={trim:.###},asetpts=PTS-STARTPTS{outputTag}";
         }
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace FM.LiveSwitch.Mux
         /// <returns></returns>
         public string GetAudioEndTrimFilterChain(string inputTag, string outputTag, double trim)
         {
-            return $"{inputTag}atrim=end={trim}{outputTag}";
+            return $"{inputTag}atrim=end={trim:.###}{outputTag}";
         }
     }
 }
