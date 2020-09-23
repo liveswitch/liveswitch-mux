@@ -132,8 +132,8 @@ namespace FM.LiveSwitch.Mux
                 var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
                 if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoFile != null)
                 {
-                    ActiveRecording.AudioStartTimestamp = ActiveRecording.AudioStartTimestamp.Value.AddSeconds(videoDelay);
-                    ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStopTimestamp.Value.AddSeconds(videoDelay);
+                    ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(videoDelay);
+                    ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(videoDelay);
                 }
 
                 // update recording timestamps to match any changes to the audio timestamps
