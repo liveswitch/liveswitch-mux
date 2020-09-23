@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,14 +10,21 @@ namespace FM.LiveSwitch.Mux
         public static async Task<LogEntry[]> GetEntries(string filePath)
         {
             var json = await FileUtility.GetContents(filePath);
-            if (json.StartsWith("["))
+            if (json != null && json.StartsWith("["))
             {
-                var entries = JsonConvert.DeserializeObject<List<LogEntry>>(json);
-                foreach (var entry in entries)
+                try
                 {
-                    entry.FilePath = filePath;
+                    var entries = JsonConvert.DeserializeObject<List<LogEntry>>(json);
+                    foreach (var entry in entries)
+                    {
+                        entry.FilePath = filePath;
+                    }
+                    return entries.ToArray();
                 }
-                return entries.ToArray();
+                catch (Exception)
+                {
+                    Console.Error.WriteLine($"Could not read from {filePath} as the file is malformatted. Is another process running that could have modified it?");
+                }
             }
             return new LogEntry[0]; // not a log file
         }
