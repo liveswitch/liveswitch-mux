@@ -132,26 +132,28 @@ namespace FM.LiveSwitch.Mux
                 var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
                 if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoFile != null)
                 {
-                    if (videoDelay < 0)
-                    {
-                        ActiveRecording.AudioStartTimestamp = ActiveRecording.AudioStartTimestamp.Value.AddSeconds(videoDelay);
-                        ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStopTimestamp.Value.AddSeconds(videoDelay);
-
-                        ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.AudioStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
-                        ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.AudioStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
-                    }
-                    else
-                    {
-                        ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(-videoDelay);
-                        ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(-videoDelay);
-
-                        ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.VideoStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
-                        ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.VideoStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
-                    }
+                    ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(videoDelay);
+                    ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(videoDelay);
                 }
 
-                StartTimestamp = ActiveRecording.StartTimestamp;
-                StopTimestamp = ActiveRecording.StopTimestamp;
+                // ensure consistency on start/stop timestamps
+                var audioStartTimestampTicks = long.MaxValue;
+                var audioStopTimestampTicks = long.MinValue;
+                if (ActiveRecording.AudioFile != null)
+                {
+                    audioStartTimestampTicks = ActiveRecording.AudioStartTimestamp.Value.Ticks;
+                    audioStopTimestampTicks = ActiveRecording.AudioStopTimestamp.Value.Ticks;
+                }
+                var videoStartTimestampTicks = long.MaxValue;
+                var videoStopTimestampTicks = long.MinValue;
+                if (ActiveRecording.VideoFile != null)
+                {
+                    videoStartTimestampTicks = ActiveRecording.VideoStartTimestamp.Value.Ticks;
+                    videoStopTimestampTicks = ActiveRecording.VideoStopTimestamp.Value.Ticks;
+                }
+
+                StartTimestamp = ActiveRecording.StartTimestamp = new DateTime(Math.Min(audioStartTimestampTicks, videoStartTimestampTicks));
+                StopTimestamp = ActiveRecording.StopTimestamp = new DateTime(Math.Max(audioStopTimestampTicks, videoStopTimestampTicks));
 
                 _Recordings.Add(ActiveRecording);
                 ActiveRecording = null;
