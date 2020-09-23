@@ -132,22 +132,22 @@ namespace FM.LiveSwitch.Mux
                 var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
                 if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoFile != null)
                 {
-                    if (videoDelay < 0)
-                    {
-                        ActiveRecording.AudioStartTimestamp = ActiveRecording.AudioStartTimestamp.Value.AddSeconds(videoDelay);
-                        ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStopTimestamp.Value.AddSeconds(videoDelay);
+                    ActiveRecording.AudioStartTimestamp = ActiveRecording.AudioStartTimestamp.Value.AddSeconds(videoDelay);
+                    ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStopTimestamp.Value.AddSeconds(videoDelay);
+                }
 
-                        ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.AudioStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
-                        ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.AudioStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
-                    }
-                    else
-                    {
-                        ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(-videoDelay);
-                        ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(-videoDelay);
+                // update recording timestamps to match any changes to the audio timestamps
+                if (ActiveRecording.AudioFile != null)
+                {
+                    ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.AudioStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
+                    ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.AudioStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
+                }
 
-                        ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.VideoStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
-                        ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.VideoStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
-                    }
+                // update recording timestamps to match any changes to the video timestamps
+                if (ActiveRecording.VideoFile != null)
+                {
+                    ActiveRecording.StartTimestamp = new DateTime(Math.Min(ActiveRecording.VideoStartTimestamp.Value.Ticks, ActiveRecording.StartTimestamp.Ticks));
+                    ActiveRecording.StopTimestamp = new DateTime(Math.Max(ActiveRecording.VideoStopTimestamp.Value.Ticks, ActiveRecording.StopTimestamp.Ticks));
                 }
 
                 StartTimestamp = ActiveRecording.StartTimestamp;
