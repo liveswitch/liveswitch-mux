@@ -66,22 +66,11 @@ namespace FM.LiveSwitch.Mux.Test
             var audioStop = stop;
             var videoStop = stop;
 
-            if (videoDelay > 0)
-            {
-                // positive video delay indicates that video arrived late
-                // and needs to be shuffled back in time to match audio
-                start = start.AddSeconds(-videoDelay);
-                videoStart = videoStart.AddSeconds(-videoDelay);
-                videoStop = videoStop.AddSeconds(-videoDelay);
-            }
-            if (videoDelay < 0)
-            {
-                // negative video delay indicates that audio arrived late
-                // and needs to be shuffled back in time to match video
-                start = start.AddSeconds(videoDelay);
-                audioStart = audioStart.AddSeconds(videoDelay);
-                audioStop = audioStop.AddSeconds(videoDelay);
-            }
+            videoStart = videoStart.AddSeconds(videoDelay);
+            videoStop = videoStop.AddSeconds(videoDelay);
+
+            start = new DateTime(Math.Min(audioStart.Ticks, videoStart.Ticks));
+            stop = new DateTime(Math.Max(audioStop.Ticks, videoStop.Ticks));
 
             Assert.Single(context.Applications);
 
