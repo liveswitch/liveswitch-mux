@@ -251,6 +251,10 @@ namespace FM.LiveSwitch.Mux
                                 {
                                     Console.Error.WriteLine($"Could not read from {filePath} as it no longer exists. Is another process running that could have removed it?");
                                 }
+                                catch (IOException ex) when (ex.Message.Contains("Stale file handle")) // for Linux
+                                {
+                                    Console.Error.WriteLine($"Could not read from {filePath} as the file handle is stale. Is another process running that could have removed it?");
+                                }
                             }
                         }
                         return logEntries.ToArray();
