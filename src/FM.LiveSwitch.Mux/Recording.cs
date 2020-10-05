@@ -254,7 +254,7 @@ namespace FM.LiveSwitch.Mux
                             }
 
                             // next update
-                            while (timestamp >= update.StopTimestamp)
+                            while (timestamp >= update.StopTimestamp && Updates.Length > updateIndex+1)
                             {
                                 updateIndex++;
                                 update = Updates[updateIndex];
