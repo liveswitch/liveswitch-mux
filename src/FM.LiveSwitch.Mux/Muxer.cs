@@ -1,5 +1,4 @@
-﻿using CommandLine.Text;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,6 +29,11 @@ namespace FM.LiveSwitch.Mux
             {
                 Console.Error.WriteLine($"Missing imput files option.");
                 return false;
+            }
+            else
+            {
+                // CommandLine.Parser returns empty strings when there is a space after the separator.
+                Options.InputFiles = Options.InputFiles.Where(fileName => fileName.Length > 0);
             }
 
             if (Options.OutputPath == null)
