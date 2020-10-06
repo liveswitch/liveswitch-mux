@@ -27,7 +27,7 @@ namespace FM.LiveSwitch.Mux
 
             if (Options.InputFiles.Count() == 0)
             {
-                Console.Error.WriteLine($"Missing imput files option.");
+                Console.Error.WriteLine($"No input file names provided. Use --help option for more details about available options.");
                 return false;
             }
             else

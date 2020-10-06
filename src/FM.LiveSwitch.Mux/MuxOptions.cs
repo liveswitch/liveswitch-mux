@@ -13,7 +13,7 @@ namespace FM.LiveSwitch.Mux
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]
         public string InputPath { get; set; }
 
-        [Option('k', "input-files", Required = true, Separator = ',', HelpText = "The input json files from the media server separeated by a comma (',').")]
+        [Option('j', "input-files", Required = true, Separator = ',', HelpText = "The input json file names from the media server separeated by a comma (',').")]
         public IEnumerable<string> InputFiles { get; set; }
 
         [Option('o', "output-path", HelpText = "The output path for muxed sessions. Defaults to the input path.")]
