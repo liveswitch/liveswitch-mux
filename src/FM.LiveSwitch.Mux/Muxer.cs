@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommandLine.Text;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,12 @@ namespace FM.LiveSwitch.Mux
             {
                 Options.InputPath = Environment.CurrentDirectory;
                 Console.Error.WriteLine($"Input path defaulting to: {Options.InputPath}");
+            }
+
+            if (Options.InputFiles.Count() == 0)
+            {
+                Console.Error.WriteLine($"Missing imput files option.");
+                return false;
             }
 
             if (Options.OutputPath == null)
@@ -239,22 +246,22 @@ namespace FM.LiveSwitch.Mux
                 case StrategyType.Flat:
                     {
                         var logEntries = new List<LogEntry>();
-                        foreach (var filePath in Directory.EnumerateFiles(options.InputPath, "*.*", SearchOption.TopDirectoryOnly))
+                        foreach (var fileName in Options.InputFiles)
                         {
-                            if (filePath.EndsWith(".json") || filePath.EndsWith(".json.rec"))
+                            var filePath = "";
+                            var extension = Path.GetExtension(fileName);
+                            if (fileName.EndsWith(".json") || fileName.EndsWith(".json.rec"))
                             {
-                                try
-                                {
-                                    logEntries.AddRange(await LogUtility.GetEntries(filePath));
-                                }
-                                catch (FileNotFoundException)
-                                {
-                                    Console.Error.WriteLine($"Could not read from {filePath} as it no longer exists. Is another process running that could have removed it?");
-                                }
-                                catch (IOException ex) when (ex.Message.Contains("Stale file handle")) // for Linux
-                                {
-                                    Console.Error.WriteLine($"Could not read from {filePath} as the file handle is stale. Is another process running that could have removed it?");
-                                }
+                                filePath = Path.Combine(Options.InputPath, fileName);       
+                            }
+                            else if (string.IsNullOrWhiteSpace(extension))
+                            {
+                                filePath = Path.Combine(Options.InputPath, fileName + ".json");
+                            }
+
+                            if (File.Exists(filePath))
+                            {
+                                logEntries.AddRange(await LogUtility.GetEntries(filePath));
                             }
                         }
                         return logEntries.ToArray();
