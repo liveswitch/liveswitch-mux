@@ -266,6 +266,10 @@ namespace FM.LiveSwitch.Mux
                             if (File.Exists(filePath))
                             {
                                 logEntries.AddRange(await LogUtility.GetEntries(filePath));
+                            } 
+                            else
+                            {
+                                Console.Error.WriteLine($"Could not locate file {fileName} in input directory {Options.InputPath}.");
                             }
                         }
                         return logEntries.ToArray();
