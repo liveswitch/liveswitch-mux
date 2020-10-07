@@ -25,12 +25,12 @@ namespace FM.LiveSwitch.Mux
                 Console.Error.WriteLine($"Input path defaulting to: {Options.InputPath}");
             }
 
-            if (Options.InputFiles.Count() == 0)
+            if (Options.InputFiles.Count() == 0 && Options.FilterFiles)
             {
                 Console.Error.WriteLine($"No input file names provided. Use --help option for more details about available options.");
                 return false;
             }
-            else
+            else if (Options.InputFiles.Count() > 0)
             {
                 // CommandLine.Parser returns empty strings when there is a space after the separator.
                 Options.InputFiles = Options.InputFiles.Where(fileName => fileName.Length > 0);
@@ -250,26 +250,22 @@ namespace FM.LiveSwitch.Mux
                 case StrategyType.Flat:
                     {
                         var logEntries = new List<LogEntry>();
-                        foreach (var fileName in Options.InputFiles)
+                        foreach (var filePath in Directory.EnumerateFiles(options.InputPath, "*.*", SearchOption.TopDirectoryOnly))
                         {
-                            var filePath = "";
-                            var extension = Path.GetExtension(fileName);
-                            if (fileName.EndsWith(".json") || fileName.EndsWith(".json.rec"))
+                            if (ShouldProcessFile(filePath, options))
                             {
-                                filePath = Path.Combine(Options.InputPath, fileName);       
-                            }
-                            else if (string.IsNullOrWhiteSpace(extension))
-                            {
-                                filePath = Path.Combine(Options.InputPath, fileName + ".json");
-                            }
-
-                            if (File.Exists(filePath))
-                            {
-                                logEntries.AddRange(await LogUtility.GetEntries(filePath));
-                            } 
-                            else
-                            {
-                                Console.Error.WriteLine($"Could not locate file {fileName} in input directory {Options.InputPath}.");
+                                try
+                                {
+                                    logEntries.AddRange(await LogUtility.GetEntries(filePath));
+                                }
+                                catch (FileNotFoundException)
+                                {
+                                    Console.Error.WriteLine($"Could not read from {filePath} as it no longer exists. Is another process running that could have removed it?");
+                                }
+                                catch (IOException ex) when (ex.Message.Contains("Stale file handle")) // for Linux
+                                {
+                                    Console.Error.WriteLine($"Could not read from {filePath} as the file handle is stale. Is another process running that could have removed it?");
+                                }
                             }
                         }
                         return logEntries.ToArray();
@@ -277,6 +273,15 @@ namespace FM.LiveSwitch.Mux
                 default:
                     throw new Exception("Unrecognized strategy.");
             }
+        }
+
+        private bool ShouldProcessFile(string filePath, MuxOptions options)
+        {
+            var isJsonFile = filePath.EndsWith(".json") || filePath.EndsWith(".json.rec");
+            var isFileFiltered = options.InputFiles.Contains(Path.GetFileName(filePath)) || options.InputFiles.Contains(Path.GetFileNameWithoutExtension(filePath));
+
+            return (!options.FilterFiles && isJsonFile) 
+                || (options.FilterFiles && isJsonFile && isFileFiltered);
         }
 
         private string Move(string file, MuxOptions options)

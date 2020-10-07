@@ -13,7 +13,7 @@ namespace FM.LiveSwitch.Mux
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]
         public string InputPath { get; set; }
 
-        [Option('j', "input-files", Required = true, Separator = ',', HelpText = "The input json file names from the media server separeated by a comma (',').")]
+        [Option('j', "input-files", Separator = ',', HelpText = "The input json file names from the media server separeated by a comma (',').")]
         public IEnumerable<string> InputFiles { get; set; }
 
         [Option('o', "output-path", HelpText = "The output path for muxed sessions. Defaults to the input path.")]
@@ -105,5 +105,8 @@ namespace FM.LiveSwitch.Mux
 
         [Option("session-id", HelpText = "The session ID to mux, obtained from a dry-run.")]
         public Guid? SessionId { get; set; }
+
+        [Option("filter-files", HelpText = "Process only the files listed in the input-files argument.")]
+        public bool FilterFiles { get; set; }
     }
 }
