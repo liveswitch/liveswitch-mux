@@ -253,7 +253,7 @@ namespace FM.LiveSwitch.Mux
 
                         if (Options.InputFileNames.Count() == 0)
                         {
-                            filePaths = Directory.EnumerateFiles(Options.InputPath, "*", SearchOption.TopDirectoryOnly);
+                            filePaths = Directory.EnumerateFiles(Options.InputPath, "*.*", SearchOption.TopDirectoryOnly);
                         }
                         else
                         {
