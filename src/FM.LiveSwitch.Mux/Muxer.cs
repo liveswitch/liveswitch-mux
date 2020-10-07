@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
@@ -23,20 +24,6 @@ namespace FM.LiveSwitch.Mux
             {
                 Options.InputPath = Environment.CurrentDirectory;
                 Console.Error.WriteLine($"Input path defaulting to: {Options.InputPath}");
-            }
-
-            if (Options.InputFiles.Count() == 0 && Options.FilterFiles)
-            {
-                Console.Error.WriteLine($"No input file names provided. Use --help option for more details about available options.");
-                return false;
-            }
-            else if (Options.InputFiles.Count() > 0)
-            {
-                // CommandLine.Parser returns empty strings when there is a space after the separator.
-                // Also, CommandLine.Parser leaves the separator on the string sometimes.
-                Options.InputFiles = string.Join(MuxOptions.ArgSeparator, Options.InputFiles)
-                                            .Split(MuxOptions.ArgSeparator)
-                                            .Where(fileName => fileName.Length > 0);
             }
 
             if (Options.OutputPath == null)
@@ -82,6 +69,15 @@ namespace FM.LiveSwitch.Mux
             {
                 Console.Error.WriteLine($"Height updated from {Options.Height} to the minimum value of {MuxOptions.MinHeight}.");
                 Options.Height = MuxOptions.MinHeight;
+            }
+
+            if (Options.InputFileNames.Count() > 0)
+            {
+                // CommandLine.Parser returns empty strings when there is a space after the separator.
+                // Also, CommandLine.Parser leaves the separator in the string sometimes.
+                Options.InputFileNames = string.Join(MuxOptions.ArgSeparator, Options.InputFileNames)
+                                            .Split(MuxOptions.ArgSeparator)
+                                            .Where(fileName => fileName.Length > 0);
             }
 
             var logEntries = await GetLogEntries(Options);
@@ -253,9 +249,26 @@ namespace FM.LiveSwitch.Mux
                 case StrategyType.Flat:
                     {
                         var logEntries = new List<LogEntry>();
-                        foreach (var filePath in Directory.EnumerateFiles(options.InputPath, "*.*", SearchOption.TopDirectoryOnly))
+                        IEnumerable<string> filePaths;
+
+                        if (Options.InputFileNames.Count() == 0)
                         {
-                            if (ShouldProcessFile(filePath, options))
+                            filePaths = Directory.EnumerateFiles(Options.InputPath, "*", SearchOption.TopDirectoryOnly);
+                        }
+                        else
+                        {
+                            filePaths = Options.InputFileNames.Select(inputFileName => Path.Combine(Options.InputPath, inputFileName));
+                        }
+
+                        foreach (var filePath in filePaths)
+                        {
+                            // filter the input files if a filter is provided.
+                            if (Options.InputFilter != null && !Regex.Match(Path.GetFileName(filePath), Options.InputFilter).Success)
+                            {
+                                continue;
+                            }
+
+                            if (filePath.EndsWith(".json") || filePath.EndsWith(".json.rec"))
                             {
                                 try
                                 {
@@ -276,15 +289,6 @@ namespace FM.LiveSwitch.Mux
                 default:
                     throw new Exception("Unrecognized strategy.");
             }
-        }
-
-        private bool ShouldProcessFile(string filePath, MuxOptions options)
-        {
-            var isJsonFile = filePath.EndsWith(".json") || filePath.EndsWith(".json.rec");
-            var isFileFiltered = options.InputFiles.Contains(Path.GetFileName(filePath)) || options.InputFiles.Contains(Path.GetFileNameWithoutExtension(filePath));
-
-            return (!options.FilterFiles && isJsonFile) 
-                || (options.FilterFiles && isJsonFile && isFileFiltered);
         }
 
         private string Move(string file, MuxOptions options)
