@@ -114,6 +114,11 @@ lsmux [options]
   --dry-run             Do a dry-run with no muxing.
 
   --session-id          The session ID to mux, obtained from a dry-run.
+
+  --input-filter        A regular expression used to filter the input file list.
+  
+  --input-file-names    A comma separated list of input files to target instead of scanning the
+                        directory.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.

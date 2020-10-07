@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using System;
+using System.Collections.Generic;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -8,6 +9,7 @@ namespace FM.LiveSwitch.Mux
         public const int MinMargin = 0;
         public const int MinWidth = 160;
         public const int MinHeight = 120;
+        public const char ArgSeparator = ',';
 
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]
         public string InputPath { get; set; }
@@ -101,5 +103,11 @@ namespace FM.LiveSwitch.Mux
 
         [Option("session-id", HelpText = "The session ID to mux, obtained from a dry-run.")]
         public Guid? SessionId { get; set; }
+
+        [Option("input-filter", HelpText = "A regular expression used to filter the input file list.")]
+        public string InputFilter { get; set; }
+
+        [Option("input-file-names", Separator = ArgSeparator, HelpText = "A comma separated list of input files to target instead of scanning the directory.")]
+        public IEnumerable<string> InputFileNames { get; set; }
     }
 }
