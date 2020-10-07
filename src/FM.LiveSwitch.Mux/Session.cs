@@ -584,8 +584,10 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
+            var ONE_MS = new TimeSpan(10000);                       // 1 Tick = 100ns, 10000 Ticks = 1ms
+
             // insert blank chunk if needed
-            if (chunks.Count > 0 && chunks[0].StartTimestamp != StartTimestamp)
+            if (chunks.Count > 0 && (chunks[0].StartTimestamp - StartTimestamp).Duration() >= ONE_MS)
             {
                 chunks.Insert(0, new VideoChunk
                 {
@@ -595,6 +597,8 @@ namespace FM.LiveSwitch.Mux
                     Segments = new VideoSegment[0]
                 });
             }
+            
+            chunks.RemoveAll(chunk => chunk.Duration < ONE_MS);
 
             // build filter chains
             var filterChainsAndTags = GetVideoFilterChainsAndTags(chunks.ToArray(), options);
