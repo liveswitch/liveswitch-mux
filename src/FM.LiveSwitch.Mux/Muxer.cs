@@ -33,7 +33,10 @@ namespace FM.LiveSwitch.Mux
             else if (Options.InputFiles.Count() > 0)
             {
                 // CommandLine.Parser returns empty strings when there is a space after the separator.
-                Options.InputFiles = Options.InputFiles.Where(fileName => fileName.Length > 0);
+                // Also, CommandLine.Parser leaves the separator on the string sometimes.
+                Options.InputFiles = string.Join(MuxOptions.ArgSeparator, Options.InputFiles)
+                                            .Split(MuxOptions.ArgSeparator)
+                                            .Where(fileName => fileName.Length > 0);
             }
 
             if (Options.OutputPath == null)

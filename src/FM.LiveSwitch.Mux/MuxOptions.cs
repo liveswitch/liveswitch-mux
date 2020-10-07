@@ -9,11 +9,12 @@ namespace FM.LiveSwitch.Mux
         public const int MinMargin = 0;
         public const int MinWidth = 160;
         public const int MinHeight = 120;
+        public const char ArgSeparator = ',';
 
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]
         public string InputPath { get; set; }
 
-        [Option('j', "input-files", Separator = ',', HelpText = "The input json file names from the media server separeated by a comma (',').")]
+        [Option('j', "input-files", Separator = ArgSeparator, HelpText = "The input json file names from the media server separeated by a comma (',').")]
         public IEnumerable<string> InputFiles { get; set; }
 
         [Option('o', "output-path", HelpText = "The output path for muxed sessions. Defaults to the input path.")]
