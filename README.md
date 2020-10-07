@@ -46,6 +46,9 @@ lsmux [options]
   -i, --input-path      The input path, i.e. the recording path used by the media server.
                         Defaults to the current directory.
 
+  -j, --input-files     The input json file names from the media server separeated by a comma 
+                        (',').
+                        
   -o, --output-path     The output path for muxed sessions. Defaults to the input path.
 
   -t, --temp-path       The path for temporary intermediate files. Defaults to the input path.
@@ -114,6 +117,8 @@ lsmux [options]
   --dry-run             Do a dry-run with no muxing.
 
   --session-id          The session ID to mux, obtained from a dry-run.
+
+  --filter-files        Process only the files listed in the input-files argument.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
