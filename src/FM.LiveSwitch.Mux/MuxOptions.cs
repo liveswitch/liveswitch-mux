@@ -65,8 +65,11 @@ namespace FM.LiveSwitch.Mux
         [Option("no-video", HelpText = "Do not mux video.")]
         public bool NoVideo { get; set; }
 
-        [Option("move-inputs", HelpText = "Move input files to the output path.")]
+        [Option("move-inputs", HelpText = "Move input files to the move path.")]
         public bool MoveInputs { get; set; }
+
+        [Option("move-path", HelpText = "The destination path for moved files. Defaults to the output path.")]
+        public string MovePath { get; set; }
 
         [Option("delete-inputs", HelpText = "Delete input files from the input path.")]
         public bool DeleteInputs { get; set; }
