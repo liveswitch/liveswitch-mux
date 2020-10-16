@@ -14,7 +14,7 @@ namespace FM.LiveSwitch.Mux
             get { return _Channels.Values.ToArray(); }
         }
 
-        private Dictionary<string, Channel> _Channels = new Dictionary<string, Channel>();
+        private readonly Dictionary<string, Channel> _Channels = new Dictionary<string, Channel>();
 
         public Application(string id)
         {

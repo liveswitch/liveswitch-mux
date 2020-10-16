@@ -35,14 +35,13 @@ dotnet build
 
 Using this approach will generate a library instead of an executable. Use `dotnet lsmux.dll` instead of `lsmux` to run it.
 
-
 ## Usage
 
 ```shell
 lsmux [options]
 ```
 
-```
+```shell
   -i, --input-path      The input path, i.e. the recording path used by the media server.
                         Defaults to the current directory.
 
@@ -143,10 +142,10 @@ lsmux --no-video --application-id foo --channel-id bar
 
 Several `layout` options are available:
 
-- `hstack` produces a single row of videos.
-- `vstack` produces a single column of videos.
-- `hgrid` produces a grid that favours width over height when necessary.
-- `vgrid` produces a grid that favours height over width when necessary.
+-   `hstack` produces a single row of videos.
+-   `vstack` produces a single column of videos.
+-   `hgrid` produces a grid that favours width over height when necessary.
+-   `vgrid` produces a grid that favours height over width when necessary.
 
 The `width` and `height` can also be set to the desired size, along with the `frame-rate` in frames per second:
 
@@ -271,7 +270,7 @@ interface Size {
 
 General log output is written to `stderr`, while `stdout` is reserved for a list of JSON metadata files - one for each session, e.g.:
 
-```
+```shell
 /path/to/my/recordings/session_2019-12-25_07-59-37_to_2019-12-25_09-08-43_1758af02-c9bc-dc5a-1eef-41c1130a8c41.json
 /path/to/my/recordings/session_2019-12-25_08-02-34_to_2019-12-25_09-03-38_1758af02-c9bc-dc5a-1eef-41c1130a8c41.json
 ```

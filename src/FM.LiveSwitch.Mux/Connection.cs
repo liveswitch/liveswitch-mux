@@ -44,7 +44,7 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public bool Completed { get { return ActiveRecording == null && CompletedRecordings.Length > 0; } }
 
-        private List<Recording> _Recordings = new List<Recording>();
+        private readonly List<Recording> _Recordings = new List<Recording>();
 
         [JsonIgnore]
         public Client Client { get; set; }

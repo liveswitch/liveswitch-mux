@@ -6,8 +6,8 @@ namespace FM.LiveSwitch.Mux
 {
     public struct Size : IEquatable<Size>
     {
-        public int Width;
-        public int Height;
+        public int Width { get; }
+        public int Height { get; }
 
         [JsonIgnore]
         public int PixelCount { get { return Width * Height; } }
@@ -41,9 +41,9 @@ namespace FM.LiveSwitch.Mux
             return hash;
         }
 
-        public bool Equals(Size size)
+        public bool Equals(Size obj)
         {
-            return size.Width == Width && size.Height == Height;
+            return obj.Width == Width && obj.Height == Height;
         }
 
         public override string ToString()
@@ -51,7 +51,7 @@ namespace FM.LiveSwitch.Mux
             return $"{Width}x{Height}";
         }
 
-        public static Size Empty = new Size(0, 0);
+        public static Size Empty { get; } = new Size(0, 0);
 
         public static bool operator ==(Size size1, Size size2)
         {

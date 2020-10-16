@@ -52,7 +52,7 @@ namespace FM.LiveSwitch.Mux
             get { return _CompletedSessions.ToArray(); }
         }
 
-        private List<Session> _CompletedSessions = new List<Session>();
+        private readonly List<Session> _CompletedSessions = new List<Session>();
 
         public Channel(string id, string applicationId)
         {

@@ -3,15 +3,15 @@ using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
-    public class FileUtility
+    public static class FileUtility
     {
         public static async Task<string> GetContents(string path)
         {
-            using (var file = await GetStream(path, FileAccess.Read))
+            using (var file = await GetStream(path, FileAccess.Read).ConfigureAwait(false))
             {
                 using (var reader = new StreamReader(file))
                 {
-                    return await reader.ReadToEndAsync();
+                    return await reader.ReadToEndAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -38,7 +38,7 @@ namespace FM.LiveSwitch.Mux
                         throw;
                     }
 
-                    await Task.Delay(delay);
+                    await Task.Delay(delay).ConfigureAwait(false);
 
                     // retry immediately the first time, but 200ms thereafter
                     delay = GetFileStreamRetryDelay;

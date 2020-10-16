@@ -5,8 +5,8 @@ namespace FM.LiveSwitch.Mux
 {
     public struct Point : IEquatable<Point>
     {
-        public int X;
-        public int Y;
+        public int X { get; }
+        public int Y { get; }
 
         public Point(int x, int y)
         {
@@ -19,9 +19,9 @@ namespace FM.LiveSwitch.Mux
             return new Point(X, Y);
         }
 
-        public bool Equals(Point point)
+        public bool Equals(Point obj)
         {
-            return point.X == X && point.Y == Y;
+            return obj.X == X && obj.Y == Y;
         }
 
         public override string ToString()
@@ -39,7 +39,7 @@ namespace FM.LiveSwitch.Mux
             return new Point(point1.X - point2.X, point1.Y - point2.Y);
         }
 
-        public static Point Zero = new Point(0, 0);
+        public static Point Zero { get; } = new Point(0, 0);
 
         public dynamic ToDynamic()
         {

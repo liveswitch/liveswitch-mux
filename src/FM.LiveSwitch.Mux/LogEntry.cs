@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
     public class LogEntry
     {
-        public const string TypeStartRecording = "startRecording";
-        public const string TypeStopRecording = "stopRecording";
-        public const string TypeUpdateRecording = "updateRecording";
+        public static readonly string TypeStartRecording = "startRecording";
+        public static readonly string TypeStopRecording = "stopRecording";
+        public static readonly string TypeUpdateRecording = "updateRecording";
 
         public string Type { get; set; }
 

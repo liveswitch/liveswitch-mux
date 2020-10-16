@@ -120,7 +120,7 @@ namespace FM.LiveSwitch.Mux
 
         private const int MAX_AMIX_INPUTS = 32;
 
-        private int AudioMixIndex = 0;
+        private int AudioMixIndex;
 
         public string[] GetAudioMixFilterChains(IEnumerable<string> inputTags, out string outputTag)
         {
@@ -180,7 +180,7 @@ namespace FM.LiveSwitch.Mux
             // process audio
             if (HasAudio && !options.NoAudio)
             {
-                if (!await MuxAudio(options))
+                if (!await MuxAudio(options).ConfigureAwait(false))
                 {
                     return false;
                 }
@@ -190,7 +190,7 @@ namespace FM.LiveSwitch.Mux
             // process video
             if (HasVideo && !options.NoVideo)
             {
-                if (!await MuxVideo(options))
+                if (!await MuxVideo(options).ConfigureAwait(false))
                 {
                     return false;
                 }
@@ -231,7 +231,7 @@ namespace FM.LiveSwitch.Mux
             }
 
             // run it
-            await FFmpeg(string.Join(" ", arguments));
+            await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
             return FileExists;
         }
@@ -363,7 +363,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // run it
-                await FFmpeg(string.Join(" ", arguments));
+                await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
                 return AudioFileExists;
             }
@@ -484,7 +484,7 @@ namespace FM.LiveSwitch.Mux
                 else
                 {
                     recording.VideoCodec = await GetVideoCodec(recording);
-                    recording.SetVideoSegments(await ParseVideoSegments(recording));
+                    recording.SetVideoSegments(await ParseVideoSegments(recording).ConfigureAwait(false));
                 }
             }
 
@@ -553,7 +553,7 @@ namespace FM.LiveSwitch.Mux
                     });
                 }
 
-                var chunk = (VideoChunk)null;
+                VideoChunk chunk;
                 if (chunks.Count == 0)
                 {
                     chunk = VideoChunk.First(@event);
@@ -672,7 +672,7 @@ namespace FM.LiveSwitch.Mux
                     }
 
                     // run it
-                    await FFmpeg(string.Join(" ", arguments));
+                    await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -725,7 +725,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // run it
-                await FFmpeg(string.Join(" ", arguments));
+                await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
                 return VideoFileExists;
             }
@@ -828,7 +828,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<string> GetAudioCodec(Recording recording)
         {
-            var lines = await FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}");
+            var lines = await FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}").ConfigureAwait(false);
             if (lines.Length == 0)
             {
                 return null;
@@ -838,7 +838,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<string> GetVideoCodec(Recording recording)
         {
-            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}");
+            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}").ConfigureAwait(false);
             if (lines.Length == 0)
             {
                 return null;
@@ -848,7 +848,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<VideoSegment[]> ParseVideoSegments(Recording recording)
         {
-            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_frames -show_entries frame=pkt_pts_time,width,height -print_format csv=item_sep=|:nokey=1:print_section=0 {recording.VideoFile}");
+            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_frames -show_entries frame=pkt_pts_time,width,height -print_format csv=item_sep=|:nokey=1:print_section=0 {recording.VideoFile}").ConfigureAwait(false);
 
             var currentSize = Size.Empty;
             var segments = new List<VideoSegment>();

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
-    public class LogUtility
+    public static class LogUtility
     {
         public static async Task<LogEntry[]> GetEntries(string filePath)
         {

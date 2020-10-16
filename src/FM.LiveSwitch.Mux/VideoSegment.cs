@@ -44,7 +44,12 @@ namespace FM.LiveSwitch.Mux
             };
         }
 
-        public VideoSegment Clone(RecordingUpdate update = null)
+        public VideoSegment Clone()
+        {
+            return Clone(null);
+        }
+
+        public VideoSegment Clone(RecordingUpdate update)
         {
             return new VideoSegment
             {

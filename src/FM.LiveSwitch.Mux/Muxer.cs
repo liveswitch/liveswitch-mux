@@ -82,11 +82,11 @@ namespace FM.LiveSwitch.Mux
                 // CommandLine.Parser returns empty strings when there is a space after the separator.
                 // Also, CommandLine.Parser leaves the separator in the string sometimes.
                 Options.InputFileNames = string.Join(MuxOptions.ArgSeparator, Options.InputFileNames)
-                                            .Split(MuxOptions.ArgSeparator)
-                                            .Where(fileName => fileName.Length > 0);
+                    .Split(MuxOptions.ArgSeparator)
+                    .Where(fileName => fileName.Length > 0);
             }
 
-            var logEntries = await GetLogEntries(Options);
+            var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
             if (logEntries == null)
             {
                 Console.Error.WriteLine($"No recordings found. Log file(s) not found.");
@@ -240,7 +240,7 @@ namespace FM.LiveSwitch.Mux
                         {
                             options.Strategy = StrategyType.Flat;
                         }
-                        return await GetLogEntries(options);
+                        return await GetLogEntries(options).ConfigureAwait(false);
                     }
                 case StrategyType.Hierarchical:
                     {

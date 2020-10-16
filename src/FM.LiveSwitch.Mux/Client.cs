@@ -66,7 +66,7 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public bool Completed { get { return ActiveConnections.Length == 0 && CompletedConnections.Length > 0; } }
 
-        private Dictionary<string, Connection> _Connections = new Dictionary<string, Connection>();
+        private readonly Dictionary<string, Connection> _Connections = new Dictionary<string, Connection>();
 
         public Client(string id, string deviceId, string userId, string channelId, string applicationId)
         {
