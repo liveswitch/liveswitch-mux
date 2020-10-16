@@ -121,7 +121,7 @@ namespace FM.LiveSwitch.Mux
 
         private int AudioMixIndex;
 
-        public string[] GetAudioMixFilterChains(IEnumerable<string> inputTags, out string outputTag)
+        private string[] GetAudioMixFilterChains(IEnumerable<string> inputTags, out string outputTag)
         {
             AudioMixIndex = 0;
             return DoGetAudioMixFilterChains(inputTags, out outputTag);
@@ -424,24 +424,29 @@ namespace FM.LiveSwitch.Mux
                 var recordingTag = recording.AudioTag;
                 var resampleTag = $"[aresample_{recording.AudioIndex}]";
                 var delayTag = $"[adelay_{recording.AudioIndex}]";
-                var trimTag = $"[atrim_{recording.AudioIndex}]";
+                var trimFirstTag = $"[atrimfirst_{recording.AudioIndex}]";
+                var trimLastTag = $"[atrimlast_{recording.AudioIndex}]";
 
                 // resample
-                filterChains.Add(recording.GetAudioResampleFilterChain(recordingTag, recordingTag = resampleTag));
+                filterChains.Add(recording.GetAudioResampleFilterChain(recordingTag, resampleTag));
+                recordingTag = resampleTag;
 
                 // delay
-                filterChains.Add(recording.GetAudioDelayFilterChain(StartTimestamp, recordingTag, recordingTag = delayTag));
+                filterChains.Add(recording.GetAudioDelayFilterChain(StartTimestamp, recordingTag, delayTag));
+                recordingTag = delayTag;
 
                 if (trimFirst > 0)
                 {
                     // atrim start - removes the beginning of the audio of the first track.
-                    filterChains.Add(recording.GetAudioStartTrimFilterChain(recordingTag, recordingTag = trimTag, trimFirst));
+                    filterChains.Add(recording.GetAudioStartTrimFilterChain(recordingTag, trimFirstTag, trimFirst));
+                    recordingTag = trimFirstTag;
                 }
 
                 if (trimLast > 0 && recording.StopTimestamp == StopTimestamp)
                 {
                     // atrim end - removes the ending of the audio for the last track.
-                    filterChains.Add(recording.GetAudioEndTrimFilterChain(recordingTag, recordingTag = trimTag, trimLast));
+                    filterChains.Add(recording.GetAudioEndTrimFilterChain(recordingTag, trimLastTag, trimLast));
+                    recordingTag = trimLastTag;
                 }
 
                 // keep track of tags
@@ -801,22 +806,27 @@ namespace FM.LiveSwitch.Mux
                     var overlayTag = $"[voverlay_{chunkIndex}_{segmentIndex}]";
 
                     // fps
-                    chunkFilterChains.Add(chunk.GetFpsFilterChain(options.FrameRate, segmentTag, segmentTag = fpsTag));
+                    chunkFilterChains.Add(chunk.GetFpsFilterChain(options.FrameRate, segmentTag, fpsTag));
+                    segmentTag = fpsTag;
 
                     // trim
-                    chunkFilterChains.Add(chunk.GetTrimFilterChain(recording, segmentTag, segmentTag = trimTag));
+                    chunkFilterChains.Add(chunk.GetTrimFilterChain(recording, segmentTag, trimTag));
+                    segmentTag = trimTag;
 
                     // then scale
-                    chunkFilterChains.Add(view.GetSizeFilterChain(segmentTag, segmentTag = scaleTag));
+                    chunkFilterChains.Add(view.GetSizeFilterChain(segmentTag, scaleTag));
+                    segmentTag = scaleTag;
 
                     // then crop (optional)
                     if (options.Crop)
                     {
-                        chunkFilterChains.Add(view.GetCropFilterChain(segmentTag, segmentTag = cropTag));
+                        chunkFilterChains.Add(view.GetCropFilterChain(segmentTag, cropTag));
+                        segmentTag = cropTag;
                     }
 
                     // then overlay
-                    chunkFilterChains.Add(view.GetOverlayChain(options.Crop, chunkTag, segmentTag, chunkTag = overlayTag));
+                    chunkFilterChains.Add(view.GetOverlayChain(options.Crop, chunkTag, segmentTag, overlayTag));
+                    chunkTag = overlayTag;
                 }
 
                 filterChainsAndTags.Add((string.Join(";", chunkFilterChains), chunkTag));
