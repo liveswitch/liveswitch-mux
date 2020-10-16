@@ -59,31 +59,32 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
-            if (Options.Margin < MuxOptions.MinMargin)
+            var minimumMargin = 0;
+            if (Options.Margin < minimumMargin)
             {
-                Console.Error.WriteLine($"Margin updated from {Options.Margin} to the minimum value of {MuxOptions.MinMargin}.");
-                Options.Margin = MuxOptions.MinMargin;
+                Console.Error.WriteLine($"Margin updated from {Options.Margin} to the minimum value of {minimumMargin}.");
+                Options.Margin = minimumMargin;
             }
 
-            if (Options.Width < MuxOptions.MinWidth)
+            var minWidth = 160;
+            if (Options.Width < minWidth)
             {
-                Console.Error.WriteLine($"Width updated from {Options.Width} to the minimum value of {MuxOptions.MinWidth}.");
-                Options.Width = MuxOptions.MinWidth;
+                Console.Error.WriteLine($"Width updated from {Options.Width} to the minimum value of {minWidth}.");
+                Options.Width = minWidth;
             }
 
-            if (Options.Height < MuxOptions.MinHeight)
+            var minHeight = 120;
+            if (Options.Height < minHeight)
             {
-                Console.Error.WriteLine($"Height updated from {Options.Height} to the minimum value of {MuxOptions.MinHeight}.");
-                Options.Height = MuxOptions.MinHeight;
+                Console.Error.WriteLine($"Height updated from {Options.Height} to the minimum value of {minHeight}.");
+                Options.Height = minHeight;
             }
 
             if (Options.InputFileNames.Count() > 0)
             {
                 // CommandLine.Parser returns empty strings when there is a space after the separator.
                 // Also, CommandLine.Parser leaves the separator in the string sometimes.
-                Options.InputFileNames = string.Join(MuxOptions.ArgSeparator, Options.InputFileNames)
-                    .Split(MuxOptions.ArgSeparator)
-                    .Where(fileName => fileName.Length > 0);
+                Options.InputFileNames = string.Join(',', Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
             }
 
             var logEntries = await GetLogEntries(Options).ConfigureAwait(false);

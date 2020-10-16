@@ -6,11 +6,6 @@ namespace FM.LiveSwitch.Mux
 {
     public class MuxOptions
     {
-        public static readonly int MinMargin = 0;
-        public static readonly int MinWidth = 160;
-        public static readonly int MinHeight = 120;
-        public static readonly char ArgSeparator = ',';
-
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]
         public string InputPath { get; set; }
 
