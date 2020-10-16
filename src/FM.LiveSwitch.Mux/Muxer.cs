@@ -222,6 +222,8 @@ namespace FM.LiveSwitch.Mux
                         return true;
                     case ConsoleKey.N:
                         return false;
+                    default:
+                        continue;
                 }
             }
         }
