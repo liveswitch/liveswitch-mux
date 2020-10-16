@@ -83,7 +83,9 @@ lsmux [options]
 
   --no-video            Do not mux video.
 
-  --move-inputs         Move input files to the output path.
+  --move-inputs         Move input files to the move path.
+
+  --move-path           The destination path for moved files. Defaults to the output path.
 
   --delete-inputs       Delete input files from the input path.
 
@@ -116,7 +118,7 @@ lsmux [options]
   --session-id          The session ID to mux, obtained from a dry-run.
 
   --input-filter        A regular expression used to filter the input file list.
-  
+
   --input-file-names    A comma separated list of input files to target instead of scanning the
                         directory.
 ```

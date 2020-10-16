@@ -38,6 +38,12 @@ namespace FM.LiveSwitch.Mux
                 Console.Error.WriteLine($"Temp path defaulting to: {Options.TempPath}");
             }
 
+            if (Options.MoveInputs && Options.MovePath == null)
+            {
+                Options.MovePath = Options.OutputPath;
+                Console.Error.WriteLine($"Move path defaulting to: {Options.MovePath}");
+            }
+
             if (Options.Layout == LayoutType.JS)
             {
                 if (Options.JavaScriptFile == null)
@@ -133,7 +139,7 @@ namespace FM.LiveSwitch.Mux
 
                             if (Options.MoveInputs)
                             {
-                                if (Options.InputPath != Options.OutputPath)
+                                if (Options.InputPath != Options.MovePath)
                                 {
                                     foreach (var recording in session.CompletedRecordings)
                                     {
@@ -293,12 +299,12 @@ namespace FM.LiveSwitch.Mux
 
         private string Move(string file, MuxOptions options)
         {
-            var newFile = file.Replace(options.InputPath, options.OutputPath, StringComparison.InvariantCultureIgnoreCase);
+            var newFile = file.Replace(options.InputPath, options.MovePath, StringComparison.InvariantCultureIgnoreCase);
 
-            var outputPath = Path.GetDirectoryName(newFile);
-            if (!Directory.Exists(outputPath))
+            var movePath = Path.GetDirectoryName(newFile);
+            if (!Directory.Exists(movePath))
             {
-                Directory.CreateDirectory(outputPath);
+                Directory.CreateDirectory(movePath);
             }
 
             try
