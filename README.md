@@ -1,6 +1,6 @@
 # LiveSwitch Mux CLI
 
-![build](https://github.com/liveswitch/liveswitch-mux/workflows/build/badge.svg) ![license](https://img.shields.io/badge/License-MIT-yellow.svg) ![release](https://img.shields.io/github/v/release/liveswitch/liveswitch-mux.svg)
+![build](https://github.com/liveswitch/liveswitch-mux/workflows/build/badge.svg) ![code quality](https://app.codacy.com/project/badge/Grade/9a3b33b63b254b118fcdd80e807cba8c) ![license](https://img.shields.io/badge/License-MIT-yellow.svg) ![release](https://img.shields.io/github/v/release/liveswitch/liveswitch-mux.svg)
 
 The LiveSwitch Mux CLI combines your individual LiveSwitch Media Server recordings together into single files - one per session.
 
