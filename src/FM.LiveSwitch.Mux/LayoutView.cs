@@ -41,22 +41,22 @@ namespace FM.LiveSwitch.Mux
         {
             if (Bounds.Size.Width == 0)
             {
-                throw new Exception("Cannot scale bounds with zero width.");
+                throw new ScaleBoundsException("Cannot scale bounds with zero width.");
             }
 
             if (Bounds.Size.Height == 0)
             {
-                throw new Exception("Cannot scale bounds with zero height.");
+                throw new ScaleBoundsException("Cannot scale bounds with zero height.");
             }
 
             if (Frame.Size.Width == 0)
             {
-                throw new Exception("Cannot scale bounds while frame has zero width.");
+                throw new ScaleBoundsException("Cannot scale bounds while frame has zero width.");
             }
 
             if (Frame.Size.Height == 0)
             {
-                throw new Exception("Cannot scale bounds while frame has zero height.");
+                throw new ScaleBoundsException("Cannot scale bounds while frame has zero height.");
             }
 
             var outerRatio = (double)Frame.Size.Width / Frame.Size.Height;

@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -257,7 +256,7 @@ namespace FM.LiveSwitch.Mux
                 case StrategyType.Flat:
                     return options.OutputPath;
                 default:
-                    throw new Exception("Unrecognized strategy.");
+                    throw new InvalidOperationException($"Unexpected strategy type '{options.Strategy}'.");
             }
         }
 
@@ -270,7 +269,7 @@ namespace FM.LiveSwitch.Mux
                 case StrategyType.Flat:
                     return options.TempPath;
                 default:
-                    throw new Exception("Unrecognized strategy.");
+                    throw new InvalidOperationException($"Unexpected strategy type '{options.Strategy}'.");
             }
         }
 
@@ -292,7 +291,7 @@ namespace FM.LiveSwitch.Mux
 
                 if (!options.DryRun)
                 {
-                    recording.AudioCodec = await GetAudioCodec(recording);
+                    recording.AudioCodec = await GetAudioCodec(recording).ConfigureAwait(false);
                 }
             }
 
@@ -483,7 +482,7 @@ namespace FM.LiveSwitch.Mux
                 }
                 else
                 {
-                    recording.VideoCodec = await GetVideoCodec(recording);
+                    recording.VideoCodec = await GetVideoCodec(recording).ConfigureAwait(false);
                     recording.SetVideoSegments(await ParseVideoSegments(recording).ConfigureAwait(false));
                 }
             }
@@ -964,9 +963,9 @@ namespace FM.LiveSwitch.Mux
 
                 return lines.ToArray();
             }
-            catch (Win32Exception wex)
+            catch (Exception ex)
             {
-                throw new Exception($"Could not start {command}. Is ffmpeg installed and available on your PATH?", wex);
+                throw new ExecuteException($"Could not start {command}. Is ffmpeg installed and available on your PATH?", ex);
             }
         }
 

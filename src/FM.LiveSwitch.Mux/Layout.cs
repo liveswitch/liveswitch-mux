@@ -51,7 +51,7 @@ namespace FM.LiveSwitch.Mux
                 case LayoutType.JS:
                     return CalculateJSFrames(inputs, output, javascriptFile);
                 default:
-                    throw new Exception("Unrecognized layout.");
+                    throw new InvalidOperationException($"Unexpected layout type '{type}'.");
             }
         }
 
@@ -117,16 +117,16 @@ namespace FM.LiveSwitch.Mux
             var result = engine.Invoke("layout", inputs.Select(x => x.ToDynamic()).ToArray(), output.ToDynamic());
             if (result == null)
             {
-                throw new Exception("Missing return value from JS 'layout' function.");
+                throw new JavaScriptLayoutException("Missing return value from JS 'layout' function.");
             }
             var dynamicFrames = result.ToObject() as dynamic[];
             if (dynamicFrames == null)
             {
-                throw new Exception("Unexpected return value from JS 'layout' function.");
+                throw new JavaScriptLayoutException("Unexpected return value from JS 'layout' function.");
             }
             if (dynamicFrames.Length != inputs.Length)
             {
-                throw new Exception($"Unexpected array length ({dynamicFrames.Length}, expected {inputs.Length}) in return value from JS 'calculate' function.");
+                throw new JavaScriptLayoutException($"Unexpected array length ({dynamicFrames.Length}, expected {inputs.Length}) in return value from JS 'calculate' function.");
             }
             var frames = new Rectangle[dynamicFrames.Length];
             for (var i = 0; i < dynamicFrames.Length; i++)
@@ -134,7 +134,7 @@ namespace FM.LiveSwitch.Mux
                 var frame = Rectangle.FromDynamic(dynamicFrames[i]) as Rectangle?;
                 if (frame == null)
                 {
-                    throw new Exception($"Unexpected array value at index {i} in return value from JS 'layout' function.");
+                    throw new JavaScriptLayoutException($"Unexpected array value at index {i} in return value from JS 'layout' function.");
                 }
                 frames[i] = frame.Value;
             }
