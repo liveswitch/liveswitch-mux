@@ -6,11 +6,6 @@ namespace FM.LiveSwitch.Mux
 {
     public class MuxOptions
     {
-        public const int MinMargin = 0;
-        public const int MinWidth = 160;
-        public const int MinHeight = 120;
-        public const char ArgSeparator = ',';
-
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]
         public string InputPath { get; set; }
 
@@ -110,7 +105,7 @@ namespace FM.LiveSwitch.Mux
         [Option("input-filter", HelpText = "A regular expression used to filter the input file list.")]
         public string InputFilter { get; set; }
 
-        [Option("input-file-names", Separator = ArgSeparator, HelpText = "A comma separated list of input files to target instead of scanning the directory.")]
+        [Option("input-file-names", Separator = ',', HelpText = "A comma separated list of input files to target instead of scanning the directory.")]
         public IEnumerable<string> InputFileNames { get; set; }
     }
 }

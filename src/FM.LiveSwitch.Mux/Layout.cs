@@ -67,11 +67,11 @@ namespace FM.LiveSwitch.Mux
             // don't scale the margin
             if (horizontal)
             {
-                layoutFrameSize.Width -= layoutMarginSum;
+                layoutFrameSize = new Size(layoutFrameSize.Width - layoutMarginSum, layoutFrameSize.Height);
             }
             else
             {
-                layoutFrameSize.Height -= layoutMarginSum;
+                layoutFrameSize = new Size(layoutFrameSize.Width, layoutFrameSize.Height - layoutMarginSum);
             }
 
             var layoutFrame = new Rectangle(Point.Zero, layoutFrameSize);

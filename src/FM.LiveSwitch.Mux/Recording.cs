@@ -147,9 +147,14 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public RecordingUpdate[] Updates { get { return _Updates.ToArray(); } }
 
-        private List<RecordingUpdate> _Updates = new List<RecordingUpdate>();
+        private readonly List<RecordingUpdate> _Updates = new List<RecordingUpdate>();
 
-        public void Update(LogEntry logEntry, bool final = false)
+        public void Update(LogEntry logEntry)
+        {
+            Update(logEntry, false);
+        }
+
+        public void Update(LogEntry logEntry, bool final)
         {
             var data = logEntry.Data;
             if (data != null)
@@ -174,7 +179,12 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
-        public void SetVideoSegments(VideoSegment[] parsedVideoSegments = null)
+        public void SetVideoSegments()
+        {
+            SetVideoSegments(null);
+        }
+
+        public void SetVideoSegments(VideoSegment[] parsedVideoSegments)
         {
             var videoSegments = new List<VideoSegment>();
             if (parsedVideoSegments == null || parsedVideoSegments.Length == 0)

@@ -11,7 +11,7 @@ namespace FM.LiveSwitch.Mux
             get { return _Applications.Values.ToArray(); }
         }
 
-        private Dictionary<string, Application> _Applications = new Dictionary<string, Application>();
+        private readonly Dictionary<string, Application> _Applications = new Dictionary<string, Application>();
 
         public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {

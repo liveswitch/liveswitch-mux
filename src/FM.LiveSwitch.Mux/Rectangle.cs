@@ -5,8 +5,8 @@ namespace FM.LiveSwitch.Mux
 {
     public struct Rectangle : IEquatable<Rectangle>
     {
-        public Point Origin;
-        public Size Size;
+        public Point Origin { get; }
+        public Size Size { get; }
 
         public Rectangle(Point origin, Size size)
         {
@@ -19,9 +19,9 @@ namespace FM.LiveSwitch.Mux
             return new Rectangle(Origin.Clone(), Size.Clone());
         }
 
-        public bool Equals(Rectangle rectangle)
+        public bool Equals(Rectangle obj)
         {
-            return rectangle.Origin.Equals(Origin) && rectangle.Size.Equals(Size);
+            return obj.Origin.Equals(Origin) && obj.Size.Equals(Size);
         }
 
         public override string ToString()
@@ -29,7 +29,7 @@ namespace FM.LiveSwitch.Mux
             return $"{Origin}:{Size}";
         }
 
-        public static Rectangle Empty = new Rectangle(Point.Zero, Size.Empty);
+        public static Rectangle Empty { get; } = new Rectangle(Point.Zero, Size.Empty);
 
         public dynamic ToDynamic()
         {
