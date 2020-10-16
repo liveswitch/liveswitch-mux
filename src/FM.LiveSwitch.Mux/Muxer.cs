@@ -294,7 +294,7 @@ namespace FM.LiveSwitch.Mux
                         return logEntries.ToArray();
                     }
                 default:
-                    throw new Exception("Unrecognized strategy.");
+                    throw new InvalidOperationException($"Unexpected strategy type '{options.Strategy}'.");
             }
         }
 

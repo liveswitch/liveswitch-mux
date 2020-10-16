@@ -19,9 +19,9 @@ namespace FM.LiveSwitch.Mux
             return new Point(X, Y);
         }
 
-        public bool Equals(Point obj)
+        public bool Equals(Point other)
         {
-            return obj.X == X && obj.Y == Y;
+            return other.X == X && other.Y == Y;
         }
 
         public override string ToString()

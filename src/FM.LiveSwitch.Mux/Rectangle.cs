@@ -19,9 +19,9 @@ namespace FM.LiveSwitch.Mux
             return new Rectangle(Origin.Clone(), Size.Clone());
         }
 
-        public bool Equals(Rectangle obj)
+        public bool Equals(Rectangle other)
         {
-            return obj.Origin.Equals(Origin) && obj.Size.Equals(Size);
+            return other.Origin.Equals(Origin) && other.Size.Equals(Size);
         }
 
         public override string ToString()

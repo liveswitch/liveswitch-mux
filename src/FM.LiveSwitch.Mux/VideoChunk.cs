@@ -47,7 +47,7 @@ namespace FM.LiveSwitch.Mux
         {
             if (@event.Type != VideoEventType.Add)
             {
-                throw new Exception("Unexpected video event type.");
+                throw new InvalidOperationException($"Unexpected video event type '{@event.Type}'.");
             }
 
             return new VideoChunk
@@ -87,7 +87,7 @@ namespace FM.LiveSwitch.Mux
                         StartTimestamp = @event.Timestamp
                     };
                 default:
-                    throw new Exception("Unrecognized video event type.");
+                    throw new InvalidOperationException($"Unexpected video event type '{@event.Type}'.");
             }
         }
     }

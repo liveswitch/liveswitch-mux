@@ -41,9 +41,9 @@ namespace FM.LiveSwitch.Mux
             return hash;
         }
 
-        public bool Equals(Size obj)
+        public bool Equals(Size other)
         {
-            return obj.Width == Width && obj.Height == Height;
+            return other.Width == Width && other.Height == Height;
         }
 
         public override string ToString()
