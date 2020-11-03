@@ -17,4 +17,10 @@
     <ProjectReference Include="..\FM.LiveSwitch.Mux\FM.LiveSwitch.Mux.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="layout.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
