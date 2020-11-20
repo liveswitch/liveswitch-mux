@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +13,9 @@ namespace FM.LiveSwitch.Mux
 {
     public class Session
     {
+        [JsonIgnore]
+        public ILoggerFactory LoggerFactory { get; private set; }
+
         [JsonIgnore]
         public string FileName { get; set; }
 
@@ -159,11 +163,16 @@ namespace FM.LiveSwitch.Mux
             return filterChains.ToArray();
         }
 
-        public Session(string channelId, string applicationId, Client[] completedClients)
+        private readonly ILogger _Logger;
+
+        public Session(string channelId, string applicationId, Client[] completedClients, ILoggerFactory loggerFactory)
         {
             ChannelId = channelId;
             ApplicationId = applicationId;
             CompletedClients = completedClients.OrderBy(x => x.StartTimestamp).ToArray();
+            LoggerFactory = loggerFactory;
+
+            _Logger = loggerFactory.CreateLogger(nameof(Session));
         }
 
         public async Task<bool> Mux(MuxOptions options)
@@ -198,7 +207,7 @@ namespace FM.LiveSwitch.Mux
 
             if (inputArguments.Count == 0)
             {
-                Console.Error.WriteLine("No media files found.");
+                _Logger.LogInformation("No media files found.");
                 return false;
             }
 
@@ -338,8 +347,8 @@ namespace FM.LiveSwitch.Mux
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"Could not create temporary filter chain file '{filterChainFileName}': {ex}");
-                        Console.Error.WriteLine($"Filter chain will be passed as command-line argument.");
+                        _Logger.LogError(ex, "Could not create temporary filter chain file '{FilterChainFileName}'.", filterChainFileName);
+                        _Logger.LogWarning($"Filter chain will be passed as command-line argument.");
                         arguments.Add($@"-filter_complex ""{string.Join(";", filterChains)}""");
                     }
                 }
@@ -377,7 +386,7 @@ namespace FM.LiveSwitch.Mux
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Could not delete temporary filter chain file '{filterChainFileName}': {ex}");
+                    _Logger.LogError(ex, "Could not delete temporary filter chain file '{FilterChainFileName}'.", filterChainFileName);
                 }
             }
         }
@@ -466,7 +475,7 @@ namespace FM.LiveSwitch.Mux
         {
             if (options.TrimFirst || options.TrimLast)
             {
-                Console.Error.WriteLine("--trim-first and --trim-last are not supported for video.");
+                _Logger.LogError("--trim-first and --trim-last are not supported for video.");
                 return false;
             }
 
@@ -497,7 +506,7 @@ namespace FM.LiveSwitch.Mux
             if (recordings.Length == 0)
             {
                 VideoFile = null;
-                Console.Error.WriteLine("Session has no video segments.");
+                _Logger.LogInformation("Session has no video segments.");
                 return false;
             }
 
@@ -653,8 +662,8 @@ namespace FM.LiveSwitch.Mux
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"Could not create temporary chunk filter chain file '{chunkFilterChainFileName}': {ex}");
-                        Console.Error.WriteLine($"Chunk filter chain will be passed as command-line argument.");
+                        _Logger.LogError(ex, "Could not create temporary chunk filter chain file '{ChunkFilterChainFileName}'.", chunkFilterChainFileName);
+                        _Logger.LogWarning($"Chunk filter chain will be passed as command-line argument.");
                         arguments.Add($@"-filter_complex ""{filterChain}""");
                     }
                     arguments.Add($@"-map ""{filterTag}""");
@@ -689,7 +698,7 @@ namespace FM.LiveSwitch.Mux
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"Could not delete temporary chunk filter chain file '{chunkFilterChainFileName}': {ex}");
+                        _Logger.LogError(ex, "Could not delete temporary chunk filter chain file '{ChunkFilterChainFileName}'.", chunkFilterChainFileName);
                     }
                 }
             }
@@ -744,7 +753,7 @@ namespace FM.LiveSwitch.Mux
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Could not delete temporary chunk list file '{chunkListFile}': {ex}");
+                    _Logger.LogError(ex, "Could not delete temporary chunk list file '{ChunkListFile}'.", chunkListFile);
                 }
 
                 foreach (var chunkFile in chunkFiles)
@@ -758,7 +767,7 @@ namespace FM.LiveSwitch.Mux
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"Could not delete temporary chunk file '{chunkFile}': {ex}");
+                        _Logger.LogError(ex, "Could not delete temporary chunk file '{ChunkFile}'.", chunkFile);
                     }
                 }
             }
@@ -896,12 +905,12 @@ namespace FM.LiveSwitch.Mux
                     }
                     else
                     {
-                        Console.Error.WriteLine($"Could not parse ffprobe output: {line}");
+                        _Logger.LogError("Could not parse ffprobe output: {Line}", line);
                     }
                 }
                 else
                 {
-                    Console.Error.WriteLine($"Unexpected ffprobe output: {line}");
+                    _Logger.LogError("Unexpected ffprobe output: {Line}", line);
                 }
             }
 
@@ -926,6 +935,8 @@ namespace FM.LiveSwitch.Mux
 
         private async Task<string[]> Execute(string command, string arguments, bool useStandardError, bool logOutput)
         {
+            var logger = LoggerFactory.CreateLogger(command);
+
             // prep the process arguments
             var processStartInfo = new ProcessStartInfo
             {
@@ -944,8 +955,7 @@ namespace FM.LiveSwitch.Mux
             }
 
             // log what we're about to do
-            Console.Error.WriteLine();
-            Console.Error.WriteLine($"{processStartInfo.FileName} {processStartInfo.Arguments}");
+            logger.LogInformation(arguments);
 
             try
             {
@@ -962,7 +972,7 @@ namespace FM.LiveSwitch.Mux
                     {
                         if (logOutput)
                         {
-                            Console.Error.WriteLine(line);
+                            logger.LogInformation(line);
                         }
                         lines.Add(line);
                     }

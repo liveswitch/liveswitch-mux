@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using CommandLine.Text;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -11,6 +12,15 @@ namespace FM.LiveSwitch.Mux
     {
         static void Main(string[] args)
         {
+            using var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole(options =>
+                {
+                    // reserve stdout for programmatic use
+                    options.LogToStandardErrorThreshold = LogLevel.Trace;
+                });
+            });
+
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,
@@ -20,32 +30,31 @@ namespace FM.LiveSwitch.Mux
                 }
             };
 
-            using (var parser = new Parser((settings) =>
+            using var parser = new Parser((settings) =>
             {
                 settings.CaseInsensitiveEnumValues = true;
                 settings.HelpWriter = null;
-            }))
+            });
+
+            var result = parser.ParseArguments<MuxOptions>(args);
+
+            result.WithParsed(options =>
             {
-                var result = parser.ParseArguments<MuxOptions>(args);
-
-                result.WithParsed(options =>
+                Task.Run(async () =>
                 {
-                    Task.Run(async () =>
-                    {
-                        await new Muxer(options).Run();
-                    }).GetAwaiter().GetResult();
-                });
+                    await new Muxer(options, loggerFactory).Run();
+                }).GetAwaiter().GetResult();
+            });
 
-                result.WithNotParsed(errors =>
-                {
-                    var helpText = HelpText.AutoBuild(result, 96);
-                    helpText.Copyright = "Copyright (C) 2019 Frozen Mountain Software Ltd.";
-                    helpText.AddEnumValuesToHelpText = true;
-                    helpText.AddOptions(result);
-                    Console.Error.Write(helpText);
-                    Environment.Exit(1);
-                });
-            }
+            result.WithNotParsed(errors =>
+            {
+                var helpText = HelpText.AutoBuild(result, 96);
+                helpText.Copyright = "Copyright (C) 2019 Frozen Mountain Software Ltd.";
+                helpText.AddEnumValuesToHelpText = true;
+                helpText.AddOptions(result);
+                Console.Error.Write(helpText);
+                Environment.Exit(1);
+            });
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -11,11 +12,18 @@ namespace FM.LiveSwitch.Mux
     {
         public MuxOptions Options { get; private set; }
 
+        public ILoggerFactory LoggerFactory { get; private set; }
+
+        private readonly ILogger _Logger;
+
         const string HierarchicalLogFileName = "log.json";
 
-        public Muxer(MuxOptions options)
+        public Muxer(MuxOptions options, ILoggerFactory loggerFactory)
         {
             Options = options;
+            LoggerFactory = loggerFactory;
+
+            _Logger = LoggerFactory.CreateLogger(nameof(Muxer));
         }
 
         public async Task<bool> Run()
@@ -23,25 +31,25 @@ namespace FM.LiveSwitch.Mux
             if (Options.InputPath == null)
             {
                 Options.InputPath = Environment.CurrentDirectory;
-                Console.Error.WriteLine($"Input path defaulting to: {Options.InputPath}");
+                _Logger.LogInformation("Input path defaulting to: {InputPath}", Options.InputPath);
             }
 
             if (Options.OutputPath == null)
             {
                 Options.OutputPath = Options.InputPath;
-                Console.Error.WriteLine($"Output path defaulting to: {Options.OutputPath}");
+                _Logger.LogInformation("Output path defaulting to: {OutputPath}", Options.OutputPath);
             }
 
             if (Options.TempPath == null)
             {
                 Options.TempPath = Options.InputPath;
-                Console.Error.WriteLine($"Temp path defaulting to: {Options.TempPath}");
+                _Logger.LogInformation("Temp path defaulting to: {TempPath}", Options.TempPath);
             }
 
             if (Options.MoveInputs && Options.MovePath == null)
             {
                 Options.MovePath = Options.OutputPath;
-                Console.Error.WriteLine($"Move path defaulting to: {Options.MovePath}");
+                _Logger.LogInformation("Move path defaulting to: {MovePath}", Options.MovePath);
             }
 
             if (Options.Layout == LayoutType.JS)
@@ -49,34 +57,34 @@ namespace FM.LiveSwitch.Mux
                 if (Options.JavaScriptFile == null)
                 {
                     Options.JavaScriptFile = Path.Combine(Options.InputPath, "layout.js");
-                    Console.Error.WriteLine($"JavaScript file defaulting to: {Options.JavaScriptFile}");
+                    _Logger.LogInformation("JavaScript file defaulting to: {JavaScriptFile}", Options.JavaScriptFile);
                 }
 
                 if (!FileUtility.Exists(Options.JavaScriptFile))
                 {
-                    Console.Error.WriteLine($"Cannot find {Options.JavaScriptFile}.");
+                    _Logger.LogError("Cannot find {JavaScriptFile}.", Options.JavaScriptFile);
                     return false;
                 }
             }
 
-            var minimumMargin = 0;
-            if (Options.Margin < minimumMargin)
+            var minMargin = 0;
+            if (Options.Margin < minMargin)
             {
-                Console.Error.WriteLine($"Margin updated from {Options.Margin} to the minimum value of {minimumMargin}.");
-                Options.Margin = minimumMargin;
+                _Logger.LogInformation("Margin updated from {Margin} to the minimum value of {MinMargin}.", Options.Margin, minMargin);
+                Options.Margin = minMargin;
             }
 
             var minWidth = 160;
             if (Options.Width < minWidth)
             {
-                Console.Error.WriteLine($"Width updated from {Options.Width} to the minimum value of {minWidth}.");
+                _Logger.LogInformation("Width updated from {Width} to the minimum value of {MinWidth}.", Options.Width, minWidth);
                 Options.Width = minWidth;
             }
 
             var minHeight = 120;
             if (Options.Height < minHeight)
             {
-                Console.Error.WriteLine($"Height updated from {Options.Height} to the minimum value of {minHeight}.");
+                _Logger.LogInformation("Height updated from {Height} to the minimum value of {MinHeight}.", Options.Height, minHeight);
                 Options.Height = minHeight;
             }
 
@@ -90,23 +98,29 @@ namespace FM.LiveSwitch.Mux
             var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
             if (logEntries == null)
             {
-                Console.Error.WriteLine($"No recordings found. Log file(s) not found.");
+                _Logger.LogInformation($"No recordings found. Log file(s) not found.");
                 return false;
             }
             if (logEntries.Length == 0)
             {
-                Console.Error.WriteLine($"No recordings found.");
+                _Logger.LogInformation($"No recordings found.");
                 return false;
             }
 
             // sort log entries by timestamp
             logEntries = logEntries.OrderBy(x => x.Timestamp).ToArray();
+            _Logger.LogDebug("Found {Count} log entries.", logEntries.Count());
 
             // process each log entry
             var context = new Context();
             foreach (var logEntry in logEntries)
             {
-                context.ProcessLogEntry(logEntry, Options);
+                _Logger.LogDebug("Processing log entry for application ID '{ApplicationId}', channel ID '{ChannelId}', client ID '{ClientId}', and connection ID '{ConnectionId}'.",
+                    logEntry.ApplicationId,
+                    logEntry.ChannelId,
+                    logEntry.ClientId,
+                    logEntry.ConnectionId);
+                context.ProcessLogEntry(logEntry, Options, LoggerFactory);
             }
 
             // process the results
@@ -130,13 +144,19 @@ namespace FM.LiveSwitch.Mux
                             continue;
                         }
 
-                        Console.Error.WriteLine();
-                        Console.Error.WriteLine($"Channel {channel.Id} from application {application.Id} is ready for muxing ({session.StartTimestamp} to {session.StopTimestamp}).");
+                        _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' is ready for muxing ({StartTimestamp} to {StopTimestamp}).",
+                            application.Id,
+                            channel.Id,
+                            session.StartTimestamp,
+                            session.StopTimestamp);
 
                         if (await session.Mux(Options))
                         {
-                            Console.Error.WriteLine();
-                            Console.Error.WriteLine($"Channel {channel.Id} from application {application.Id} has been muxed ({session.StartTimestamp} to {session.StopTimestamp}).");
+                            _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
+                                application.Id,
+                                channel.Id,
+                                session.StartTimestamp,
+                                session.StopTimestamp);
 
                             if (Options.MoveInputs)
                             {
@@ -187,7 +207,9 @@ namespace FM.LiveSwitch.Mux
 
                     if (channel.Active)
                     {
-                        Console.Error.WriteLine($"Channel {channel.Id} from application {application.Id} is currently active.");
+                        _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' is currently active.",
+                            application.Id,
+                            channel.Id);
                     }
                 }
             }
@@ -195,6 +217,8 @@ namespace FM.LiveSwitch.Mux
             // write metadata files to stdout
             foreach (var metadataFile in metadataFiles)
             {
+                _Logger.LogDebug("Metadata written to: {MetadataFile}", metadataFile);
+
                 Console.WriteLine(metadataFile);
             }
 
@@ -253,7 +277,7 @@ namespace FM.LiveSwitch.Mux
                             return null;
                         }
 
-                        return await LogUtility.GetEntries(logFilePath);
+                        return await LogUtility.GetEntries(logFilePath, _Logger);
                     }
                 case StrategyType.Flat:
                     {
@@ -281,15 +305,15 @@ namespace FM.LiveSwitch.Mux
                             {
                                 try
                                 {
-                                    logEntries.AddRange(await LogUtility.GetEntries(filePath));
+                                    logEntries.AddRange(await LogUtility.GetEntries(filePath, _Logger));
                                 }
                                 catch (FileNotFoundException)
                                 {
-                                    Console.Error.WriteLine($"Could not read from {filePath} as it no longer exists. Is another process running that could have removed it?");
+                                    _Logger.LogWarning("Could not read from {FilePath} as it no longer exists. Is another process running that could have removed it?", filePath);
                                 }
                                 catch (IOException ex) when (ex.Message.Contains("Stale file handle")) // for Linux
                                 {
-                                    Console.Error.WriteLine($"Could not read from {filePath} as the file handle is stale. Is another process running that could have removed it?");
+                                    _Logger.LogWarning("Could not read from {FilePath} as the file handle is stale. Is another process running that could have removed it?", filePath);
                                 }
                             }
                         }
@@ -317,7 +341,7 @@ namespace FM.LiveSwitch.Mux
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Could not move {file} to {newFile}. {ex}");
+                _Logger.LogError(ex, "Could not move {File} to {NewFile}.", file, newFile);
             }
             return file;
         }
@@ -334,7 +358,7 @@ namespace FM.LiveSwitch.Mux
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Could not delete {file}. {ex}");
+                _Logger.LogError(ex, "Could not delete {File}.", file);
             }
             return false;
         }

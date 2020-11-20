@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,6 +15,14 @@ namespace FM.LiveSwitch.Mux.Test
         [InlineData(1)]
         public void VideoDelayUpdatesSession(double videoDelay)
         {
+            using var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole(options =>
+                {
+                    options.LogToStandardErrorThreshold = LogLevel.Trace;
+                });
+            });
+
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
             var stop = start.AddMinutes(1);
 
@@ -38,7 +46,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Type = LogEntry.TypeStartRecording,
                 Timestamp = start,
                 UserId = userId,
-            }, options);
+            }, options, loggerFactory);
             context.ProcessLogEntry(new LogEntry
             {
                 ApplicationId = applicationId,
@@ -59,7 +67,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Type = LogEntry.TypeStopRecording,
                 Timestamp = stop,
                 UserId = userId,
-            }, options);
+            }, options, loggerFactory);
 
             var audioStart = start;
             var videoStart = start;

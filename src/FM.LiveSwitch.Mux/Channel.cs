@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,7 +61,7 @@ namespace FM.LiveSwitch.Mux
             ApplicationId = applicationId;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options, ILoggerFactory loggerFactory)
         {
             var clientId = logEntry.ClientId;
             if (clientId == null)
@@ -77,7 +78,7 @@ namespace FM.LiveSwitch.Mux
 
             if (Completed)
             {
-                _CompletedSessions.Add(new Session(Id, ApplicationId, CompletedClients));
+                _CompletedSessions.Add(new Session(Id, ApplicationId, CompletedClients, loggerFactory));
                 _Clients = new Dictionary<string, Client>();
             }
 
