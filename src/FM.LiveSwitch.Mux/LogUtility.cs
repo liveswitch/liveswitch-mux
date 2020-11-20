@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace FM.LiveSwitch.Mux
 {
     public static class LogUtility
     {
-        public static async Task<LogEntry[]> GetEntries(string filePath)
+        public static async Task<LogEntry[]> GetEntries(string filePath, ILogger logger)
         {
             var json = await FileUtility.GetContents(filePath);
             if (json != null && json.StartsWith("["))
@@ -21,9 +22,9 @@ namespace FM.LiveSwitch.Mux
                     }
                     return entries.ToArray();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Could not read from {filePath} as the file is malformatted. Is another process running that could have modified it?");
+                    logger.LogError(ex, "Could not read from {FilePath} as the file is malformatted. Is another process running that could have modified it?", filePath);
                 }
             }
             return new LogEntry[0]; // not a log file

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,7 +14,7 @@ namespace FM.LiveSwitch.Mux
 
         private readonly Dictionary<string, Application> _Applications = new Dictionary<string, Application>();
 
-        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options, ILoggerFactory loggerFactory)
         {
             var applicationId = logEntry.ApplicationId;
             if (applicationId == null)
@@ -26,7 +27,7 @@ namespace FM.LiveSwitch.Mux
                 _Applications[applicationId] = application = new Application(applicationId);
             }
 
-            return application.ProcessLogEntry(logEntry, options);
+            return application.ProcessLogEntry(logEntry, options, loggerFactory);
         }
     }
 }

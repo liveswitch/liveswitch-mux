@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,7 +22,7 @@ namespace FM.LiveSwitch.Mux
             Id = id;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
+        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options, ILoggerFactory loggerFactory)
         {
             var channelId = logEntry.ChannelId;
             if (channelId == null)
@@ -34,7 +35,7 @@ namespace FM.LiveSwitch.Mux
                 _Channels[channelId] = channel = new Channel(channelId, Id);
             }
 
-            return channel.ProcessLogEntry(logEntry, options);
+            return channel.ProcessLogEntry(logEntry, options, loggerFactory);
         }
     }
 }
