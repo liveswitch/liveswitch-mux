@@ -23,12 +23,19 @@ jobs:
       run: dotnet restore
     - name: Run tests
       run: dotnet test src/FM.LiveSwitch.Mux.Test/FM.LiveSwitch.Mux.Test.csproj
+    - name: Build library
+      run: dotnet publish src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -c Release -o artifacts/lib
     - name: Build for Windows
       run: dotnet publish src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/win-x64
     - name: Build for macOS
       run: dotnet publish src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/osx-x64
     - name: Build for Linux
       run: dotnet publish src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -r linux-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o artifacts/linux-x64
+    - name: Upload library
+      uses: actions/upload-artifact@v2
+      with:
+        name: win-x64
+        path: artifacts/lib/lsmux.dll
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v2
       with:
