@@ -109,8 +109,16 @@ namespace FM.LiveSwitch.Mux
 
                 if (ActiveRecording.AudioFile != null)
                 {
-                    ActiveRecording.AudioStartTimestamp = logEntry.Data?.AudioFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
-                    ActiveRecording.AudioStopTimestamp = logEntry.Data?.AudioLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
+                    if (logEntry.Data?.AudioFirstFrameTimestamp != null && logEntry.Data?.AudioLastFrameTimestamp != null)
+                    {
+                        ActiveRecording.AudioStartTimestamp = logEntry.Data?.AudioFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
+                        ActiveRecording.AudioStopTimestamp = logEntry.Data?.AudioLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
+                    }
+                    else
+                    {
+                        ActiveRecording.AudioStartTimestamp = null;
+                        ActiveRecording.AudioStopTimestamp = null;
+                    }
 
                     if (!Path.IsPathRooted(ActiveRecording.AudioFile))
                     {
@@ -120,8 +128,16 @@ namespace FM.LiveSwitch.Mux
 
                 if (ActiveRecording.VideoFile != null)
                 {
-                    ActiveRecording.VideoStartTimestamp = logEntry.Data?.VideoFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
-                    ActiveRecording.VideoStopTimestamp = logEntry.Data?.VideoLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
+                    if (logEntry.Data?.VideoFirstFrameTimestamp != null && logEntry.Data?.VideoLastFrameTimestamp != null)
+                    {
+                        ActiveRecording.VideoStartTimestamp = logEntry.Data?.VideoFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
+                        ActiveRecording.VideoStopTimestamp = logEntry.Data?.VideoLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
+                    }
+                    else
+                    {
+                        ActiveRecording.VideoStartTimestamp = null;
+                        ActiveRecording.VideoStopTimestamp = null;
+                    }
 
                     if (!Path.IsPathRooted(ActiveRecording.VideoFile))
                     {
@@ -130,7 +146,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
-                if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoFile != null)
+                if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoStartTimestamp != null)
                 {
                     ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(videoDelay);
                     ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(videoDelay);
@@ -146,7 +162,7 @@ namespace FM.LiveSwitch.Mux
                 }
                 var videoStartTimestampTicks = long.MaxValue;
                 var videoStopTimestampTicks = long.MinValue;
-                if (ActiveRecording.VideoFile != null)
+                if (ActiveRecording.VideoFile != null && ActiveRecording.VideoStartTimestamp != null)
                 {
                     videoStartTimestampTicks = ActiveRecording.VideoStartTimestamp.Value.Ticks;
                     videoStopTimestampTicks = ActiveRecording.VideoStopTimestamp.Value.Ticks;

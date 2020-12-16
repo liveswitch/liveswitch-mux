@@ -103,7 +103,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                        return connection.CompletedRecordings.Any(recording => recording.VideoFileExists);
+                    return connection.CompletedRecordings.Any(recording => recording.VideoFileExists); // && recording.VideoStartTimestamp.HasValue);
                     });
                 });
             }
@@ -703,73 +703,80 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
-            var chunkListFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video_chunks.list";
-            var chunkListFile = Path.Combine(GetTempPath(options), chunkListFileName);
-            var chunkListFilePath = Path.GetDirectoryName(chunkListFile);
-            if (!Directory.Exists(chunkListFilePath))
+            if(chunkFiles.Count > 0)
             {
-                Directory.CreateDirectory(chunkListFilePath);
-            }
-
-            System.IO.File.WriteAllText(chunkListFile, string.Join(Environment.NewLine, chunkFiles.Select(chunkFile => $"file '{chunkFile}'")));
-
-            try
-            {
-                // construct argument list
-                var arguments = new List<string>
+                var chunkListFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video_chunks.list";
+                var chunkListFile = Path.Combine(GetTempPath(options), chunkListFileName);
+                var chunkListFilePath = Path.GetDirectoryName(chunkListFile);
+                if (!Directory.Exists(chunkListFilePath))
                 {
-                    "-y", // overwrite output files without asking
-                    "-safe 0",
-                    "-f concat",
-                };
-                arguments.Add($"-i {chunkListFile}");
-                arguments.Add("-c copy");
-                arguments.Add(VideoFile);
-
-                if (options.DryRun)
-                {
-                    return true;
+                    Directory.CreateDirectory(chunkListFilePath);
                 }
 
-                var outputPath = Path.GetDirectoryName(VideoFile);
-                if (!Directory.Exists(outputPath))
-                {
-                    Directory.CreateDirectory(outputPath);
-                }
+                System.IO.File.WriteAllText(chunkListFile, string.Join(Environment.NewLine, chunkFiles.Select(chunkFile => $"file '{chunkFile}'")));
 
-                // run it
-                await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
-
-                return VideoFileExists;
-            }
-            finally
-            {
                 try
                 {
-                    if (System.IO.File.Exists(chunkListFile) && !options.SaveTempFiles)
+                    // construct argument list
+                    var arguments = new List<string>
                     {
-                        System.IO.File.Delete(chunkListFile);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _Logger.LogError(ex, "Could not delete temporary chunk list file '{ChunkListFile}'.", chunkListFile);
-                }
+                        "-y", // overwrite output files without asking
+                        "-safe 0",
+                        "-f concat",
+                    };
+                    arguments.Add($"-i {chunkListFile}");
+                    arguments.Add("-c copy");
+                    arguments.Add(VideoFile);
 
-                foreach (var chunkFile in chunkFiles)
+                    if (options.DryRun)
+                    {
+                        return true;
+                    }
+
+                    var outputPath = Path.GetDirectoryName(VideoFile);
+                    if (!Directory.Exists(outputPath))
+                    {
+                        Directory.CreateDirectory(outputPath);
+                    }
+
+                    // run it
+                    await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+
+                    return VideoFileExists;
+                }
+                finally
                 {
                     try
                     {
-                        if (System.IO.File.Exists(chunkFile) && !options.SaveTempFiles)
+                        if (System.IO.File.Exists(chunkListFile) && !options.SaveTempFiles)
                         {
-                            System.IO.File.Delete(chunkFile);
+                            System.IO.File.Delete(chunkListFile);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _Logger.LogError(ex, "Could not delete temporary chunk file '{ChunkFile}'.", chunkFile);
+                        _Logger.LogError(ex, "Could not delete temporary chunk list file '{ChunkListFile}'.", chunkListFile);
+                    }
+
+                    foreach (var chunkFile in chunkFiles)
+                    {
+                        try
+                        {
+                            if (System.IO.File.Exists(chunkFile) && !options.SaveTempFiles)
+                            {
+                                System.IO.File.Delete(chunkFile);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _Logger.LogError(ex, "Could not delete temporary chunk file '{ChunkFile}'.", chunkFile);
+                        }
                     }
                 }
+            }
+            else
+            {
+                return true;
             }
         }
 
