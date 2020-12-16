@@ -103,7 +103,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                    return connection.CompletedRecordings.Any(recording => recording.VideoFileExists); // && recording.VideoStartTimestamp.HasValue);
+                    return connection.CompletedRecordings.Any(recording => recording.VideoFileExists && recording.VideoStartTimestamp.HasValue);
                     });
                 });
             }
