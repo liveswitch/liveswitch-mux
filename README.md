@@ -35,6 +35,14 @@ dotnet build
 
 Using this approach will generate a library instead of an executable. Use `dotnet lsmux.dll` instead of `lsmux` to run it.
 
+## Docker
+
+Images are also hosted on [DockerHub](https://hub.docker.com/r/frozenmountain/liveswitch-mux).
+
+```shell
+docker run --rm frozenmountain/liveswitch-mux [verb] [options]
+```
+
 ## Usage
 
 ```shell
