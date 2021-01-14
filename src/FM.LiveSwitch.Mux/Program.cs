@@ -62,13 +62,7 @@ namespace FM.LiveSwitch.Mux
 
         private static string[] AppendEnvironmentVariables(string[] args)
         {
-            if (args.Length == 0)
-            {
-                return args;
-            }
-
-            var verb = args[0];
-            if (!TryGetOptions(verb, out var options))
+            if (!TryGetOptions(args.FirstOrDefault(), out var environmentVariablePrefix, out var options))
             {
                 return args;
             }
@@ -76,7 +70,7 @@ namespace FM.LiveSwitch.Mux
             var newArgs = new List<string>(args);
             foreach (var unusedOption in FilterOptions(args, options))
             {
-                var value = Environment.GetEnvironmentVariable($"{Assembly.GetExecutingAssembly().GetName().Name.ToUpperInvariant()}_{verb.ToUpperInvariant()}_{unusedOption.LongName.ToUpperInvariant()}");
+                var value = Environment.GetEnvironmentVariable($"{environmentVariablePrefix}_{unusedOption.LongName.ToUpperInvariant()}");
                 if (value != null)
                 {
                     Console.Error.WriteLine($"Environment variable discovered matching --{unusedOption.LongName} option.");
@@ -86,20 +80,26 @@ namespace FM.LiveSwitch.Mux
             return newArgs.ToArray();
         }
 
-        private static string Environmentalize(string name)
+        private static bool TryGetOptions(string verb, out string environmentVariablePrefix, out OptionAttribute[] options)
         {
-            return name.ToUpperInvariant().Replace("-", "_").Replace(".", "_");
-        }
+            if (verb != null && verb.StartsWith("-"))
+            {
+                return TryGetOptions(null, out environmentVariablePrefix, out options);
+            }
 
-        private static bool TryGetOptions(string verb, out OptionAttribute[] options)
-        {
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(type => !type.IsAbstract))
             {
                 var verbAttribute = type.GetCustomAttributes<VerbAttribute>().FirstOrDefault();
                 if (verbAttribute != null)
                 {
-                    if (verbAttribute.Name == verb)
+                    if (verb == null || verbAttribute.Name == verb)
                     {
+                        environmentVariablePrefix = Assembly.GetExecutingAssembly().GetName().Name.ToUpperInvariant();
+                        if (verb != null)
+                        {
+                            environmentVariablePrefix = $"{environmentVariablePrefix}_{verb.ToUpperInvariant()}";
+                        }
+
                         options = type.GetProperties()
                             .Select(property => property.GetCustomAttributes<OptionAttribute>().FirstOrDefault())
                             .Where(option => option != null).ToArray();
@@ -108,6 +108,7 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
+            environmentVariablePrefix = null;
             options = null;
             return false;
         }
