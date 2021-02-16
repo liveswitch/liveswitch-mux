@@ -61,7 +61,7 @@ namespace FM.LiveSwitch.Mux
                                 throw;
                             }
 
-                            _Logger.LogInformation(e);
+                            _Logger.LogInformation("File Not Found Exception");
 
                             await Task.Delay(200).ConfigureAwait(false);
 
