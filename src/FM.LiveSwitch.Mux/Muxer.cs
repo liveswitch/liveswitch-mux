@@ -18,6 +18,11 @@ namespace FM.LiveSwitch.Mux
 
         const string HierarchicalLogFileName = "log.json";
 
+        private int delay = 0;
+        private int numTries = 0;
+        private const int retryDelay = 200; //milliseconds
+        private const int maxTries = 10000 / retryDelay;
+
         public Muxer(MuxOptions options, ILoggerFactory loggerFactory)
         {
             Options = options;
@@ -28,201 +33,223 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<bool> Run()
         {
-            if (Options.InputPath == null)
+            while (true)
             {
-                Options.InputPath = Environment.CurrentDirectory;
-                _Logger.LogInformation("Input path defaulting to: {InputPath}", Options.InputPath);
-            }
-
-            if (Options.OutputPath == null)
-            {
-                Options.OutputPath = Options.InputPath;
-                _Logger.LogInformation("Output path defaulting to: {OutputPath}", Options.OutputPath);
-            }
-
-            if (Options.TempPath == null)
-            {
-                Options.TempPath = Options.InputPath;
-                _Logger.LogInformation("Temp path defaulting to: {TempPath}", Options.TempPath);
-            }
-
-            if (Options.MoveInputs && Options.MovePath == null)
-            {
-                Options.MovePath = Options.OutputPath;
-                _Logger.LogInformation("Move path defaulting to: {MovePath}", Options.MovePath);
-            }
-
-            if (Options.Layout == LayoutType.JS)
-            {
-                if (Options.JavaScriptFile == null)
+                try
                 {
-                    Options.JavaScriptFile = Path.Combine(Options.InputPath, "layout.js");
-                    _Logger.LogInformation("JavaScript file defaulting to: {JavaScriptFile}", Options.JavaScriptFile);
-                }
-
-                if (!FileUtility.Exists(Options.JavaScriptFile))
-                {
-                    _Logger.LogError("Cannot find {JavaScriptFile}.", Options.JavaScriptFile);
-                    return false;
-                }
-            }
-
-            var minMargin = 0;
-            if (Options.Margin < minMargin)
-            {
-                _Logger.LogInformation("Margin updated from {Margin} to the minimum value of {MinMargin}.", Options.Margin, minMargin);
-                Options.Margin = minMargin;
-            }
-
-            var minWidth = 160;
-            if (Options.Width < minWidth)
-            {
-                _Logger.LogInformation("Width updated from {Width} to the minimum value of {MinWidth}.", Options.Width, minWidth);
-                Options.Width = minWidth;
-            }
-
-            var minHeight = 120;
-            if (Options.Height < minHeight)
-            {
-                _Logger.LogInformation("Height updated from {Height} to the minimum value of {MinHeight}.", Options.Height, minHeight);
-                Options.Height = minHeight;
-            }
-
-            if (Options.InputFileNames.Count() > 0)
-            {
-                // CommandLine.Parser returns empty strings when there is a space after the separator.
-                // Also, CommandLine.Parser leaves the separator in the string sometimes.
-                Options.InputFileNames = string.Join(',', Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
-            }
-
-            var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
-            if (logEntries == null)
-            {
-                _Logger.LogInformation($"No recordings found. Log file(s) not found.");
-                return false;
-            }
-            if (logEntries.Length == 0)
-            {
-                _Logger.LogInformation($"No recordings found.");
-                return false;
-            }
-
-            // sort log entries by timestamp
-            logEntries = logEntries.OrderBy(x => x.Timestamp).ToArray();
-            _Logger.LogDebug("Found {Count} log entries.", logEntries.Count());
-
-            // process each log entry
-            var context = new Context();
-            foreach (var logEntry in logEntries)
-            {
-                _Logger.LogDebug("Processing log entry for application ID '{ApplicationId}', channel ID '{ChannelId}', client ID '{ClientId}', and connection ID '{ConnectionId}'.",
-                    logEntry.ApplicationId,
-                    logEntry.ChannelId,
-                    logEntry.ClientId,
-                    logEntry.ConnectionId);
-                context.ProcessLogEntry(logEntry, Options, LoggerFactory);
-            }
-
-            // process the results
-            var metadataFiles = new List<string>();
-            foreach (var application in context.Applications)
-            {
-                if (Options.ApplicationId != null && Options.ApplicationId != application.Id)
-                {
-                    continue;
-                }
-                foreach (var channel in application.Channels)
-                {
-                    if (Options.ChannelId != null && Options.ChannelId != channel.Id)
+                    if (Options.InputPath == null)
                     {
-                        continue;
+                        Options.InputPath = Environment.CurrentDirectory;
+                        _Logger.LogInformation("Input path defaulting to: {InputPath}", Options.InputPath);
                     }
-                    foreach (var session in channel.CompletedSessions)
+
+                    if (Options.OutputPath == null)
                     {
-                        if (Options.SessionId != null && Options.SessionId != session.Id)
+                        Options.OutputPath = Options.InputPath;
+                        _Logger.LogInformation("Output path defaulting to: {OutputPath}", Options.OutputPath);
+                    }
+
+                    if (Options.TempPath == null)
+                    {
+                        Options.TempPath = Options.InputPath;
+                        _Logger.LogInformation("Temp path defaulting to: {TempPath}", Options.TempPath);
+                    }
+
+                    if (Options.MoveInputs && Options.MovePath == null)
+                    {
+                        Options.MovePath = Options.OutputPath;
+                        _Logger.LogInformation("Move path defaulting to: {MovePath}", Options.MovePath);
+                    }
+
+                    if (Options.Layout == LayoutType.JS)
+                    {
+                        if (Options.JavaScriptFile == null)
+                        {
+                            Options.JavaScriptFile = Path.Combine(Options.InputPath, "layout.js");
+                            _Logger.LogInformation("JavaScript file defaulting to: {JavaScriptFile}", Options.JavaScriptFile);
+                        }
+
+                        if (!FileUtility.Exists(Options.JavaScriptFile))
+                        {
+                            _Logger.LogError("Cannot find {JavaScriptFile}.", Options.JavaScriptFile);
+                            return false;
+                        }
+                    }
+
+                    var minMargin = 0;
+                    if (Options.Margin < minMargin)
+                    {
+                        _Logger.LogInformation("Margin updated from {Margin} to the minimum value of {MinMargin}.", Options.Margin, minMargin);
+                        Options.Margin = minMargin;
+                    }
+
+                    var minWidth = 160;
+                    if (Options.Width < minWidth)
+                    {
+                        _Logger.LogInformation("Width updated from {Width} to the minimum value of {MinWidth}.", Options.Width, minWidth);
+                        Options.Width = minWidth;
+                    }
+
+                    var minHeight = 120;
+                    if (Options.Height < minHeight)
+                    {
+                        _Logger.LogInformation("Height updated from {Height} to the minimum value of {MinHeight}.", Options.Height, minHeight);
+                        Options.Height = minHeight;
+                    }
+
+                    if (Options.InputFileNames.Count() > 0)
+                    {
+                        // CommandLine.Parser returns empty strings when there is a space after the separator.
+                        // Also, CommandLine.Parser leaves the separator in the string sometimes.
+                        Options.InputFileNames = string.Join(',', Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
+                    }
+
+                    var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
+                    if (logEntries == null)
+                    {
+                        _Logger.LogInformation($"No recordings found. Log file(s) not found.");
+                        return false;
+                    }
+                    if (logEntries.Length == 0)
+                    {
+                        _Logger.LogInformation($"No recordings found.");
+                        return false;
+                    }
+
+                    // sort log entries by timestamp
+                    logEntries = logEntries.OrderBy(x => x.Timestamp).ToArray();
+                    _Logger.LogDebug("Found {Count} log entries.", logEntries.Count());
+
+                    // process each log entry
+                    var context = new Context();
+                    foreach (var logEntry in logEntries)
+                    {
+                        _Logger.LogDebug("Processing log entry for application ID '{ApplicationId}', channel ID '{ChannelId}', client ID '{ClientId}', and connection ID '{ConnectionId}'.",
+                            logEntry.ApplicationId,
+                            logEntry.ChannelId,
+                            logEntry.ClientId,
+                            logEntry.ConnectionId);
+                        context.ProcessLogEntry(logEntry, Options, LoggerFactory);
+                    }
+
+                    // process the results
+                    var metadataFiles = new List<string>();
+                    foreach (var application in context.Applications)
+                    {
+                        if (Options.ApplicationId != null && Options.ApplicationId != application.Id)
                         {
                             continue;
                         }
-
-                        _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' is ready for muxing ({StartTimestamp} to {StopTimestamp}).",
-                            application.Id,
-                            channel.Id,
-                            session.StartTimestamp,
-                            session.StopTimestamp);
-
-                        if (await session.Mux(Options))
+                        foreach (var channel in application.Channels)
                         {
-                            _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
-                                application.Id,
-                                channel.Id,
-                                session.StartTimestamp,
-                                session.StopTimestamp);
-
-                            if (Options.MoveInputs)
+                            if (Options.ChannelId != null && Options.ChannelId != channel.Id)
                             {
-                                if (Options.InputPath != Options.MovePath)
+                                continue;
+                            }
+                            foreach (var session in channel.CompletedSessions)
+                            {
+                                if (Options.SessionId != null && Options.SessionId != session.Id)
                                 {
-                                    foreach (var recording in session.CompletedRecordings)
+                                    continue;
+                                }
+
+                                _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' is ready for muxing ({StartTimestamp} to {StopTimestamp}).",
+                                    application.Id,
+                                    channel.Id,
+                                    session.StartTimestamp,
+                                    session.StopTimestamp);
+
+                                if (await session.Mux(Options))
+                                {
+                                    _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
+                                        application.Id,
+                                        channel.Id,
+                                        session.StartTimestamp,
+                                        session.StopTimestamp);
+
+                                    if (Options.MoveInputs)
                                     {
-                                        if (recording.AudioFileExists)
+                                        if (Options.InputPath != Options.MovePath)
                                         {
-                                            recording.AudioFile = Move(recording.AudioFile, Options);
+                                            foreach (var recording in session.CompletedRecordings)
+                                            {
+                                                if (recording.AudioFileExists)
+                                                {
+                                                    recording.AudioFile = Move(recording.AudioFile, Options);
+                                                }
+                                                if (recording.VideoFileExists)
+                                                {
+                                                    recording.VideoFile = Move(recording.VideoFile, Options);
+                                                }
+                                                if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
+                                                {
+                                                    recording.LogFile = Move(recording.LogFile, Options);
+                                                }
+                                            }
                                         }
-                                        if (recording.VideoFileExists)
+                                    }
+                                    else if (Options.DeleteInputs)
+                                    {
+                                        foreach (var recording in session.CompletedRecordings)
                                         {
-                                            recording.VideoFile = Move(recording.VideoFile, Options);
+                                            if (recording.AudioFileExists)
+                                            {
+                                                Delete(recording.AudioFile, Options);
+                                            }
+                                            if (recording.VideoFileExists)
+                                            {
+                                                Delete(recording.VideoFile, Options);
+                                            }
+                                            if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
+                                            {
+                                                Delete(recording.LogFile, Options);
+                                            }
                                         }
-                                        if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
-                                        {
-                                            recording.LogFile = Move(recording.LogFile, Options);
-                                        }
+                                    }
+
+                                    if (session.WriteMetadata(Options))
+                                    {
+                                        metadataFiles.Add(session.MetadataFile);
                                     }
                                 }
                             }
-                            else if (Options.DeleteInputs)
-                            {
-                                foreach (var recording in session.CompletedRecordings)
-                                {
-                                    if (recording.AudioFileExists)
-                                    {
-                                        Delete(recording.AudioFile, Options);
-                                    }
-                                    if (recording.VideoFileExists)
-                                    {
-                                        Delete(recording.VideoFile, Options);
-                                    }
-                                    if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
-                                    {
-                                        Delete(recording.LogFile, Options);
-                                    }
-                                }
-                            }
 
-                            if (session.WriteMetadata(Options))
+                            if (channel.Active)
                             {
-                                metadataFiles.Add(session.MetadataFile);
+                                _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' is currently active.",
+                                    application.Id,
+                                    channel.Id);
                             }
                         }
                     }
 
-                    if (channel.Active)
+                    // write metadata files to stdout
+                    foreach (var metadataFile in metadataFiles)
                     {
-                        _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' is currently active.",
-                            application.Id,
-                            channel.Id);
+                        _Logger.LogDebug("Metadata written to: {MetadataFile}", metadataFile);
+
+                        Console.WriteLine(metadataFile);
                     }
+
+                    return true;
                 }
+                catch (FileNotFoundException e)
+                {
+                    // retry for approximately 10 seconds before giving up
+                    if(numTries >= maxTries)
+                    {
+                        throw;
+                    }
+
+                    _Logger.LogWarning("File Not Found Exception triggered", e);
+
+                    await Task.Delay(delay).ConfigureAwait(false);
+
+                    // retry immediately the first time, but 200ms thereafter
+                    delay = retryDelay;
+                }
+                numTries++;
             }
-
-            // write metadata files to stdout
-            foreach (var metadataFile in metadataFiles)
-            {
-                _Logger.LogDebug("Metadata written to: {MetadataFile}", metadataFile);
-
-                Console.WriteLine(metadataFile);
-            }
-
-            return true;
         }
 
         private bool ConfirmDelete(MuxOptions options, string path)

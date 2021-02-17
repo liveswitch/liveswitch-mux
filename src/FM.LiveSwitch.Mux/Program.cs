@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.IO;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -41,33 +40,12 @@ namespace FM.LiveSwitch.Mux
             });
 
             var result = parser.ParseArguments<MuxOptions>(AppendEnvironmentVariables(args));
-            var _Logger = loggerFactory.CreateLogger(nameof(Muxer));
-            var i = 0;
 
             result.WithParsed(options =>
             {
                 Task.Run(async () =>
                 {
-                    while (true)
-                    {
-                        try
-                        {
-                            await new Muxer(options, loggerFactory).Run();
-                        }
-                        catch (FileNotFoundException e)
-                        {
-                            if (i > 5)
-                            {
-                                throw;
-                            }
-
-                            _Logger.LogInformation("File Not Found Exception");
-
-                            await Task.Delay(200).ConfigureAwait(false);
-
-                            i++;
-                        }
-                    }
+                    await new Muxer(options, loggerFactory).Run();
                 }).GetAwaiter().GetResult();
             });
 
