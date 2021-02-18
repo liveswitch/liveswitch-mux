@@ -18,11 +18,6 @@ namespace FM.LiveSwitch.Mux
 
         const string HierarchicalLogFileName = "log.json";
 
-        private int delay = 0;
-        private int numTries = 0;
-        private const int retryDelay = 200; //milliseconds
-        private const int maxTries = 10000 / retryDelay;
-
         public Muxer(MuxOptions options, ILoggerFactory loggerFactory)
         {
             Options = options;
@@ -33,6 +28,9 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<bool> Run()
         {
+            var retryDelay = 200; //milliseconds
+            var retryCount = 0;
+            var retryCountMax = 10000 / retryDelay; // 10 seconds
             while (true)
             {
                 try
@@ -233,22 +231,19 @@ namespace FM.LiveSwitch.Mux
 
                     return true;
                 }
-                catch (FileNotFoundException e)
+                catch (FileNotFoundException ex)
                 {
                     // retry for approximately 10 seconds before giving up
-                    if(numTries >= maxTries)
+                    if(retryCount >= retryCountMax)
                     {
+                        _Logger.LogError($"A temporary exception was encountered, but retries have been exhausted.", ex);
                         throw;
                     }
 
-                    _Logger.LogWarning("File Not Found Exception triggered", e);
-
-                    await Task.Delay(delay).ConfigureAwait(false);
-
-                    // retry immediately the first time, but 200ms thereafter
-                    delay = retryDelay;
+                    retryCount++;
+                    _Logger.LogWarning($"A temporary exception was encountered. Will retry after {retryDelay} milliseconds (attempt #{retryCount}).", ex);
+                    await Task.Delay(retryDelay).ConfigureAwait(false);
                 }
-                numTries++;
             }
         }
 
