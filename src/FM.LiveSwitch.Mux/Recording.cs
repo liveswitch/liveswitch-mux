@@ -104,7 +104,7 @@ namespace FM.LiveSwitch.Mux
         {
             get
             {
-                if (VideoSegments == null)
+                if (VideoSegments == null || VideoStartTimestamp == null || VideoStopTimestamp == null)
                 {
                     return null;
                 }
@@ -118,7 +118,7 @@ namespace FM.LiveSwitch.Mux
                         videoEvents.Add(new VideoEvent
                         {
                             Type = VideoEventType.Add,
-                            Timestamp = VideoStartTimestamp ?? DateTime.MinValue,
+                            Timestamp = VideoStartTimestamp.Value,
                             Segment = segment
                         });
                     }
