@@ -234,7 +234,7 @@ namespace FM.LiveSwitch.Mux
                 catch (FileNotFoundException ex)
                 {
                     // retry for approximately 10 seconds before giving up
-                    if(retryCount >= retryCountMax)
+                    if (retryCount >= retryCountMax)
                     {
                         _Logger.LogError($"A temporary exception was encountered, but retries have been exhausted.", ex);
                         throw;
