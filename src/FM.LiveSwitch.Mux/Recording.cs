@@ -104,7 +104,7 @@ namespace FM.LiveSwitch.Mux
         {
             get
             {
-                if (VideoSegments == null)
+                if (VideoSegments == null || VideoStartTimestamp == null || VideoStopTimestamp == null)
                 {
                     return null;
                 }
@@ -264,7 +264,7 @@ namespace FM.LiveSwitch.Mux
                             }
 
                             // next update
-                            while (timestamp >= update.StopTimestamp && Updates.Length > updateIndex+1)
+                            while (timestamp >= update.StopTimestamp && Updates.Length > updateIndex + 1)
                             {
                                 updateIndex++;
                                 update = Updates[updateIndex];

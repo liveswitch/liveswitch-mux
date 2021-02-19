@@ -292,7 +292,7 @@ namespace FM.LiveSwitch.Mux
 
             // initialize recordings
             var recordingIndex = 0;
-            var recordings = CompletedRecordings.Where(x => x.AudioFileExists).ToArray();
+            var recordings = CompletedRecordings.Where(x => x.AudioFileExists && x.AudioStartTimestamp != null && x.AudioStopTimestamp != null).ToArray();
             foreach (var recording in recordings)
             {
                 recording.AudioIndex = recordingIndex++;
@@ -487,7 +487,7 @@ namespace FM.LiveSwitch.Mux
 
             // initialize recordings
             var recordingIndex = 0;
-            var recordings = CompletedRecordings.Where(x => x.VideoFileExists).ToArray();
+            var recordings = CompletedRecordings.Where(x => x.VideoFileExists && x.VideoStartTimestamp != null && x.VideoStopTimestamp != null).ToArray();
             foreach (var recording in recordings)
             {
                 if (options.DryRun)
