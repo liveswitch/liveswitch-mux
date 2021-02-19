@@ -485,12 +485,6 @@ namespace FM.LiveSwitch.Mux
             // get output file path
             VideoFile = Path.Combine(GetOutputPath(options), VideoFileName);
 
-            if (VideoFile == null)
-            {
-                _Logger.LogInformation("No Video File.");
-                return false;
-            }
-
             // initialize recordings
             var recordingIndex = 0;
             var recordings = CompletedRecordings.Where(x => x.VideoFileExists).ToArray();
