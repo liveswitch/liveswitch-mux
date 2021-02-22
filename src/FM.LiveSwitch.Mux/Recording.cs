@@ -118,7 +118,7 @@ namespace FM.LiveSwitch.Mux
                         videoEvents.Add(new VideoEvent
                         {
                             Type = VideoEventType.Add,
-                            Timestamp = VideoStartTimestamp ?? DateTime.MinValue,
+                            Timestamp = VideoStartTimestamp.Value,
                             Segment = segment
                         });
                     }
@@ -137,7 +137,7 @@ namespace FM.LiveSwitch.Mux
                 videoEvents.Add(new VideoEvent
                 {
                     Type = VideoEventType.Remove,
-                    Timestamp = VideoStopTimestamp ?? DateTime.MinValue,
+                    Timestamp = VideoStopTimestamp.Value,
                     LastSegment = lastSegment
                 });
                 return videoEvents.ToArray();
