@@ -88,7 +88,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                        return connection.CompletedRecordings.Any(recording => recording.AudioFileExists);
+                        return connection.CompletedRecordings.Any(recording => recording.AudioFileExists && recording.AudioStartTimestamp.HasValue);
                     });
                 });
             }
