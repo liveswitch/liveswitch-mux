@@ -88,7 +88,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                        return connection.CompletedRecordings.Any(recording => recording.AudioFileExists);
+                        return connection.CompletedRecordings.Any(recording => recording.AudioFileExists && recording.AudioStartTimestamp.HasValue && recording.AudioStopTimestamp.HasValue);
                     });
                 });
             }
@@ -103,7 +103,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                        return connection.CompletedRecordings.Any(recording => recording.VideoFileExists);
+                        return connection.CompletedRecordings.Any(recording => recording.VideoFileExists && recording.VideoStartTimestamp.HasValue && recording.VideoStopTimestamp.HasValue);
                     });
                 });
             }
@@ -292,7 +292,7 @@ namespace FM.LiveSwitch.Mux
 
             // initialize recordings
             var recordingIndex = 0;
-            var recordings = CompletedRecordings.Where(x => x.AudioFileExists).ToArray();
+            var recordings = CompletedRecordings.Where(x => x.AudioFileExists && x.AudioStartTimestamp != null && x.AudioStopTimestamp != null).ToArray();
             foreach (var recording in recordings)
             {
                 recording.AudioIndex = recordingIndex++;
@@ -487,7 +487,7 @@ namespace FM.LiveSwitch.Mux
 
             // initialize recordings
             var recordingIndex = 0;
-            var recordings = CompletedRecordings.Where(x => x.VideoFileExists).ToArray();
+            var recordings = CompletedRecordings.Where(x => x.VideoFileExists && x.VideoStartTimestamp != null && x.VideoStopTimestamp != null).ToArray();
             foreach (var recording in recordings)
             {
                 if (options.DryRun)
@@ -505,9 +505,8 @@ namespace FM.LiveSwitch.Mux
 
             if (recordings.Length == 0)
             {
-                VideoFile = null;
                 _Logger.LogInformation("Session has no video segments.");
-                return false;
+                return true;
             }
 
             foreach (var recording in recordings)
@@ -701,6 +700,11 @@ namespace FM.LiveSwitch.Mux
                         _Logger.LogError(ex, "Could not delete temporary chunk filter chain file '{ChunkFilterChainFileName}'.", chunkFilterChainFileName);
                     }
                 }
+            }
+
+            if (chunkFiles.Count == 0)
+            {
+                return true;
             }
 
             var chunkListFileName = $"{ProcessOutputFileName(options.OutputFileName)}_video_chunks.list";
