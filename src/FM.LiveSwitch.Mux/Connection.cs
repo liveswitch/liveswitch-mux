@@ -146,7 +146,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
-                if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoStartTimestamp != null)
+                if (videoDelay != 0 && ActiveRecording.AudioFile != null && ActiveRecording.VideoStartTimestamp.HasValue && ActiveRecording.VideoStopTimestamp.HasValue)
                 {
                     ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(videoDelay);
                     ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(videoDelay);
@@ -162,7 +162,7 @@ namespace FM.LiveSwitch.Mux
                 }
                 var videoStartTimestampTicks = long.MaxValue;
                 var videoStopTimestampTicks = long.MinValue;
-                if (ActiveRecording.VideoFile != null && ActiveRecording.VideoStartTimestamp != null)
+                if (ActiveRecording.VideoFile != null && ActiveRecording.VideoStartTimestamp.HasValue && ActiveRecording.VideoStopTimestamp.HasValue)
                 {
                     videoStartTimestampTicks = ActiveRecording.VideoStartTimestamp.Value.Ticks;
                     videoStopTimestampTicks = ActiveRecording.VideoStopTimestamp.Value.Ticks;
