@@ -88,7 +88,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                        return connection.CompletedRecordings.Any(recording => recording.AudioFileExists && recording.AudioStartTimestamp.HasValue);
+                        return connection.CompletedRecordings.Any(recording => recording.AudioFileExists && recording.AudioStartTimestamp.HasValue && recording.AudioStopTimestamp.HasValue);
                     });
                 });
             }
@@ -103,7 +103,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     return client.CompletedConnections.Any(connection =>
                     {
-                        return connection.CompletedRecordings.Any(recording => recording.VideoFileExists && recording.VideoStartTimestamp.HasValue);
+                        return connection.CompletedRecordings.Any(recording => recording.VideoFileExists && recording.VideoStartTimestamp.HasValue && recording.VideoStopTimestamp.HasValue);
                     });
                 });
             }
