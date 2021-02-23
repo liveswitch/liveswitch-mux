@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace FM.LiveSwitch.Mux
 {
+    [Verb("mux", true)]
     public class MuxOptions
     {
         [Option('i', "input-path", HelpText = "The input path, i.e. the recording path used by the media server. Defaults to the current directory.")]

@@ -35,6 +35,24 @@ dotnet build
 
 Using this approach will generate a library instead of an executable. Use `dotnet lsmux.dll` instead of `lsmux` to run it.
 
+## Docker
+
+Images are also hosted on [DockerHub](https://hub.docker.com/r/frozenmountain/liveswitch-mux).
+
+```shell
+docker run --rm frozenmountain/liveswitch-mux [verb] [options]
+```
+
+## Environment Variables
+
+Environment variables can be used in place of command-line arguments.
+
+Environment variable names are `lsmux_{option}`, e.g. `lsmux_gateway-url`.
+
+Environment variable names are case-insensitive, so `lsmux_application-id` is equivalent to `LSMUX_APPLICATION-ID`.
+
+Note that command-line arguments always take precedence over environment variables.
+
 ## Usage
 
 ```shell
