@@ -37,7 +37,7 @@ namespace FM.LiveSwitch.Mux
         [Option('p', "process-invalid-media", Default = false, HelpText = "Preprocess corrupted media files as normal.")]
         public bool ProcessInvalidMedia { get; set; }
 
-        [Option("min-orphan-duration", Default = 120, HelpText = "Minimum duration (in minutes) of waiting for incomplete media file to have constant file size for the connection to be considered orphan.")]
+        [Option("min-orphan-duration", Default = 120, HelpText = "Minimum duration (in minutes) of waiting for incomplete media file to have file size unchanged for the media to be considered orphan.")]
         public int MinimumOrphanDuration { get; set; }
 
         [Option("background-color", Default = "000000", HelpText = "The background colour.")]
