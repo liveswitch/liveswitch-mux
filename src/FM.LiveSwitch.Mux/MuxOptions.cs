@@ -34,6 +34,9 @@ namespace FM.LiveSwitch.Mux
         [Option('f', "frame-rate", Default = 30, HelpText = "The frames per second of the output video.")]
         public int FrameRate { get; set; }
 
+        [Option('p', "process-invalid-media", Default = false, HelpText = "Preprocess corrupted media files as normal.")]
+        public bool ProcessInvalidMedia { get; set; }
+
         [Option("background-color", Default = "000000", HelpText = "The background colour.")]
         public string BackgroundColor { get; set; }
 

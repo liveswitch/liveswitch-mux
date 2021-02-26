@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using IO = System.IO;
 using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
@@ -7,9 +7,9 @@ namespace FM.LiveSwitch.Mux
     {
         public static async Task<string> GetContents(string path)
         {
-            using (var file = await GetStream(path, FileAccess.Read).ConfigureAwait(false))
+            using (var file = await GetStream(path, IO.FileAccess.Read).ConfigureAwait(false))
             {
-                using (var reader = new StreamReader(file))
+                using (var reader = new IO.StreamReader(file))
                 {
                     return await reader.ReadToEndAsync().ConfigureAwait(false);
                 }
@@ -19,7 +19,7 @@ namespace FM.LiveSwitch.Mux
         private const int GetFileStreamRetryDelay = 200;
         private const int GetFileStreamRetryAttempts = 30000 / GetFileStreamRetryDelay;
 
-        public static async Task<FileStream> GetStream(string path, FileAccess access)
+        public static async Task<IO.FileStream> GetStream(string path, IO.FileAccess access)
         {
             var delay = 0;
 
@@ -28,9 +28,9 @@ namespace FM.LiveSwitch.Mux
             {
                 try
                 {
-                    return File.Open(path, FileMode.Open, access, FileShare.None);
+                    return IO.File.Open(path, IO.FileMode.Open, access, IO.FileShare.None);
                 }
-                catch (IOException e) when (IsLocked(e))
+                catch (IO.IOException e) when (IsLocked(e))
                 {
                     // retry for approximately 30 seconds before giving up
                     if (i > GetFileStreamRetryAttempts)
@@ -47,20 +47,20 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
-        private static bool IsLocked(IOException ex)
+        private static bool IsLocked(IO.IOException ex)
         {
-            return !(ex is DirectoryNotFoundException ||
-                     ex is DriveNotFoundException ||
-                     ex is EndOfStreamException ||
-                     ex is FileLoadException ||
-                     ex is FileNotFoundException ||
-                     ex is PathTooLongException
+            return !(ex is IO.DirectoryNotFoundException ||
+                     ex is IO.DriveNotFoundException ||
+                     ex is IO.EndOfStreamException ||
+                     ex is IO.FileLoadException ||
+                     ex is IO.FileNotFoundException ||
+                     ex is IO.PathTooLongException
                     );
         }
 
         public static bool Exists(string path)
         {
-            return path != null && File.Exists(path) && new FileInfo(path).Length > 0;
+            return path != null && IO.File.Exists(path);
         }
     }
 }

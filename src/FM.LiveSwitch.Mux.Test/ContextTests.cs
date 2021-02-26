@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Logging = Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -19,7 +20,7 @@ namespace FM.LiveSwitch.Mux.Test
             {
                 builder.AddConsole(options =>
                 {
-                    options.LogToStandardErrorThreshold = LogLevel.Trace;
+                    options.LogToStandardErrorThreshold = Logging.LogLevel.Trace;
                 });
             });
 
