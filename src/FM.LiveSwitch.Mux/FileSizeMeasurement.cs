@@ -4,7 +4,7 @@ using System.IO;
 
 namespace FM.LiveSwitch.Mux
 {
-	class FileSizeMeasurement
+	public class FileSizeMeasurement
 	{
 		[JsonProperty]
 		public string FileName { get; private set; }
