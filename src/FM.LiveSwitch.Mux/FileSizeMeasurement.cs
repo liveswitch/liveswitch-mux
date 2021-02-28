@@ -28,8 +28,8 @@ namespace FM.LiveSwitch.Mux
 		}
 
 		public FileSizeMeasurement()
-        {
-        }
+		{
+		}
 
 		public FileSizeMeasurement(string fileName, int minimumOrphanDurationMinutes)
 		{
