@@ -12,7 +12,20 @@ namespace FM.LiveSwitch.Mux
 {
     public class JsonPreprocessor
     {
-        public int MinimumOrphanDurationMinutes = 120;
+        private int _MinimumOrphanDuration = 120;
+
+        public int MinimumOrphanDuration
+        {
+            get
+            {
+                return _MinimumOrphanDuration;
+            }
+
+            set
+            {
+                _MinimumOrphanDuration = value;
+            }
+        }
 
         private readonly ILogger _Logger;
         private readonly string _InputDirectory;
@@ -103,12 +116,12 @@ namespace FM.LiveSwitch.Mux
                             var addVideoPath = false;
                             var processInvalidMedia = false;
 
-                            if (startEvent == null)
+                            if (startEvent == default(JToken))
                             {
                                 AddToErrorList($"Event \"{LogEntry.TypeStartRecording}\" is missing");
                             }
 
-                            if (stopEvent == null)
+                            if (stopEvent == default(JToken))
                             {
                                 AddToErrorList($"Event \"{LogEntry.TypeStopRecording}\" is missing");
                             }
@@ -551,14 +564,14 @@ namespace FM.LiveSwitch.Mux
                     if (IO.File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Incomplete audio file {mediaFile} for {connectionId} is found.");
-                        sessionTracker.AudioSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDurationMinutes);
+                        sessionTracker.AudioSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDuration);
                     }
 
                     mediaFile = IO.Path.Combine(_InputDirectory, $"{connectionId}.mkv.rec");
                     if (IO.File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Incomplete video file {mediaFile} for {connectionId} is found.");
-                        sessionTracker.VideoSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDurationMinutes);
+                        sessionTracker.VideoSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDuration);
                     }
 
                     if (sessionTracker.AudioSizeMeasurement != null || sessionTracker.VideoSizeMeasurement != null)

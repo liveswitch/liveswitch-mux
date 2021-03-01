@@ -11,16 +11,16 @@ namespace FM.LiveSwitch.Mux
         public string JsonFile { get; private set; }
 
         [JsonProperty]
-        public string AudioFile;
+        public string AudioFile { get; set; }
 
         [JsonProperty]
-        public string VideoFile;
+        public string VideoFile { get; set; }
 
         [JsonProperty]
-        public FileSizeMeasurement AudioSizeMeasurement;
+        public FileSizeMeasurement AudioSizeMeasurement { get; set; }
 
         [JsonProperty]
-        public FileSizeMeasurement VideoSizeMeasurement;
+        public FileSizeMeasurement VideoSizeMeasurement { get; set; }
 
         public SessionTracker()
         {
