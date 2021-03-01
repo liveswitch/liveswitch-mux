@@ -130,7 +130,7 @@ namespace FM.LiveSwitch.Mux
                             {
                                 bool ReportIfMissing<T>(T var, string nodeName, string sectionName)
                                 {
-                                    if (var == null)
+                                    if (var?.Equals(default(T)) == null)
                                     {
                                         AddToErrorList($"JSON node \"{nodeName}\" is missing in section \"{sectionName}\".");
                                         return true;
