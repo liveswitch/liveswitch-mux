@@ -51,3 +51,7 @@ jobs:
       with:
         name: linux-x64
         path: artifacts/linux-x64
+    - name: Pack nuget library
+      run: dotnet pack src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -c Release -o artifacts/nuget
+    - name: Push nuget library
+      run: dotnet nuget push artifacts/nuget/*.nupkg --skip-duplicate --api-key ${{ secrets.NUGET_API_KEY }}
