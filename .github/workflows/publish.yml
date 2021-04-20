@@ -54,4 +54,4 @@ jobs:
     - name: Pack nuget library
       run: dotnet pack src/FM.LiveSwitch.Mux/FM.LiveSwitch.Mux.csproj -c Release -o artifacts/nuget
     - name: Push nuget library
-      run: dotnet nuget push artifacts/nuget/*.nupkg --skip-duplicate --api-key ${{ secrets.NUGET_API_KEY }}
+      run: dotnet nuget push artifacts/nuget/*.nupkg --skip-duplicate --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
