@@ -15,13 +15,7 @@ namespace FM.LiveSwitch.Mux.Test
         [InlineData(1)]
         public void VideoDelayUpdatesSession(double videoDelay)
         {
-            using var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole(options =>
-                {
-                    options.LogToStandardErrorThreshold = LogLevel.Trace;
-                });
-            });
+            using var loggerFactory = LoggerFactory.Create(builder => { });
 
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
             var stop = start.AddMinutes(1);
