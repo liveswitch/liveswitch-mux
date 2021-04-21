@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FM.LiveSwitch.Mux", "src\FM.LiveSwitch.Mux\FM.LiveSwitch.Mux.csproj", "{DFF5B5CA-5AEB-466C-AB76-65785C83E3EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FM.LiveSwitch.Mux.Test", "src\FM.LiveSwitch.Mux.Test\FM.LiveSwitch.Mux.Test.csproj", "{8F9D13B3-F2BC-4848-8975-4AED38E9BEF4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FM.LiveSwitch.Mux.Test", "src\FM.LiveSwitch.Mux.Test\FM.LiveSwitch.Mux.Test.csproj", "{8F9D13B3-F2BC-4848-8975-4AED38E9BEF4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FM.LiveSwitch.Mux.Standard", "src\FM.LiveSwitch.Mux.Standard\FM.LiveSwitch.Mux.Standard.csproj", "{41FFFA3D-7CEB-41CA-822F-5118A208FE66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{8F9D13B3-F2BC-4848-8975-4AED38E9BEF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F9D13B3-F2BC-4848-8975-4AED38E9BEF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F9D13B3-F2BC-4848-8975-4AED38E9BEF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41FFFA3D-7CEB-41CA-822F-5118A208FE66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41FFFA3D-7CEB-41CA-822F-5118A208FE66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41FFFA3D-7CEB-41CA-822F-5118A208FE66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41FFFA3D-7CEB-41CA-822F-5118A208FE66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
