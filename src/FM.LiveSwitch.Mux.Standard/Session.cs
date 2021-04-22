@@ -30,8 +30,10 @@ namespace FM.LiveSwitch.Mux
             get
             {
                 var input = string.Join(":", CompletedRecordings.Select(x => x.Id).OrderBy(x => x));
-                using var md5 = MD5.Create();
-                return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
+                using (var md5 = MD5.Create())
+                {
+                    return new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(input)));
+                }
             } 
         }
 

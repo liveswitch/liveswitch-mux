@@ -99,7 +99,7 @@ namespace FM.LiveSwitch.Mux
                     {
                         // CommandLine.Parser returns empty strings when there is a space after the separator.
                         // Also, CommandLine.Parser leaves the separator in the string sometimes.
-                        Options.InputFileNames = string.Join(',', Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
+                        Options.InputFileNames = string.Join(",", Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
                     }
 
                     var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath, Options.ProcessInvalidMedia);
@@ -352,7 +352,7 @@ namespace FM.LiveSwitch.Mux
 
         private string Move(string file, MuxOptions options)
         {
-            var newFile = file.Replace(options.InputPath, options.MovePath, StringComparison.InvariantCultureIgnoreCase);
+            var newFile = file.Replace(options.InputPath, options.MovePath);
 
             var movePath = Path.GetDirectoryName(newFile);
             if (!Directory.Exists(movePath))

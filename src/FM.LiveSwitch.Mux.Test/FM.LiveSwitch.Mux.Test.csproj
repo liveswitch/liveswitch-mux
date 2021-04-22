@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FM.LiveSwitch.Mux\FM.LiveSwitch.Mux.csproj" />
+    <ProjectReference Include="..\FM.LiveSwitch.Mux.Standard\FM.LiveSwitch.Mux.Standard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
