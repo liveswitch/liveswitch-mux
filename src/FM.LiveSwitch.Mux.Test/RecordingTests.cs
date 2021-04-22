@@ -16,8 +16,6 @@ namespace FM.LiveSwitch.Mux.Test
     public class RecordingTests
     {
         private readonly ILoggerFactory _LoggerFactory;
-        private string _AudioFile;
-        private string _VideoFile;
 
         public RecordingTests(ITestOutputHelper output)
         {
@@ -348,7 +346,7 @@ namespace FM.LiveSwitch.Mux.Test
             try
             {
                 var jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
-                var result = await RunMuxer(dirPath);
+                var result = await RunMuxer(dirPath).ConfigureAwait(false);
 
                 Assert.True(result, "Muxer run failed");
                 Assert.True(!File.Exists(jsonFilePath + ".fail"));
@@ -360,7 +358,7 @@ namespace FM.LiveSwitch.Mux.Test
 
                     jsonBlob = Regex.Replace(jsonBlob, $"\"{field}\"\\s*:\\s*\".*\"\\s*,?", "");
                     File.WriteAllText(jsonFilePath, jsonBlob);
-                    result = await RunMuxer(dirPath);
+                    result = await RunMuxer(dirPath).ConfigureAwait(false);
 
                     Assert.True(result, "Muxer run failed");
                     Assert.True(File.Exists(jsonFilePath + ".fail"));
@@ -376,7 +374,7 @@ namespace FM.LiveSwitch.Mux.Test
 
                     jsonBlob = new Regex($"\"{pair.Key}\"([^,]*)(,)?").Replace(jsonBlob, $"\"{pair.Key}\":\"{pair.Value}\"$2", 2);
                     File.WriteAllText(jsonFilePath, jsonBlob);
-                    result = await RunMuxer(dirPath);
+                    result = await RunMuxer(dirPath).ConfigureAwait(false);
 
                     Assert.True(result, "Muxer run failed");
                     Assert.True(File.Exists(jsonFilePath + ".fail"));
@@ -433,7 +431,7 @@ namespace FM.LiveSwitch.Mux.Test
                 var baseName = Path.GetFileNameWithoutExtension(newJsonFile);
                 var newAudioFile = Path.Combine(tempPath, baseName) + ".mka";
                 var newVideoFile = Path.Combine(tempPath, baseName) + ".mkv";
-                var result = await RunMuxer(tempPath);
+                var result = await RunMuxer(tempPath).ConfigureAwait(false);
 
                 Assert.True(result, "Muxer run failed");
                 Assert.False(File.Exists(jsonFile));
@@ -503,20 +501,18 @@ namespace FM.LiveSwitch.Mux.Test
         private string CreateTempFileFromExample(string extension = "json", string destinationPath = null)
         {
             var jsonFilePath = Path.Combine("./", "ExampleJson", "example.json");
-
-            _AudioFile = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
-            _VideoFile = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
-
+            var audioFile = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+            var videoFile = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
             var jsonBlob = File.ReadAllText(jsonFilePath);
 
             jsonBlob = jsonBlob
-                .Replace("--AudioFile--", _AudioFile.Replace("\\", "\\\\"))
-                .Replace("--VideoFile--", _VideoFile.Replace("\\", "\\\\"))
+                .Replace("--AudioFile--", audioFile.Replace("\\", "\\\\"))
+                .Replace("--VideoFile--", videoFile.Replace("\\", "\\\\"))
                 .Replace("b30b91854dca48f5913aa4a63a3801b9", Guid.NewGuid().ToString().Replace("-", ""))
                 .Replace("9360c8d8a19b474283c500fd2c1abcff", Guid.NewGuid().ToString().Replace("-", ""));
 
-            File.WriteAllText(_AudioFile, Guid.NewGuid().ToString());
-            File.WriteAllText(_VideoFile, Guid.NewGuid().ToString());
+            File.WriteAllText(audioFile, Guid.NewGuid().ToString());
+            File.WriteAllText(videoFile, Guid.NewGuid().ToString());
 
             var tempFilePath = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.{extension}");
             File.WriteAllText(tempFilePath, jsonBlob);
@@ -533,7 +529,7 @@ namespace FM.LiveSwitch.Mux.Test
 
             try
             {
-                parser.ParseArguments<MuxOptions>(new string[]
+                parser.ParseArguments<MuxOptions>(new[] 
                 {
                     "--dry-run",
                     "--min-orphan-duration",
@@ -543,7 +539,7 @@ namespace FM.LiveSwitch.Mux.Test
                     $"-o{outPath}"
                 }).WithParsed(options => parseOptions = options);
 
-                success = await new Muxer(parseOptions, _LoggerFactory).Run();
+                success = await new Muxer(parseOptions, _LoggerFactory).Run().ConfigureAwait(false);
             }
             finally
             {
