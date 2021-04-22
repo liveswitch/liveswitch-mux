@@ -1,10 +1,29 @@
+using CommandLine;
+using Divergic.Logging.Xunit;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace FM.LiveSwitch.Mux.Test
 {
     public class RecordingTests
     {
+        private readonly ILoggerFactory _LoggerFactory;
+        private string _AudioFile;
+        private string _VideoFile;
+
+        public RecordingTests(ITestOutputHelper output)
+        {
+            _LoggerFactory = LogFactory.Create(output);
+        }
+
         [Theory]
         [InlineData(false, false)]
         [InlineData(true, false)]
@@ -318,6 +337,224 @@ namespace FM.LiveSwitch.Mux.Test
                 Assert.False(recording.VideoSegments[4].VideoDisabled);
                 Assert.False(recording.VideoSegments[4].VideoMuted);
             }
+        }
+
+        [Fact]
+        public async Task JsonIntegrityCheckTest()
+        {
+            var dirPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}");
+            Directory.CreateDirectory(dirPath);
+
+            try
+            {
+                var jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
+                var result = await RunMuxer(dirPath);
+
+                Assert.True(result, "Muxer run failed");
+                Assert.True(!File.Exists(jsonFilePath + ".fail"));
+
+                foreach (var field in new[] { "timestamp", "applicationId", "externalId", "channelId", "connectionId", "applicationConfigId", "channelConfigId" })
+                {
+                    jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
+                    var jsonBlob = File.ReadAllText(jsonFilePath);
+
+                    jsonBlob = Regex.Replace(jsonBlob, $"\"{field}\"\\s*:\\s*\".*\"\\s*,?", "");
+                    File.WriteAllText(jsonFilePath, jsonBlob);
+                    result = await RunMuxer(dirPath);
+
+                    Assert.True(result, "Muxer run failed");
+                    Assert.True(File.Exists(jsonFilePath + ".fail"));
+                }
+
+                foreach (var pair in new Dictionary<string, string> { { "timestamp", "1000-09-25T09:08:22.752223Z" }, { "applicationId", "app" }, { "channelId", "channel" },
+                                                                  { "connectionId", "ca2f89d2-1d2e-6bf9-81a2-23fa39142aaa" }, { "externalId", "BBBBBBBB" },
+                                                                  { "applicationConfigId", "caaff9d2-112e-6b09-8fa2-23fa391421f0" },
+                                                                  { "channelConfigId", "ff84a09d-b436-9af2-01f5-ec53cbbdfa37" } })
+                {
+                    jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
+                    var jsonBlob = File.ReadAllText(jsonFilePath);
+
+                    jsonBlob = new Regex($"\"{pair.Key}\"([^,]*)(,)?").Replace(jsonBlob, $"\"{pair.Key}\":\"{pair.Value}\"$2", 2);
+                    File.WriteAllText(jsonFilePath, jsonBlob);
+                    result = await RunMuxer(dirPath);
+
+                    Assert.True(result, "Muxer run failed");
+                    Assert.True(File.Exists(jsonFilePath + ".fail"));
+                }
+            }
+            finally
+            {
+                foreach (var file in Directory.GetFiles(dirPath))
+                {
+                    File.Delete(file);
+                }
+                Directory.Delete(dirPath);
+            }
+        }
+
+        [Fact]
+        public async Task OrphanSessionTest()
+        {
+            string jsonFile = null;
+            string audioFile = null;
+            string videoFile = null;
+
+            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}");
+            Directory.CreateDirectory(tempPath);
+
+            try
+            {
+                foreach (var file in Directory.EnumerateFiles(Path.Combine("./", "OrphanSessions"), "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    File.Copy(file, Path.Combine(tempPath, Path.GetFileName(file)));
+                }
+
+                foreach (var file in Directory.EnumerateFiles(tempPath, "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    if (file.EndsWith("json.rec"))
+                    {
+                        jsonFile = file;
+                    }
+                    else if (file.EndsWith("mka.rec"))
+                    {
+                        audioFile = file;
+                    }
+                    else if (file.EndsWith("mkv.rec"))
+                    {
+                        videoFile = file;
+                    }
+                }
+
+                Assert.NotNull(jsonFile);
+                Assert.NotNull(audioFile);
+                Assert.NotNull(videoFile);
+
+                var newJsonFile = Path.Combine(tempPath, Path.GetFileNameWithoutExtension(jsonFile));
+                var baseName = Path.GetFileNameWithoutExtension(newJsonFile);
+                var newAudioFile = Path.Combine(tempPath, baseName) + ".mka";
+                var newVideoFile = Path.Combine(tempPath, baseName) + ".mkv";
+                var result = await RunMuxer(tempPath);
+
+                Assert.True(result, "Muxer run failed");
+                Assert.False(File.Exists(jsonFile));
+                Assert.False(File.Exists(audioFile));
+                Assert.False(File.Exists(videoFile));
+
+                Assert.True(File.Exists(newJsonFile));
+                Assert.True(File.Exists(newAudioFile));
+                Assert.True(File.Exists(newVideoFile));
+
+                using (System.IO.FileStream stream = new System.IO.FileStream(newJsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                using (StreamReader sr = new StreamReader(stream))
+                using (JsonReader reader = new JsonTextReader(sr))
+                {
+                    var jsonDoc = JArray.Load(reader);
+                    Assert.Equal(2, jsonDoc.Count);
+
+                    var section1 = jsonDoc[0];
+                    var section2 = jsonDoc[1];
+                    var timestamp1 = section1["timestamp"]?.Value<DateTime>();
+                    var timestamp2 = section2["timestamp"]?.Value<DateTime>();
+
+                    Assert.NotNull(timestamp1);
+                    Assert.NotNull(timestamp2);
+                    Assert.True(timestamp1 <= timestamp2);
+
+                    var data = section2["data"];
+                    var jsonAudioFile = data["audioFile"]?.Value<string>();
+                    var jsonVideoFile = data["videoFile"]?.Value<string>();
+
+                    Assert.NotNull(jsonAudioFile);
+                    Assert.NotNull(jsonVideoFile);
+                    Assert.Equal(jsonAudioFile, newAudioFile);
+                    Assert.Equal(jsonVideoFile, newVideoFile);
+
+                    var firstVideoTimestamp = data["videoFirstFrameTimestamp"]?.Value<DateTime>();
+                    var lastVideoTimestamp = data["videoLastFrameTimestamp"]?.Value<DateTime>();
+                    var firstAudioTimestamp = data["audioFirstFrameTimestamp"]?.Value<DateTime>();
+                    var lastAudioTimestamp = data["audioLastFrameTimestamp"]?.Value<DateTime>();
+
+                    Assert.NotNull(firstVideoTimestamp);
+                    Assert.NotNull(lastVideoTimestamp);
+                    Assert.NotNull(firstAudioTimestamp);
+                    Assert.NotNull(lastAudioTimestamp);
+                    Assert.Equal(firstAudioTimestamp, timestamp1);
+                    Assert.Equal(firstVideoTimestamp, timestamp1);
+                    Assert.True(firstVideoTimestamp <= lastVideoTimestamp);
+                    Assert.True(firstAudioTimestamp <= lastAudioTimestamp);
+
+                    var audioDuration = (lastAudioTimestamp - firstAudioTimestamp)?.Seconds;
+                    var videoDuration = (lastVideoTimestamp - firstVideoTimestamp)?.Seconds;
+
+                    Assert.Equal(16, audioDuration);
+                    Assert.Equal(9, videoDuration);
+                }
+            }
+            finally
+            {
+                foreach (var file in Directory.EnumerateFiles(tempPath, "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    File.Delete(file);
+                }
+                Directory.Delete(tempPath);
+            }
+        }
+
+        private string CreateTempFileFromExample(string extension = "json", string destinationPath = null)
+        {
+            var jsonFilePath = Path.Combine("./", "ExampleJson", "example.json");
+
+            _AudioFile = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+            _VideoFile = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+
+            var jsonBlob = File.ReadAllText(jsonFilePath);
+
+            jsonBlob = jsonBlob
+                .Replace("--AudioFile--", _AudioFile.Replace("\\", "\\\\"))
+                .Replace("--VideoFile--", _VideoFile.Replace("\\", "\\\\"))
+                .Replace("b30b91854dca48f5913aa4a63a3801b9", Guid.NewGuid().ToString().Replace("-", ""))
+                .Replace("9360c8d8a19b474283c500fd2c1abcff", Guid.NewGuid().ToString().Replace("-", ""));
+
+            File.WriteAllText(_AudioFile, Guid.NewGuid().ToString());
+            File.WriteAllText(_VideoFile, Guid.NewGuid().ToString());
+
+            var tempFilePath = Path.Combine(destinationPath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.{extension}");
+            File.WriteAllText(tempFilePath, jsonBlob);
+
+            return tempFilePath;
+        }
+
+        private async Task<bool> RunMuxer(string inputPath)
+        {
+            var outPath = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            var parseOptions = new MuxOptions();
+            var parser = new Parser();
+            var success = false;
+
+            try
+            {
+                parser.ParseArguments<MuxOptions>(new string[]
+                {
+                    "--dry-run",
+                    "--min-orphan-duration",
+                    "0",
+                    $"-s{StrategyType.Flat}",
+                    $"-i{inputPath}",
+                    $"-o{outPath}"
+                }).WithParsed(options => parseOptions = options);
+
+                success = await new Muxer(parseOptions, _LoggerFactory).Run();
+            }
+            finally
+            {
+                foreach (var file in outPath.EnumerateFiles())
+                {
+                    file.Delete();
+                }
+                outPath.Delete();
+            }
+
+            return success;
         }
     }
 }
