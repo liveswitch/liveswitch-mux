@@ -17,5 +17,7 @@ namespace FM.LiveSwitch.Mux
         public bool AudioDisabled { get; set; }
 
         public bool VideoDisabled { get; set; }
+
+        public string VideoContent { get; set; }
     }
 }
