@@ -49,7 +49,7 @@ namespace FM.LiveSwitch.Mux
         {
             for (var i = 0; i < 3; i++)
             {
-                if (await JsonIntegrityCheck())
+                if (await JsonIntegrityCheck().ConfigureAwait(false))
                 {
                     break;
                 }
@@ -59,7 +59,7 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
-            await ProcessOrphanSessions();
+            await ProcessOrphanSessions().ConfigureAwait(false);
         }
 
         private async Task<bool> JsonIntegrityCheck()
@@ -312,7 +312,7 @@ namespace FM.LiveSwitch.Mux
 
                                 if (calcLastAudioTS)
                                 {
-                                    var duration = await GetDuration(audioFilePath);
+                                    var duration = await GetDuration(audioFilePath).ConfigureAwait(false);
                                     if (duration != null)
                                     {
                                         lastAudioTimestamp = firstAudioTimestamp + duration;
@@ -331,7 +331,7 @@ namespace FM.LiveSwitch.Mux
 
                                 if (calcLastVideoTS)
                                 {
-                                    var duration = await GetDuration(videoFilePath);
+                                    var duration = await GetDuration(videoFilePath).ConfigureAwait(false);
                                     if (duration != null)
                                     {
                                         lastVideoTimestamp = firstVideoTimestamp + duration;
@@ -676,7 +676,7 @@ namespace FM.LiveSwitch.Mux
                                 AddProperty(dataObj, "audioFile", audioFile);
                                 AddProperty(dataObj, "audioFirstFrameTimestamp", firstFrameTimestamp);
 
-                                var duration = await GetDuration(audioFile);
+                                var duration = await GetDuration(audioFile).ConfigureAwait(false);
                                 if (duration != null)
                                 {
                                     var lastFrameTimestamp = firstFrameTimestamp + duration;
@@ -697,7 +697,7 @@ namespace FM.LiveSwitch.Mux
                                 AddProperty(dataObj, "videoFile", videoFile);
                                 AddProperty(dataObj, "videoFirstFrameTimestamp", firstFrameTimestamp);
 
-                                var duration = await GetDuration(videoFile);
+                                var duration = await GetDuration(videoFile).ConfigureAwait(false);
                                 if (duration != null)
                                 {
                                     var lastFrameTimestamp = firstFrameTimestamp + duration;

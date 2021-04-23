@@ -10,7 +10,7 @@ namespace FM.LiveSwitch.Mux
 {
     public class FfmpegUtility
     {
-        private ILogger _Logger;
+        private readonly ILogger _Logger;
 
         public FfmpegUtility(ILogger logger)
         {
