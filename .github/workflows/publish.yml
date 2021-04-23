@@ -21,6 +21,10 @@ jobs:
         dotnet-version: 3.1.x
     - name: Install dependencies
       run: dotnet restore
+    - name: Update apt-get
+      run: apt-get update
+    - name: Install ffmpeg
+      run: apt-get install ffmpeg
     - name: Run tests
       run: dotnet test src/FM.LiveSwitch.Mux.Test/FM.LiveSwitch.Mux.Test.csproj
     - name: Build library
