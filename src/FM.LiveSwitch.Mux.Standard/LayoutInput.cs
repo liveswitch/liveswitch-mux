@@ -24,6 +24,8 @@ namespace FM.LiveSwitch.Mux
 
         public bool VideoDisabled { get; set; }
 
+        public string AudioContent { get; set; }
+
         public string VideoContent { get; set; }
 
         public dynamic ToDynamic()
@@ -40,6 +42,7 @@ namespace FM.LiveSwitch.Mux
                 videoMuted = VideoMuted,
                 audioDisabled = AudioDisabled,
                 videoDisabled = VideoDisabled,
+                audioContent = AudioContent,
                 videoContent = VideoContent
             };
         }
@@ -71,6 +74,7 @@ namespace FM.LiveSwitch.Mux
                 VideoMuted = (lookup.ContainsKey("videoMuted") ? value.videoMuted as bool? : null) == true,
                 AudioDisabled = (lookup.ContainsKey("audioDisabled") ? value.audioDisabled as bool? : null) == true,
                 VideoDisabled = (lookup.ContainsKey("videoDisabled") ? value.videoDisabled as bool? : null) == true,
+                AudioContent = lookup.ContainsKey("audioContent") ? value.audioContent as string : null,
                 VideoContent = lookup.ContainsKey("videoContent") ? value.videoContent as string : null,
             };
         }
