@@ -312,7 +312,7 @@ namespace FM.LiveSwitch.Mux
 
                                 if (calcLastAudioTS)
                                 {
-                                    var duration = await GetDuration(_Logger, audioFilePath);
+                                    var duration = await GetDuration(audioFilePath);
                                     if (duration != null)
                                     {
                                         lastAudioTimestamp = firstAudioTimestamp + duration;
@@ -331,7 +331,7 @@ namespace FM.LiveSwitch.Mux
 
                                 if (calcLastVideoTS)
                                 {
-                                    var duration = await GetDuration(_Logger, videoFilePath);
+                                    var duration = await GetDuration(videoFilePath);
                                     if (duration != null)
                                     {
                                         lastVideoTimestamp = firstVideoTimestamp + duration;
@@ -676,7 +676,7 @@ namespace FM.LiveSwitch.Mux
                                 AddProperty(dataObj, "audioFile", audioFile);
                                 AddProperty(dataObj, "audioFirstFrameTimestamp", firstFrameTimestamp);
 
-                                var duration = await GetDuration(_Logger, audioFile);
+                                var duration = await GetDuration(audioFile);
                                 if (duration != null)
                                 {
                                     var lastFrameTimestamp = firstFrameTimestamp + duration;
@@ -697,7 +697,7 @@ namespace FM.LiveSwitch.Mux
                                 AddProperty(dataObj, "videoFile", videoFile);
                                 AddProperty(dataObj, "videoFirstFrameTimestamp", firstFrameTimestamp);
 
-                                var duration = await GetDuration(_Logger, videoFile);
+                                var duration = await GetDuration(videoFile);
                                 if (duration != null)
                                 {
                                     var lastFrameTimestamp = firstFrameTimestamp + duration;
@@ -814,41 +814,11 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
-        private long? GetFirstTimecode(Matroska.Cluster cluster)
-        {
-            if (cluster.SimpleBlocks != null && cluster.SimpleBlocks.Length > 0)
-            {
-                return cluster.Timecode + cluster.SimpleBlocks.First().Timecode;
-            }
-
-            if (cluster.BlockGroups != null && cluster.BlockGroups.Length > 0)
-            {
-                return cluster.Timecode + cluster.BlockGroups.First().Block.Timecode;
-            }
-
-            return null;
-        }
-
-        private long? GetLastTimecode(Matroska.Cluster cluster)
-        {
-            if (cluster.SimpleBlocks != null && cluster.SimpleBlocks.Length > 0)
-            {
-                return cluster.Timecode + cluster.SimpleBlocks.Last().Timecode;
-            }
-
-            if (cluster.BlockGroups != null && cluster.BlockGroups.Length > 0)
-            {
-                return cluster.Timecode + cluster.BlockGroups.Last().Block.Timecode;
-            }
-
-            return null;
-        }
-
-        private async Task<TimeSpan?> GetDuration(ILogger logger, string filePath)
+        private async Task<TimeSpan?> GetDuration(string filePath)
         {
             try
             {
-                var ffmpegUtil = new FfmpegUtility(logger);
+                var ffmpegUtil = new FfmpegUtility(_Logger);
                 return await ffmpegUtil.GetDuration(filePath).ConfigureAwait(false);
             }
             catch (Exception ex)
