@@ -104,7 +104,7 @@ namespace FM.LiveSwitch.Mux
 
                     var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath, Options.ProcessInvalidMedia);
                     preprocessor.MinimumOrphanDuration = Options.MinimumOrphanDuration;
-                    preprocessor.processDirectory();
+                    await preprocessor.processDirectory();
 
                     var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
                     if (logEntries == null)
