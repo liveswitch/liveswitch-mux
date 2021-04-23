@@ -22,9 +22,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Update apt-get
-      run: apt-get update
+      run: sudo apt-get update
     - name: Install ffmpeg
-      run: apt-get install ffmpeg
+      run: sudo apt-get install ffmpeg
     - name: Run tests
       run: dotnet test src/FM.LiveSwitch.Mux.Test/FM.LiveSwitch.Mux.Test.csproj
     - name: Build library
