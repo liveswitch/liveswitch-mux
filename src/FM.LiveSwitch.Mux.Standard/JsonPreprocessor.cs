@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using IO = System.IO;
 
 namespace FM.LiveSwitch.Mux
@@ -44,11 +45,11 @@ namespace FM.LiveSwitch.Mux
             _ProcessInvalidMedia = ProcessInvalidMedia;
         }
 
-        public void processDirectory()
+        public async Task processDirectory()
         {
             for (var i = 0; i < 3; i++)
             {
-                if (JsonIntegrityCheck())
+                if (await JsonIntegrityCheck())
                 {
                     break;
                 }
@@ -58,10 +59,10 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
-            ProcessOrphanSessions();
+            await ProcessOrphanSessions();
         }
 
-        private bool JsonIntegrityCheck()
+        private async Task<bool> JsonIntegrityCheck()
         {
             var tempFiles = new List<Tuple<string, string>>();
             var noErrors = true;
@@ -311,7 +312,7 @@ namespace FM.LiveSwitch.Mux
 
                                 if (calcLastAudioTS)
                                 {
-                                    var duration = GetDuration(_Logger, audioFilePath);
+                                    var duration = await GetDuration(_Logger, audioFilePath);
                                     if (duration != null)
                                     {
                                         lastAudioTimestamp = firstAudioTimestamp + duration;
@@ -330,7 +331,7 @@ namespace FM.LiveSwitch.Mux
 
                                 if (calcLastVideoTS)
                                 {
-                                    var duration = GetDuration(_Logger, videoFilePath);
+                                    var duration = await GetDuration(_Logger, videoFilePath);
                                     if (duration != null)
                                     {
                                         lastVideoTimestamp = firstVideoTimestamp + duration;
@@ -464,7 +465,12 @@ namespace FM.LiveSwitch.Mux
                 try
                 {
                     _Logger.LogDebug($"JsonIntegrityCheck has temporary files and moving file {pair.Item2} to file {pair.Item1}");
-                    IO.File.Move(pair.Item2, pair.Item1, true);
+
+                    if (IO.File.Exists(pair.Item1))
+                    {
+                        IO.File.Delete(pair.Item1);
+                    }
+                    IO.File.Move(pair.Item2, pair.Item1);
                 }
                 catch (Exception ex)
                 {
@@ -478,7 +484,7 @@ namespace FM.LiveSwitch.Mux
             return noErrors;
         }
 
-        private void ProcessOrphanSessions()
+        private async Task ProcessOrphanSessions()
         {
             _Logger.LogDebug("Starting processing orphan sessions...");
             _Logger.LogDebug("Starting cleaning up missing files...");
@@ -592,7 +598,7 @@ namespace FM.LiveSwitch.Mux
             }
 
             var finishedSessions = new HashSet<string>();
-            foreach (var (connectionId, sessionTracker) in orphanSessions)
+            foreach ((string connectionId, SessionTracker sessionTracker) in orphanSessions.Select(x => (x.Key, x.Value)))
             {
                 _Logger.LogDebug($"ProcessOrphanSessions starting processing orphan sessions for {sessionTracker.JsonFile}");
 
@@ -670,7 +676,7 @@ namespace FM.LiveSwitch.Mux
                                 AddProperty(dataObj, "audioFile", audioFile);
                                 AddProperty(dataObj, "audioFirstFrameTimestamp", firstFrameTimestamp);
 
-                                var duration = GetDuration(_Logger, audioFile);
+                                var duration = await GetDuration(_Logger, audioFile);
                                 if (duration != null)
                                 {
                                     var lastFrameTimestamp = firstFrameTimestamp + duration;
@@ -691,7 +697,7 @@ namespace FM.LiveSwitch.Mux
                                 AddProperty(dataObj, "videoFile", videoFile);
                                 AddProperty(dataObj, "videoFirstFrameTimestamp", firstFrameTimestamp);
 
-                                var duration = GetDuration(_Logger, videoFile);
+                                var duration = await GetDuration(_Logger, videoFile);
                                 if (duration != null)
                                 {
                                     var lastFrameTimestamp = firstFrameTimestamp + duration;
@@ -838,39 +844,12 @@ namespace FM.LiveSwitch.Mux
             return null;
         }
 
-        private TimeSpan? GetDuration(ILogger _Logger, string filePath)
+        private async Task<TimeSpan?> GetDuration(ILogger logger, string filePath)
         {
             try
             {
-                var file = new Matroska.File(IO.File.ReadAllBytes(filePath));
-
-                // get the clusters
-                var clusters = file.Segment?.Clusters;
-                if (clusters == null || clusters.Length == 0)
-                {
-                    return null;
-                }
-
-                // get the first timecode
-                var firstTimecode = GetFirstTimecode(clusters.First());
-                if (firstTimecode == null)
-                {
-                    return null;
-                }
-
-                // get the last timecode
-                var lastTimecode = GetLastTimecode(clusters.Last());
-                if (lastTimecode == null)
-                {
-                    return null;
-                }
-
-                // convert to nanoseconds
-                var timecodeScale = file.Segment?.SegmentInfo?.TimecodeScale ?? Matroska.SegmentInfo.DefaultTimecodeScale;
-                var durationNanos = (lastTimecode.Value - firstTimecode.Value) * timecodeScale;
-
-                // convert to timespan
-                return new TimeSpan(durationNanos / 100);
+                var ffmpegUtil = new FfmpegUtility(logger);
+                return await ffmpegUtil.GetDuration(filePath).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

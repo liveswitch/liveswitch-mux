@@ -166,6 +166,7 @@ namespace FM.LiveSwitch.Mux
         }
 
         private readonly ILogger _Logger;
+        private readonly FfmpegUtility _FfmpegUtility;
 
         public Session(string channelId, string applicationId, Client[] completedClients, ILoggerFactory loggerFactory)
         {
@@ -175,6 +176,7 @@ namespace FM.LiveSwitch.Mux
             LoggerFactory = loggerFactory;
 
             _Logger = loggerFactory.CreateLogger(nameof(Session));
+            _FfmpegUtility = new FfmpegUtility(_Logger);
         }
 
         public async Task<bool> Mux(MuxOptions options)
@@ -241,7 +243,7 @@ namespace FM.LiveSwitch.Mux
             }
 
             // run it
-            await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+            await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
             return FileExists;
         }
@@ -373,7 +375,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // run it
-                await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+                await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
                 return AudioFileExists;
             }
@@ -686,7 +688,7 @@ namespace FM.LiveSwitch.Mux
                     }
 
                     // run it
-                    await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+                    await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -744,7 +746,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // run it
-                await FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+                await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
                 return VideoFileExists;
             }
@@ -852,7 +854,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<string> GetAudioCodec(Recording recording)
         {
-            var lines = await FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}").ConfigureAwait(false);
+            var lines = await _FfmpegUtility.FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}").ConfigureAwait(false);
             if (lines.Length == 0)
             {
                 return null;
@@ -862,7 +864,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<string> GetVideoCodec(Recording recording)
         {
-            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}").ConfigureAwait(false);
+            var lines = await _FfmpegUtility.FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}").ConfigureAwait(false);
             if (lines.Length == 0)
             {
                 return null;
@@ -872,7 +874,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<VideoSegment[]> ParseVideoSegments(Recording recording)
         {
-            var lines = await FFprobe($"-v quiet -select_streams v:0 -show_frames -show_entries frame=pkt_pts_time,width,height -print_format csv=item_sep=|:nokey=1:print_section=0 {recording.VideoFile}").ConfigureAwait(false);
+            var lines = await _FfmpegUtility.FFprobe($"-v quiet -select_streams v:0 -show_frames -show_entries frame=pkt_pts_time,width,height -print_format csv=item_sep=|:nokey=1:print_section=0 {recording.VideoFile}").ConfigureAwait(false);
 
             var currentSize = Size.Empty;
             var segments = new List<VideoSegment>();
@@ -927,72 +929,6 @@ namespace FM.LiveSwitch.Mux
             }
 
             return segments.ToArray();
-        }
-
-        private Task<string[]> FFmpeg(string arguments)
-        {
-            return Execute("ffmpeg", arguments, true, true);
-        }
-
-        private Task<string[]> FFprobe(string arguments)
-        {
-            return Execute("ffprobe", arguments, false, false);
-        }
-
-        private async Task<string[]> Execute(string command, string arguments, bool useStandardError, bool logOutput)
-        {
-            var logger = LoggerFactory.CreateLogger(command);
-
-            // prep the process arguments
-            var processStartInfo = new ProcessStartInfo
-            {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                FileName = command,
-                Arguments = arguments
-            };
-
-            if (useStandardError)
-            {
-                processStartInfo.RedirectStandardError = true;
-            }
-            else
-            {
-                processStartInfo.RedirectStandardOutput = true;
-            }
-
-            // log what we're about to do
-            logger.LogInformation(arguments);
-
-            try
-            {
-                // let 'er rip
-                var process = Process.Start(processStartInfo);
-
-                // process each line
-                var lines = new List<string>();
-                var stream = useStandardError ? process.StandardError : process.StandardOutput;
-                while (!stream.EndOfStream)
-                {
-                    var line = await stream.ReadLineAsync();
-                    if (line != null)
-                    {
-                        if (logOutput)
-                        {
-                            logger.LogInformation(line);
-                        }
-                        lines.Add(line);
-                    }
-                }
-
-                // make sure everything is finished
-                process.WaitForExit();
-
-                return lines.ToArray();
-            }
-            catch (Exception ex)
-            {
-                throw new ExecuteException($"Could not start {command}. Is ffmpeg installed and available on your PATH?", ex);
-            }
         }
 
         public bool WriteMetadata(MuxOptions options)
