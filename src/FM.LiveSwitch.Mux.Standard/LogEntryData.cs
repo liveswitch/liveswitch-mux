@@ -28,6 +28,8 @@ namespace FM.LiveSwitch.Mux
 
         public bool? VideoDisabled { get; set; }
 
+        public string AudioContent { get; set; }
+
         public string VideoContent { get; set; }
 
         public bool IsEquivalent(LogEntryData other)
@@ -45,6 +47,7 @@ namespace FM.LiveSwitch.Mux
                 other.VideoMuted == VideoMuted &&
                 other.AudioDisabled == AudioDisabled &&
                 other.VideoDisabled == VideoDisabled &&
+                other.AudioContent == AudioContent &&
                 other.VideoContent == VideoContent;
         }
     }

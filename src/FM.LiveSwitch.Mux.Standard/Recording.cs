@@ -180,6 +180,7 @@ namespace FM.LiveSwitch.Mux
                         VideoMuted = data.VideoMuted == true,
                         AudioDisabled = data.AudioDisabled == true,
                         VideoDisabled = data.VideoDisabled == true,
+                        AudioContent = data.AudioContent,
                         VideoContent = data.VideoContent
                     });
                 }
@@ -219,6 +220,7 @@ namespace FM.LiveSwitch.Mux
                             StopTimestamp = update.StopTimestamp,
                             AudioDisabled = update.AudioDisabled,
                             VideoDisabled = update.VideoDisabled,
+                            AudioContent = update.AudioContent,
                             VideoContent = update.VideoContent,
                             AudioMuted = update.AudioMuted,
                             VideoMuted = update.VideoMuted,
