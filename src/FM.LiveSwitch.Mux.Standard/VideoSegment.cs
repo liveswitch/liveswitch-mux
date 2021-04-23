@@ -17,6 +17,8 @@ namespace FM.LiveSwitch.Mux
 
         public bool VideoDisabled { get; set; }
 
+        public string VideoContent { get; set; }
+
         public DateTime StartTimestamp { get; set; }
 
         public DateTime StopTimestamp { get; set; }
@@ -40,7 +42,8 @@ namespace FM.LiveSwitch.Mux
                 AudioMuted = AudioMuted,
                 AudioDisabled = AudioDisabled,
                 VideoMuted = VideoMuted,
-                VideoDisabled = VideoDisabled
+                VideoDisabled = VideoDisabled,
+                VideoContent = VideoContent
             };
         }
 
@@ -59,6 +62,7 @@ namespace FM.LiveSwitch.Mux
                 AudioDisabled = update == null ? AudioDisabled : update.AudioDisabled,
                 VideoMuted = update == null ? VideoMuted : update.VideoMuted,
                 VideoDisabled = update == null ? VideoDisabled : update.VideoDisabled,
+                VideoContent = update == null ? VideoContent : update.VideoContent,
                 StartTimestamp = StartTimestamp,
                 StopTimestamp = StopTimestamp,
                 Recording = Recording
