@@ -155,6 +155,10 @@ namespace FM.LiveSwitch.Mux
 
         private readonly List<RecordingUpdate> _Updates = new List<RecordingUpdate>();
 
+        public LogEntry[] LogEntries { get { return _LogEntries.ToArray(); } }
+
+        private readonly List<LogEntry> _LogEntries = new List<LogEntry>();
+
         public void Update(LogEntry logEntry)
         {
             Update(logEntry, false);
@@ -162,6 +166,8 @@ namespace FM.LiveSwitch.Mux
 
         public void Update(LogEntry logEntry, bool final)
         {
+            _LogEntries.Add(logEntry);
+
             var data = logEntry.Data;
             if (data != null)
             {
