@@ -157,57 +157,73 @@ namespace FM.LiveSwitch.Mux
                                     session.StartTimestamp,
                                     session.StopTimestamp);
 
-                                if (await session.Mux(Options))
+                                try
                                 {
-                                    _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
-                                        application.Id,
-                                        channel.Id,
-                                        session.StartTimestamp,
-                                        session.StopTimestamp);
-
-                                    if (Options.MoveInputs)
+                                    if (await session.Mux(Options))
                                     {
-                                        if (Options.InputPath != Options.MovePath)
+                                        _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
+                                            application.Id,
+                                            channel.Id,
+                                            session.StartTimestamp,
+                                            session.StopTimestamp);
+
+                                        if (Options.MoveInputs)
+                                        {
+                                            if (Options.InputPath != Options.MovePath)
+                                            {
+                                                foreach (var recording in session.CompletedRecordings)
+                                                {
+                                                    if (recording.AudioFileExists)
+                                                    {
+                                                        recording.AudioFile = Move(recording.AudioFile, Options);
+                                                    }
+                                                    if (recording.VideoFileExists)
+                                                    {
+                                                        recording.VideoFile = Move(recording.VideoFile, Options);
+                                                    }
+                                                    if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
+                                                    {
+                                                        recording.LogFile = Move(recording.LogFile, Options);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else if (Options.DeleteInputs)
                                         {
                                             foreach (var recording in session.CompletedRecordings)
                                             {
                                                 if (recording.AudioFileExists)
                                                 {
-                                                    recording.AudioFile = Move(recording.AudioFile, Options);
+                                                    Delete(recording.AudioFile, Options);
                                                 }
                                                 if (recording.VideoFileExists)
                                                 {
-                                                    recording.VideoFile = Move(recording.VideoFile, Options);
+                                                    Delete(recording.VideoFile, Options);
                                                 }
                                                 if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
                                                 {
-                                                    recording.LogFile = Move(recording.LogFile, Options);
+                                                    Delete(recording.LogFile, Options);
                                                 }
                                             }
                                         }
-                                    }
-                                    else if (Options.DeleteInputs)
-                                    {
-                                        foreach (var recording in session.CompletedRecordings)
+
+                                        if (session.WriteMetadata(Options))
                                         {
-                                            if (recording.AudioFileExists)
-                                            {
-                                                Delete(recording.AudioFile, Options);
-                                            }
-                                            if (recording.VideoFileExists)
-                                            {
-                                                Delete(recording.VideoFile, Options);
-                                            }
-                                            if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
-                                            {
-                                                Delete(recording.LogFile, Options);
-                                            }
+                                            metadataFiles.Add(session.MetadataFile);
                                         }
                                     }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _Logger.LogError(ex, "Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' could not be muxed ({StartTimestamp} to {StopTimestamp}).",
+                                        application.Id,
+                                        channel.Id,
+                                        session.StartTimestamp,
+                                        session.StopTimestamp);
 
-                                    if (session.WriteMetadata(Options))
+                                    if (!Options.ContinueOnFailure)
                                     {
-                                        metadataFiles.Add(session.MetadataFile);
+                                        throw;
                                     }
                                 }
                             }
