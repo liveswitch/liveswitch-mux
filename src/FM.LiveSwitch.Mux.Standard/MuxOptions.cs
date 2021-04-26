@@ -85,6 +85,9 @@ namespace FM.LiveSwitch.Mux
         [Option("js-file", HelpText = "For JS layout, the JavaScript file path. Defaults to layout.js in the input path.")]
         public string JavaScriptFile { get; set; }
 
+        [Option("continue-on-failure", HelpText = "Continue processing remaining sessions if a session fails to be processed.")]
+        public bool ContinueOnFailure { get; set; }
+
         [Option("trim-first", HelpText = "Trim audio from the first participant before any other participants have joined. Requires the --no-video flag.")]
         public bool TrimFirst { get; set; }
 
