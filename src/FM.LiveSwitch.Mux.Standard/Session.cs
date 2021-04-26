@@ -112,9 +112,6 @@ namespace FM.LiveSwitch.Mux
         }
 
         [JsonIgnore]
-        public VideoSegment[] CompletedVideoSegments { get { return CompletedClients.Where(x => x.CompletedVideoSegments != null).SelectMany(x => x.CompletedVideoSegments).OrderBy(x => x.StartTimestamp).ToArray(); } }
-
-        [JsonIgnore]
         public Recording[] CompletedRecordings { get { return CompletedClients.SelectMany(x => x.CompletedRecordings).OrderBy(x => x.StartTimestamp).ToArray(); } }
 
         [JsonIgnore]

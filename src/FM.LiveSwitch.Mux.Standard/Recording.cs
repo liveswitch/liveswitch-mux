@@ -130,6 +130,13 @@ namespace FM.LiveSwitch.Mux
                     }
                     else
                     {
+                        // updates that arrived before the video started or
+                        // after it ended are not relevant to this sequence
+                        if (segment.StartTimestamp < VideoStartTimestamp.Value ||
+                            segment.StartTimestamp > VideoStopTimestamp.Value)
+                        {
+                            continue;
+                        }
                         videoEvents.Add(new VideoEvent
                         {
                             Type = VideoEventType.Update,
