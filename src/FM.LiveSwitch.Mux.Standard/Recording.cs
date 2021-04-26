@@ -155,6 +155,10 @@ namespace FM.LiveSwitch.Mux
 
         private readonly List<RecordingUpdate> _Updates = new List<RecordingUpdate>();
 
+        public LogEntry[] LogEntries { get { return _LogEntries.ToArray(); } }
+
+        private readonly List<LogEntry> _LogEntries = new List<LogEntry>();
+
         public void Update(LogEntry logEntry)
         {
             Update(logEntry, false);
@@ -162,6 +166,8 @@ namespace FM.LiveSwitch.Mux
 
         public void Update(LogEntry logEntry, bool final)
         {
+            _LogEntries.Add(logEntry);
+
             var data = logEntry.Data;
             if (data != null)
             {
@@ -180,6 +186,8 @@ namespace FM.LiveSwitch.Mux
                         VideoMuted = data.VideoMuted == true,
                         AudioDisabled = data.AudioDisabled == true,
                         VideoDisabled = data.VideoDisabled == true,
+                        AudioContent = data.AudioContent,
+                        VideoContent = data.VideoContent
                     });
                 }
             }
@@ -218,6 +226,8 @@ namespace FM.LiveSwitch.Mux
                             StopTimestamp = update.StopTimestamp,
                             AudioDisabled = update.AudioDisabled,
                             VideoDisabled = update.VideoDisabled,
+                            AudioContent = update.AudioContent,
+                            VideoContent = update.VideoContent,
                             AudioMuted = update.AudioMuted,
                             VideoMuted = update.VideoMuted,
                             ConnectionTag = update.ConnectionTag
