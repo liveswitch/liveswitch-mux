@@ -52,6 +52,11 @@ namespace FM.LiveSwitch.Mux
 
             foreach (var jsonFile in Directory.EnumerateFiles(_InputDirectory, "*.json", SearchOption.TopDirectoryOnly))
             {
+                if (Path.GetFileName(jsonFile).StartsWith("session_"))
+                {
+                    continue;
+                }
+
                 _Logger.LogDebug($"JsonIntegrityCheck starting processing file {jsonFile}");
 
                 try
