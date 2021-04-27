@@ -442,7 +442,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Assert.True(File.Exists(newAudioFile));
                 Assert.True(File.Exists(newVideoFile));
 
-                using (System.IO.FileStream stream = new System.IO.FileStream(newJsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                using (FileStream stream = new FileStream(newJsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
                 using (StreamReader sr = new StreamReader(stream))
                 using (JsonReader reader = new JsonTextReader(sr))
                 {

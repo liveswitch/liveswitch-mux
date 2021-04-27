@@ -1,7 +1,6 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using Microsoft.Extensions.Logging;
-using Logging = Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -21,7 +20,7 @@ namespace FM.LiveSwitch.Mux
                 builder.AddConsole(options =>
                 {
                     // reserve stdout for programmatic use
-                    options.LogToStandardErrorThreshold = Logging.LogLevel.Trace;
+                    options.LogToStandardErrorThreshold = LogLevel.Trace;
                 });
             });
 

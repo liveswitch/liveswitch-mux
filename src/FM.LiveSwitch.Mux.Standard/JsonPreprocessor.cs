@@ -7,42 +7,23 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using IO = System.IO;
+using System.IO;
 
 namespace FM.LiveSwitch.Mux
 {
     public class JsonPreprocessor
     {
-        private int _MinimumOrphanDuration = 120;
-
-        public int MinimumOrphanDuration
-        {
-            get
-            {
-                return _MinimumOrphanDuration;
-            }
-
-            set
-            {
-                _MinimumOrphanDuration = value;
-            }
-        }
+        public int MinimumOrphanDuration { get; set; } = 120;
 
         private readonly ILogger _Logger;
         private readonly string _InputDirectory;
-        private readonly bool _ProcessInvalidMedia;
-
-        // Add this field to the section "stopRecording" of the JSON file
-        // to have invalid media files processed by the recording service.
-        private static readonly string ProcessInvalidMediaFieldName = "processInvalidMedia";
 
         private static readonly string OrphanSessionsFileName = ".orphan-sessions.stored.$$$";
 
-        public JsonPreprocessor(ILogger Logger, string InputDirectory, bool ProcessInvalidMedia)
+        public JsonPreprocessor(ILogger Logger, string InputDirectory)
         {
             _Logger = Logger;
             _InputDirectory = InputDirectory;
-            _ProcessInvalidMedia = ProcessInvalidMedia;
         }
 
         public async Task processDirectory()
@@ -69,13 +50,13 @@ namespace FM.LiveSwitch.Mux
 
             _Logger.LogDebug($"Starting integrity check of the directory {_InputDirectory}");
 
-            foreach (var jsonFile in IO.Directory.EnumerateFiles(_InputDirectory, "*.json", IO.SearchOption.TopDirectoryOnly))
+            foreach (var jsonFile in Directory.EnumerateFiles(_InputDirectory, "*.json", SearchOption.TopDirectoryOnly))
             {
                 _Logger.LogDebug($"JsonIntegrityCheck starting processing file {jsonFile}");
 
                 try
                 {
-                    if (IO.File.Exists(jsonFile + ".fail"))
+                    if (File.Exists(jsonFile + ".fail"))
                     {
                         _Logger.LogDebug($"File {jsonFile} is already marked as fail-checked. Skipping...");
                         continue;
@@ -83,8 +64,8 @@ namespace FM.LiveSwitch.Mux
 
                     var errorList = new List<string>();
 
-                    using (IO.FileStream stream = new IO.FileStream(jsonFile, IO.FileMode.Open, IO.FileAccess.Read, IO.FileShare.None))
-                    using (IO.StreamReader sr = new IO.StreamReader(stream))
+                    using (FileStream stream = new FileStream(jsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                    using (StreamReader sr = new StreamReader(stream))
                     using (JsonReader reader = new JsonTextReader(sr))
                     {
                         var isValid = true;
@@ -115,7 +96,6 @@ namespace FM.LiveSwitch.Mux
                             var calcLastVideoTS = false;
                             var addAudioPath = false;
                             var addVideoPath = false;
-                            var processInvalidMedia = false;
 
                             if (startEvent == default(JToken))
                             {
@@ -182,8 +162,6 @@ namespace FM.LiveSwitch.Mux
                                 Guid? applicationConfigId2 = null;
                                 Guid? channelConfigId2 = null;
 
-                                processInvalidMedia = (stopEvent[ProcessInvalidMediaFieldName] != null) || _ProcessInvalidMedia;
-
                                 if (timestamp2 != null && timestamp > timestamp2)
                                 {
                                     AddToErrorList("Start recording timestamp must not be greater than stop recording timestamp.");
@@ -223,28 +201,28 @@ namespace FM.LiveSwitch.Mux
 
                                 addRecordStopTS = (timestamp2 == null);
 
-                                if (audioFilePath != null && !IO.File.Exists(audioFilePath))
+                                if (audioFilePath != null && !File.Exists(audioFilePath))
                                 {
                                     AddToErrorList($"Audio file {audioFilePath} is missing.");
                                 }
 
-                                if (videoFilePath != null && !IO.File.Exists(videoFilePath))
+                                if (videoFilePath != null && !File.Exists(videoFilePath))
                                 {
                                     AddToErrorList($"Video file {videoFilePath} is missing.");
                                 }
 
                                 if (isValid)
                                 {
-                                    var baseName = IO.Path.GetFileNameWithoutExtension(jsonFile);
-                                    var audioPath = IO.Path.Combine(_InputDirectory, baseName + ".mka");
-                                    var videoPath = IO.Path.Combine(_InputDirectory, baseName + ".mkv");
+                                    var baseName = Path.GetFileNameWithoutExtension(jsonFile);
+                                    var audioPath = Path.Combine(_InputDirectory, baseName + ".mka");
+                                    var videoPath = Path.Combine(_InputDirectory, baseName + ".mkv");
 
                                     if (data == null)
                                     {
                                         addDataBlock = true;
                                     }
 
-                                    if (IO.File.Exists(audioPath))
+                                    if (File.Exists(audioPath))
                                     {
                                         if (firstAudioTimestamp == null)
                                         {
@@ -264,7 +242,7 @@ namespace FM.LiveSwitch.Mux
                                         }
                                     }
 
-                                    if (IO.File.Exists(videoPath))
+                                    if (File.Exists(videoPath))
                                     {
                                         if (firstVideoTimestamp == null)
                                         {
@@ -318,14 +296,10 @@ namespace FM.LiveSwitch.Mux
                                         lastAudioTimestamp = firstAudioTimestamp + duration;
                                         _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastAudioTimestamp} (duration: {duration}).");
                                     }
-                                    else if (processInvalidMedia)
+                                    else
                                     {
                                         lastAudioTimestamp = firstAudioTimestamp;
                                         _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastAudioTimestamp} (duration: cannot be calculated).");
-                                    }
-                                    else
-                                    {
-                                        AddToErrorList($"Duration of audio file \"{audioFilePath}\" cannot be determined.");
                                     }
                                 }
 
@@ -337,19 +311,15 @@ namespace FM.LiveSwitch.Mux
                                         lastVideoTimestamp = firstVideoTimestamp + duration;
                                         _Logger.LogDebug($"Calculated last video frame timestamp for file {jsonFile}: {lastVideoTimestamp} (duration: {duration}).");
                                     }
-                                    else if (processInvalidMedia)
+                                    else
                                     {
                                         lastVideoTimestamp = firstVideoTimestamp;
                                         _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastVideoTimestamp} (duration: cannot be calculated).");
                                     }
-                                    else
-                                    {
-                                        AddToErrorList($"Duration of video file \"{videoFilePath}\" cannot be determined.");
-                                    }
                                 }
 
-                                using (IO.FileStream outStream = new IO.FileStream(tempFile, IO.FileMode.Create, IO.FileAccess.Write, IO.FileShare.None))
-                                using (IO.StreamWriter sw = new IO.StreamWriter(outStream))
+                                using (FileStream outStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                                using (StreamWriter sw = new StreamWriter(outStream))
                                 using (JsonWriter writer = new JsonTextWriter(sw))
                                 {
                                     try
@@ -433,7 +403,7 @@ namespace FM.LiveSwitch.Mux
 
                     if (errorList.Count > 0)
                     {
-                        var jsonBlob = IO.File.ReadAllText(jsonFile);
+                        var jsonBlob = File.ReadAllText(jsonFile);
 
                         for (int i = errorList.Count - 1; i >= 0; i--)
                         {
@@ -443,7 +413,7 @@ namespace FM.LiveSwitch.Mux
                             jsonBlob = "ERROR: " + error + "\n" + jsonBlob;
                         }
 
-                        IO.File.WriteAllText(jsonFile + ".fail", jsonBlob);
+                        File.WriteAllText(jsonFile + ".fail", jsonBlob);
                         _Logger.LogDebug($"Finishing integrity check for JSON file {jsonFile} with {errorList.Count} errors found.");
                     }
                     else
@@ -466,11 +436,11 @@ namespace FM.LiveSwitch.Mux
                 {
                     _Logger.LogDebug($"JsonIntegrityCheck has temporary files and moving file {pair.Item2} to file {pair.Item1}");
 
-                    if (IO.File.Exists(pair.Item1))
+                    if (File.Exists(pair.Item1))
                     {
-                        IO.File.Delete(pair.Item1);
+                        File.Delete(pair.Item1);
                     }
-                    IO.File.Move(pair.Item2, pair.Item1);
+                    File.Move(pair.Item2, pair.Item1);
                 }
                 catch (Exception ex)
                 {
@@ -490,19 +460,19 @@ namespace FM.LiveSwitch.Mux
             _Logger.LogDebug("Starting cleaning up missing files...");
 
             Dictionary<string, SessionTracker> orphanSessions = new Dictionary<string, SessionTracker>();
-            var orphanFileName = IO.Path.Combine(_InputDirectory, OrphanSessionsFileName);
+            var orphanFileName = Path.Combine(_InputDirectory, OrphanSessionsFileName);
 
-            if (IO.File.Exists(orphanFileName))
+            if (File.Exists(orphanFileName))
             {
                 try
                 {
-                    var contents = IO.File.ReadAllText(orphanFileName);
+                    var contents = File.ReadAllText(orphanFileName);
                     orphanSessions = JsonConvert.DeserializeObject<Dictionary<string, SessionTracker>>(contents);
                 }
                 catch (Exception ex)
                 {
                     _Logger.LogError($"Error reading stored orphan sessions: {ex}. Deleting file {OrphanSessionsFileName}");
-                    IO.File.Delete(orphanFileName);
+                    File.Delete(orphanFileName);
                     orphanSessions = new Dictionary<string, SessionTracker>();
                 }
             }
@@ -510,7 +480,7 @@ namespace FM.LiveSwitch.Mux
             var invalidSessions = new List<string>();
             foreach (var session in orphanSessions)
             {
-                if (!IO.File.Exists(session.Value.JsonFile))
+                if (!File.Exists(session.Value.JsonFile))
                 {
                     _Logger.LogDebug($"Orphan session with JSON file {session.Value.JsonFile} is invalid and it will be removed.");
                     invalidSessions.Add(session.Key);
@@ -524,13 +494,13 @@ namespace FM.LiveSwitch.Mux
 
             _Logger.LogDebug("Finishing cleaning up missing files...");
 
-            foreach (var jsonFile in IO.Directory.EnumerateFiles(_InputDirectory, "*.json.rec", IO.SearchOption.TopDirectoryOnly))
+            foreach (var jsonFile in Directory.EnumerateFiles(_InputDirectory, "*.json.rec", SearchOption.TopDirectoryOnly))
             {
                 _Logger.LogDebug($"ProcessOrphanSessions starting analysis of the file {jsonFile}");
 
                 try
                 {
-                    var baseName = IO.Path.GetFileNameWithoutExtension(IO.Path.GetFileNameWithoutExtension(jsonFile));
+                    var baseName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(jsonFile));
                     var match = Regex.Match(jsonFile, "(([A-Za-z0-9])+)(?:(-(\\d)+)?\\.json\\.rec)");
                     var connectionId = "";
                     var sessionTracker = new SessionTracker(jsonFile);
@@ -552,29 +522,29 @@ namespace FM.LiveSwitch.Mux
                         continue;
                     }
 
-                    var mediaFile = IO.Path.Combine(_InputDirectory, $"{baseName}.mka");
-                    if (IO.File.Exists(mediaFile))
+                    var mediaFile = Path.Combine(_InputDirectory, $"{baseName}.mka");
+                    if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Audio file {mediaFile} for {connectionId} is found.");
                         sessionTracker.AudioFile = mediaFile;
                     }
 
-                    mediaFile = IO.Path.Combine(_InputDirectory, $"{baseName}.mkv");
-                    if (IO.File.Exists(mediaFile))
+                    mediaFile = Path.Combine(_InputDirectory, $"{baseName}.mkv");
+                    if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Video file {mediaFile} for {connectionId} is found.");
                         sessionTracker.VideoFile = mediaFile;
                     }
 
-                    mediaFile = IO.Path.Combine(_InputDirectory, $"{connectionId}.mka.rec");
-                    if (IO.File.Exists(mediaFile))
+                    mediaFile = Path.Combine(_InputDirectory, $"{connectionId}.mka.rec");
+                    if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Incomplete audio file {mediaFile} for {connectionId} is found.");
                         sessionTracker.AudioSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDuration);
                     }
 
-                    mediaFile = IO.Path.Combine(_InputDirectory, $"{connectionId}.mkv.rec");
-                    if (IO.File.Exists(mediaFile))
+                    mediaFile = Path.Combine(_InputDirectory, $"{connectionId}.mkv.rec");
+                    if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Incomplete video file {mediaFile} for {connectionId} is found.");
                         sessionTracker.VideoSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDuration);
@@ -604,7 +574,7 @@ namespace FM.LiveSwitch.Mux
 
                 try
                 {
-                    var baseName = IO.Path.GetFileNameWithoutExtension(IO.Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
+                    var baseName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
 
                     if ((sessionTracker.AudioSizeMeasurement != null && !sessionTracker.AudioSizeMeasurement.IsOrphan) ||
                         (sessionTracker.VideoSizeMeasurement != null && !sessionTracker.VideoSizeMeasurement.IsOrphan))
@@ -621,13 +591,13 @@ namespace FM.LiveSwitch.Mux
                         if (sessionTracker.AudioFile != null)
                         {
                             _Logger.LogDebug($"Complete audio file {sessionTracker.AudioFile} already exists. Removing.");
-                            IO.File.Delete(sessionTracker.AudioFile);
+                            File.Delete(sessionTracker.AudioFile);
                             sessionTracker.AudioFile = null;
                         }
 
                         var srcName = sessionTracker.AudioSizeMeasurement.FileName;
-                        audioFile = IO.Path.Combine(IO.Path.GetDirectoryName(srcName), $"{baseName}.mka");
-                        IO.File.Move(srcName, audioFile);
+                        audioFile = Path.Combine(Path.GetDirectoryName(srcName), $"{baseName}.mka");
+                        File.Move(srcName, audioFile);
                         sessionTracker.AudioSizeMeasurement = null;
 
                         _Logger.LogDebug($"Moved audio file from {srcName} to {audioFile}");
@@ -637,24 +607,24 @@ namespace FM.LiveSwitch.Mux
                     {
                         if (sessionTracker.VideoFile != null)
                         {
-                            IO.File.Delete(sessionTracker.VideoFile);
+                            File.Delete(sessionTracker.VideoFile);
                             sessionTracker.VideoFile = null;
                         }
 
                         var srcName = sessionTracker.VideoSizeMeasurement.FileName;
-                        videoFile = IO.Path.Combine(IO.Path.GetDirectoryName(srcName), $"{baseName}.mkv");
-                        IO.File.Move(srcName, videoFile);
+                        videoFile = Path.Combine(Path.GetDirectoryName(srcName), $"{baseName}.mkv");
+                        File.Move(srcName, videoFile);
                         sessionTracker.VideoSizeMeasurement = null;
 
                         _Logger.LogDebug($"Moved audio file from {srcName} to {videoFile}");
                     }
 
-                    var targetJsonName = IO.Path.Combine(IO.Path.GetDirectoryName(sessionTracker.JsonFile), IO.Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
+                    var targetJsonName = Path.Combine(Path.GetDirectoryName(sessionTracker.JsonFile), Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
 
-                    using (IO.FileStream inStream = new IO.FileStream(sessionTracker.JsonFile, IO.FileMode.Open, IO.FileAccess.Read, IO.FileShare.None))
-                    using (IO.FileStream outStream = new IO.FileStream(targetJsonName, IO.FileMode.Create, IO.FileAccess.Write, IO.FileShare.None))
-                    using (IO.StreamReader sr = new IO.StreamReader(inStream))
-                    using (IO.StreamWriter sw = new IO.StreamWriter(outStream))
+                    using (FileStream inStream = new FileStream(sessionTracker.JsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                    using (FileStream outStream = new FileStream(targetJsonName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    using (StreamReader sr = new StreamReader(inStream))
+                    using (StreamWriter sw = new StreamWriter(outStream))
                     using (JsonWriter writer = new JsonTextWriter(sw))
                     using (JsonReader reader = new JsonTextReader(sr))
                     {
@@ -743,7 +713,7 @@ namespace FM.LiveSwitch.Mux
                         }
                     }
 
-                    IO.File.Delete(sessionTracker.JsonFile);
+                    File.Delete(sessionTracker.JsonFile);
                     finishedSessions.Add(connectionId);
 
                     _Logger.LogDebug($"Enlisting processed file {sessionTracker.JsonFile} with ConnectionId = {connectionId} for deletion.");
@@ -769,7 +739,7 @@ namespace FM.LiveSwitch.Mux
                 try
                 {
                     var contents = JsonConvert.SerializeObject(orphanSessions);
-                    IO.File.WriteAllText(orphanFileName, contents);
+                    File.WriteAllText(orphanFileName, contents);
                 }
                 catch (Exception ex)
                 {

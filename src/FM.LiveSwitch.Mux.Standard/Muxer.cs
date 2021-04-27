@@ -102,7 +102,7 @@ namespace FM.LiveSwitch.Mux
                         Options.InputFileNames = string.Join(",", Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
                     }
 
-                    var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath, Options.ProcessInvalidMedia);
+                    var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath);
                     preprocessor.MinimumOrphanDuration = Options.MinimumOrphanDuration;
                     await preprocessor.processDirectory();
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Logging = Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
