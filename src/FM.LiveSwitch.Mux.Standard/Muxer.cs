@@ -106,12 +106,12 @@ namespace FM.LiveSwitch.Mux
                     if (logEntries == null)
                     {
                         _Logger.LogInformation($"No recordings found. Log file(s) not found.");
-                        return false;
+                        return true;
                     }
                     if (logEntries.Length == 0)
                     {
                         _Logger.LogInformation($"No recordings found.");
-                        return false;
+                        return true;
                     }
 
                     // sort log entries by timestamp
@@ -223,7 +223,7 @@ namespace FM.LiveSwitch.Mux
 
                                     if (!Options.ContinueOnFailure)
                                     {
-                                        throw;
+                                        return false;
                                     }
                                 }
                             }

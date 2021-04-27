@@ -1014,7 +1014,7 @@ namespace FM.LiveSwitch.Mux
                     Directory.CreateDirectory(metadataFilePath);
                 }
 
-                System.IO.File.WriteAllText(MetadataFile, JsonConvert.SerializeObject(this));
+                System.IO.File.WriteAllText(MetadataFile, JsonConvert.SerializeObject(ToModel()));
 
                 return MetadataFileExists;
             }
@@ -1024,6 +1024,22 @@ namespace FM.LiveSwitch.Mux
                 AudioFile = audioFile;
                 VideoFile = videoFile;
             }
+        }
+
+        public Models.Session ToModel()
+        {
+            return new Models.Session
+            {
+                Id = Id,
+                ApplicationId = ApplicationId,
+                ChannelId = ChannelId,
+                StartTimestamp = StartTimestamp,
+                StopTimestamp = StopTimestamp,
+                File = File,
+                AudioFile = AudioFile,
+                VideoFile = VideoFile,
+                Clients = CompletedClients.Select(client => client.ToModel()).ToArray(),
+            };
         }
     }
 }

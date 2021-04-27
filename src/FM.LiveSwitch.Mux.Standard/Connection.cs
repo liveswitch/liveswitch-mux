@@ -185,5 +185,16 @@ namespace FM.LiveSwitch.Mux
                 Size = new Size(CompletedRecordings.SelectMany(x => x.VideoSegments).Max(x => x.Size.Width), CompletedRecordings.SelectMany(x => x.VideoSegments).Max(x => x.Size.Height))
             };
         }
+
+        public Models.Connection ToModel()
+        {
+            return new Models.Connection
+            {
+                Id = Id,
+                StartTimestamp = StartTimestamp,
+                StopTimestamp = StopTimestamp,
+                Recordings = CompletedRecordings.Select(recording => recording.ToModel()).ToArray()
+            };
+        }
     }
 }
