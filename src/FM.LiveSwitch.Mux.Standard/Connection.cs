@@ -30,9 +30,6 @@ namespace FM.LiveSwitch.Mux
         public DateTime? StopTimestamp { get; private set; }
 
         [JsonIgnore]
-        public VideoSegment[] CompletedVideoSegments { get { return CompletedRecordings.Where(x => x.VideoSegments != null).SelectMany(x => x.VideoSegments).OrderBy(x => x.StartTimestamp).ToArray(); } }
-
-        [JsonIgnore]
         public Recording ActiveRecording { get; private set; }
 
         [JsonProperty("recordings")]
