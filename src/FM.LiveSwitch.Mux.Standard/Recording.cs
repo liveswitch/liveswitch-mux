@@ -342,5 +342,28 @@ namespace FM.LiveSwitch.Mux
         {
             return $"{inputTag}atrim=end={trim.Round(3)}{outputTag}";
         }
+
+        public Models.Recording ToModel()
+        {
+            return new Models.Recording
+            {
+                Id = Id,
+                AudioId = AudioId,
+                VideoId = VideoId,
+                StartTimestamp = StartTimestamp,
+                StopTimestamp = StopTimestamp,
+                AudioStartTimestamp = AudioStartTimestamp,
+                AudioStopTimestamp = AudioStopTimestamp,
+                VideoStartTimestamp = VideoStartTimestamp,
+                VideoStopTimestamp = VideoStopTimestamp,
+                AudioCodec = AudioCodec,
+                VideoCodec = VideoCodec,
+                AudioFile = AudioFile,
+                VideoFile = VideoFile,
+                LogFile = LogFile,
+                LogEntries = LogEntries,
+                VideoSegments = VideoSegments
+            };
+        }
     }
 }

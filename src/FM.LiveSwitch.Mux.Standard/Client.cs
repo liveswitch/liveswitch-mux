@@ -92,5 +92,18 @@ namespace FM.LiveSwitch.Mux
 
             return connection.ProcessLogEntry(logEntry, options);
         }
+
+        public Models.Client ToModel()
+        {
+            return new Models.Client
+            {
+                Id = Id,
+                UserId = UserId,
+                DeviceId = DeviceId,
+                StartTimestamp = StartTimestamp,
+                StopTimestamp = StopTimestamp,
+                Connections = CompletedConnections.Select(connection => connection.ToModel()).ToArray()
+            };
+        }
     }
 }
