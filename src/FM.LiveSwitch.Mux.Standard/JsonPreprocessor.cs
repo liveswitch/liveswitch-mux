@@ -301,16 +301,6 @@ namespace FM.LiveSwitch.Mux
                                 stopEntry.Data.VideoFirstFrameTimestamp = firstVideoTimestamp;
                             }
 
-                            if (addFirstAudioTS)
-                            {
-                                stopEntry.Data.AudioFirstFrameTimestamp = firstAudioTimestamp;
-                            }
-
-                            if (addFirstAudioTS)
-                            {
-                                stopEntry.Data.AudioFirstFrameTimestamp = firstAudioTimestamp;
-                            }
-
                             if (addAudioPath)
                             {
                                 stopEntry.Data.AudioFile = audioFilePath;
