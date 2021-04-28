@@ -14,17 +14,17 @@ Use `dotnet publish` to create a single, self-contained file for a specific plat
 
 ### Windows
 ```shell
-dotnet publish -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o win
+dotnet publish src/FM.LiveSwitch.Mux -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o win
 ```
 
 ### macOS
 ```shell
-dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o osx
+dotnet publish src/FM.LiveSwitch.Mux -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o osx
 ```
 
 ### Linux
 ```shell
-dotnet publish -r linux-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o linux
+dotnet publish src/FM.LiveSwitch.Mux -r linux-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o linux
 ```
 
 Alternatively, use `dotnet build` to create a platform-agnostic bundle (the .NET Core runtime must be installed):
@@ -60,84 +60,96 @@ lsmux [options]
 ```
 
 ```shell
-  -i, --input-path      The input path, i.e. the recording path used by the media server.
-                        Defaults to the current directory.
+  -i, --input-path         The input path, i.e. the recording path used by the media server.
+                           Defaults to the current directory.
 
-  -o, --output-path     The output path for muxed sessions. Defaults to the input path.
+  -o, --output-path        The output path for muxed sessions. Defaults to the input path.
 
-  -t, --temp-path       The path for temporary intermediate files. Defaults to the input path.
+  -t, --temp-path          The path for temporary intermediate files. Defaults to the input
+                           path.
 
-  -s, --strategy        (Default: AutoDetect) The recording strategy used by the media server.
-                        Valid values: AutoDetect, Hierarchical, Flat
+  -s, --strategy           (Default: AutoDetect) The recording strategy used by the media
+                           server. Valid values: AutoDetect, Hierarchical, Flat
 
-  -l, --layout          (Default: HGrid) The video layout to use. Valid values: HStack, VStack,
-                        HGrid, VGrid, JS
+  -l, --layout             (Default: HGrid) The video layout to use. Valid values: HStack,
+                           VStack, HGrid, VGrid, JS
 
-  -m, --margin          (Default: 0) The margin, in pixels, to insert between videos in the
-                        layout.
+  -m, --margin             (Default: 0) The margin, in pixels, to insert between videos in the
+                           layout.
 
-  -w, --width           (Default: 1920) The pixel width of the output video.
+  -w, --width              (Default: 1920) The pixel width of the output video.
 
-  -h, --height          (Default: 1080) The pixel height of the output video.
+  -h, --height             (Default: 1080) The pixel height of the output video.
 
-  -f, --frame-rate      (Default: 30) The frames per second of the output video.
+  -f, --frame-rate         (Default: 30) The frames per second of the output video.
 
-  --background-color    (Default: 000000) The background colour.
+  --min-orphan-duration    (Default: 120) Minimum duration (in minutes) of waiting for
+                           incomplete media files to have file size unchanged for the media to
+                           be considered orphaned.
 
-  --audio-codec         (Default: libopus) The output audio codec and options.
+  --background-color       (Default: 000000) The background colour.
 
-  --video-codec         (Default: libvpx -auto-alt-ref 0) The output video codec and options.
+  --audio-codec            (Default: libopus) The output audio codec and options.
 
-  --audio-container     (Default: mka) The output audio container (file extension).
+  --video-codec            (Default: libvpx -auto-alt-ref 0) The output video codec and options.
 
-  --video-container     (Default: mkv) The output video container (file extension).
+  --audio-container        (Default: mka) The output audio container (file extension).
 
-  --dynamic             Dynamically update the video layout as recordings start and stop.
+  --video-container        (Default: mkv) The output video container (file extension).
 
-  --crop                Crop video in order to use all available layout space.
+  --dynamic                Dynamically update the video layout as recordings start and stop.
 
-  --no-audio            Do not mux audio.
+  --crop                   Crop video in order to use all available layout space.
 
-  --no-video            Do not mux video.
+  --no-audio               Do not mux audio.
 
-  --move-inputs         Move input files to the move path.
+  --no-video               Do not mux video.
 
-  --move-path           The destination path for moved files. Defaults to the output path.
+  --move-inputs            Move input files to the move path.
 
-  --delete-inputs       Delete input files from the input path.
+  --move-path              The destination path for moved files. Defaults to the output path.
 
-  --no-prompt           Do not prompt before deleting.
+  --delete-inputs          Delete input files from the input path.
 
-  --application-id      The application ID to mux.
+  --no-prompt              Do not prompt before deleting.
 
-  --channel-id          The channel ID to mux.
+  --application-id         The application ID to mux.
 
-  --output-file-name    (Default: session_{startTimestamp}_to_{stopTimestamp}_{sessionId}) The
-                        output file name template. Uses curly-brace syntax (e.g. {channelId}).
-                        Valid variables: applicationId, channelId, sessionId, startTimestamp,
-                        stopTimestamp
+  --channel-id             The channel ID to mux.
 
-  --js-file             For JS layout, the JavaScript file path. Defaults to layout.js in the
-                        input path.
+  --output-file-name       (Default: session_{startTimestamp}_to_{stopTimestamp}_{sessionId})
+                           The output file name template. Uses curly-brace syntax (e.g.
+                           {channelId}). Valid variables: applicationId, channelId, sessionId,
+                           startTimestamp, stopTimestamp
 
-  --trim-first          Trim audio from the first participant before any other participants have
-                        joined. Requires the --no-video flag.
+  --js-file                For JS layout, the JavaScript file path. Defaults to layout.js in the
+                           input path.
 
-  --trim-last           Trim audio from the last participant after all other participants have
-                        left. Requires the --no-video flag.
+  --continue-on-failure    Continue processing remaining sessions if a session fails to be
+                           processed.
 
-  --no-filter-files     Do not use files for the filters. Pass the filters as arguments.
+  --trim-first             Trim audio from the first participant before any other participants
+                           have joined. Requires the --no-video flag.
 
-  --save-temp-files     Do not delete the temporary intermediate files.
+  --trim-last              Trim audio from the last participant after all other participants
+                           have left. Requires the --no-video flag.
 
-  --dry-run             Do a dry-run with no muxing.
+  --no-filter-files        Do not use files for the filters. Pass the filters as arguments.
 
-  --session-id          The session ID to mux, obtained from a dry-run.
+  --save-temp-files        Do not delete the temporary intermediate files.
 
-  --input-filter        A regular expression used to filter the input file list.
+  --dry-run                Do a dry-run with no muxing.
 
-  --input-file-names    A comma separated list of input files to target instead of scanning the
-                        directory.
+  --session-id             The session ID to mux, obtained from a dry-run.
+
+  --input-filter           A regular expression used to filter the input file list.
+
+  --input-file-names       A comma separated list of input file names to target instead of
+                           scanning the directory.
+
+  --input-file-paths       A comma separated list of input file paths to target instead of
+                           scanning the directory. Overrides --input-path and
+                           --input-file-names.
 ```
 
 The `input-path` to your recordings defaults to the current directory, but can be set to target another directory on disk.
