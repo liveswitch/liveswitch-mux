@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -100,6 +100,13 @@ namespace FM.LiveSwitch.Mux
                         // CommandLine.Parser returns empty strings when there is a space after the separator.
                         // Also, CommandLine.Parser leaves the separator in the string sometimes.
                         Options.InputFileNames = string.Join(",", Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
+                    }
+
+                    if (Options.InputFilePaths.Count() > 0)
+                    {
+                        // CommandLine.Parser returns empty strings when there is a space after the separator.
+                        // Also, CommandLine.Parser leaves the separator in the string sometimes.
+                        Options.InputFilePaths = string.Join(",", Options.InputFilePaths).Split(',').Where(filePath => filePath.Length > 0);
                     }
 
                     var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath);
@@ -326,13 +333,17 @@ namespace FM.LiveSwitch.Mux
                         var logEntries = new List<LogEntry>();
                         IEnumerable<string> filePaths;
 
-                        if (Options.InputFileNames.Count() == 0)
+                        if (Options.InputFilePaths.Count() > 0)
                         {
-                            filePaths = Directory.EnumerateFiles(Options.InputPath, "*.*", SearchOption.TopDirectoryOnly);
+                            filePaths = Options.InputFilePaths;
+                        }
+                        else if (Options.InputFileNames.Count() > 0)
+                        {
+                            filePaths = Options.InputFileNames.Select(inputFileName => Path.Combine(Options.InputPath, inputFileName));
                         }
                         else
                         {
-                            filePaths = Options.InputFileNames.Select(inputFileName => Path.Combine(Options.InputPath, inputFileName));
+                            filePaths = Directory.EnumerateFiles(Options.InputPath, "*.*", SearchOption.TopDirectoryOnly);
                         }
 
                         foreach (var filePath in filePaths)
