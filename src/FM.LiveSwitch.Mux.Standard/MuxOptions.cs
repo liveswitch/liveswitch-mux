@@ -112,7 +112,10 @@ namespace FM.LiveSwitch.Mux
         [Option("input-filter", HelpText = "A regular expression used to filter the input file list.")]
         public string InputFilter { get; set; }
 
-        [Option("input-file-names", Separator = ',', HelpText = "A comma separated list of input files to target instead of scanning the directory.")]
+        [Option("input-file-names", Separator = ',', HelpText = "A comma separated list of input file names to target instead of scanning the directory.")]
         public IEnumerable<string> InputFileNames { get; set; }
+
+        [Option("input-file-paths", Separator = ',', HelpText = "A comma separated list of input file paths to target instead of scanning the directory. Overrides --input-path and --input-file-names.")]
+        public IEnumerable<string> InputFilePaths { get; set; }
     }
 }
