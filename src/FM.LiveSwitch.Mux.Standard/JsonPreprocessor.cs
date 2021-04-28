@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace FM.LiveSwitch.Mux
             _InputDirectory = InputDirectory;
         }
 
-        public async Task processDirectory()
+        public async Task ProcessDirectory()
         {
             for (var i = 0; i < 3; i++)
             {
@@ -52,11 +53,6 @@ namespace FM.LiveSwitch.Mux
 
             foreach (var jsonFile in Directory.EnumerateFiles(_InputDirectory, "*.json", SearchOption.TopDirectoryOnly))
             {
-                if (Path.GetFileName(jsonFile).StartsWith("session_"))
-                {
-                    continue;
-                }
-
                 _Logger.LogDebug($"JsonIntegrityCheck starting processing file {jsonFile}");
 
                 try
@@ -67,343 +63,304 @@ namespace FM.LiveSwitch.Mux
                         continue;
                     }
 
-                    var errorList = new List<string>();
-
-                    using (FileStream stream = new FileStream(jsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
-                    using (StreamReader sr = new StreamReader(stream))
-                    using (JsonReader reader = new JsonTextReader(sr))
+                    var logEntries = await LogUtility.GetEntries(jsonFile, _Logger).ConfigureAwait(false);
+                    if (logEntries == null)
                     {
-                        var isValid = true;
+                        continue;
+                    }
 
-                        void AddToErrorList(string message)
+                    var errorList = new List<string>();
+                    var isValid = true;
+
+                    void AddToErrorList(string message)
+                    {
+                        isValid = false;
+                        _Logger.LogDebug($"JsonIntegrityCheck adds new line to error list for file {jsonFile}: {message}");
+                        errorList.Add(message);
+                    }
+
+                    try
+                    {
+                        var startEntry = GetEvent(logEntries, LogEntry.TypeStartRecording);
+                        var stopEntry = GetEvent(logEntries, LogEntry.TypeStopRecording);
+                        string audioFilePath = null;
+                        string videoFilePath = null;
+                        DateTime? firstAudioTimestamp = null;
+                        DateTime? firstVideoTimestamp = null;
+                        DateTime? lastAudioTimestamp = null;
+                        DateTime? lastVideoTimestamp = null;
+                        var addDataBlock = false;
+                        var addRecordStopTS = false;
+                        var addFirstAudioTS = false;
+                        var addFirstVideoTS = false;
+                        var calcLastAudioTS = false;
+                        var calcLastVideoTS = false;
+                        var addAudioPath = false;
+                        var addVideoPath = false;
+
+                        if (startEntry == null)
                         {
-                            isValid = false;
-                            _Logger.LogDebug($"JsonIntegrityCheck adds new line to error list for file {jsonFile}: {message}");
-                            errorList.Add(message);
+                            AddToErrorList($"Event \"{LogEntry.TypeStartRecording}\" is missing");
                         }
 
-                        try
+                        if (stopEntry == null)
                         {
-                            var jsonDoc = JArray.Load(reader);
-                            var startEvent = GetEvents(jsonDoc, LogEntry.TypeStartRecording).FirstOrDefault();
-                            var stopEvent = GetEvents(jsonDoc, LogEntry.TypeStopRecording).FirstOrDefault();
-                            string audioFilePath = null;
-                            string videoFilePath = null;
-                            DateTime? firstAudioTimestamp = null;
-                            DateTime? firstVideoTimestamp = null;
-                            DateTime? lastAudioTimestamp = null;
-                            DateTime? lastVideoTimestamp = null;
-                            var addDataBlock = false;
-                            var addRecordStopTS = false;
-                            var addFirstAudioTS = false;
-                            var addFirstVideoTS = false;
-                            var calcLastAudioTS = false;
-                            var calcLastVideoTS = false;
-                            var addAudioPath = false;
-                            var addVideoPath = false;
+                            AddToErrorList($"Event \"{LogEntry.TypeStopRecording}\" is missing");
+                        }
 
-                            if (startEvent == default(JToken))
+                        if (isValid)
+                        {
+                            bool ReportIfMissing<T>(T var, string nodeName, string sectionName)
                             {
-                                AddToErrorList($"Event \"{LogEntry.TypeStartRecording}\" is missing");
+                                if (var?.Equals(default(T)) == null)
+                                {
+                                    AddToErrorList($"JSON node \"{nodeName}\" is missing in section \"{sectionName}\".");
+                                    return true;
+                                }
+
+                                return false;
                             }
 
-                            if (stopEvent == default(JToken))
+                            void ReportIfDifferent<T>(T var1, T var2, string nodeName) where T : class, IComparable<T>
                             {
-                                AddToErrorList($"Event \"{LogEntry.TypeStopRecording}\" is missing");
+                                if (var1 != null && var2 != null && !var1.Equals(var2))
+                                {
+                                    AddToErrorList($"Value of JSON node \"{nodeName}\" is different between section \"{LogEntry.TypeStartRecording}\" and \"{LogEntry.TypeStopRecording}\".");
+                                }
+                            }
+
+                            ReportIfMissing((startEntry.Timestamp.Ticks == 0) ? (DateTime?)null : startEntry.Timestamp, nameof(startEntry.Timestamp), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ApplicationId, nameof(startEntry.ApplicationId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ExternalId, nameof(startEntry.ExternalId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ChannelId, nameof(startEntry.ChannelId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ConnectionId, nameof(startEntry.ConnectionId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ApplicationConfigId, nameof(startEntry.ApplicationConfigId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ChannelConfigId, nameof(startEntry.ChannelConfigId), LogEntry.TypeStartRecording);
+
+                            ReportIfMissing(stopEntry.ApplicationId, nameof(stopEntry.ApplicationId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ExternalId, nameof(stopEntry.ExternalId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ChannelId, nameof(stopEntry.ChannelId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ConnectionId, nameof(stopEntry.ConnectionId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ApplicationConfigId, nameof(stopEntry.ApplicationConfigId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ChannelConfigId, nameof(stopEntry.ChannelConfigId), LogEntry.TypeStopRecording);
+
+                            ReportIfDifferent(startEntry.ApplicationId, stopEntry.ApplicationId, nameof(stopEntry.ApplicationId));
+                            ReportIfDifferent(startEntry.ExternalId, stopEntry.ExternalId, nameof(stopEntry.ExternalId));
+                            ReportIfDifferent(startEntry.ChannelId, stopEntry.ChannelId, nameof(stopEntry.ChannelId));
+                            ReportIfDifferent(startEntry.ConnectionId, stopEntry.ConnectionId, nameof(stopEntry.ConnectionId));
+                            ReportIfDifferent(startEntry.ApplicationConfigId, stopEntry.ApplicationConfigId, nameof(stopEntry.ApplicationConfigId));
+                            ReportIfDifferent(startEntry.ChannelConfigId, stopEntry.ChannelConfigId, nameof(stopEntry.ChannelConfigId));
+
+                            var data = stopEntry.Data;
+                            if (data != null)
+                            {
+                                audioFilePath = data.AudioFile;
+                                videoFilePath = data.VideoFile;
+                                firstAudioTimestamp = data.AudioFirstFrameTimestamp;
+                                firstVideoTimestamp = data.VideoFirstFrameTimestamp;
+                                lastAudioTimestamp = data.AudioFirstFrameTimestamp;
+                                lastVideoTimestamp = data.VideoLastFrameTimestamp;
+                            }
+
+                            if (stopEntry.Timestamp.Ticks > 0 && startEntry.Timestamp > stopEntry.Timestamp)
+                            {
+                                AddToErrorList("Start recording timestamp must not be greater than stop recording timestamp.");
+                            }
+
+                            addRecordStopTS = (stopEntry.Timestamp.Ticks == 0);
+
+                            if (audioFilePath != null && !File.Exists(audioFilePath))
+                            {
+                                AddToErrorList($"Audio file {audioFilePath} is missing.");
+                            }
+
+                            if (videoFilePath != null && !File.Exists(videoFilePath))
+                            {
+                                AddToErrorList($"Video file {videoFilePath} is missing.");
                             }
 
                             if (isValid)
                             {
-                                bool ReportIfMissing<T>(T var, string nodeName, string sectionName)
+                                var baseName = Path.GetFileNameWithoutExtension(jsonFile);
+                                var audioPath = Path.Combine(_InputDirectory, baseName + ".mka");
+                                var videoPath = Path.Combine(_InputDirectory, baseName + ".mkv");
+
+                                if (data == null)
                                 {
-                                    if (var?.Equals(default(T)) == null)
+                                    addDataBlock = true;
+                                }
+
+                                if (File.Exists(audioPath))
+                                {
+                                    if (firstAudioTimestamp == null)
                                     {
-                                        AddToErrorList($"JSON node \"{nodeName}\" is missing in section \"{sectionName}\".");
-                                        return true;
-                                    }
+                                        addFirstAudioTS = true;
+                                        firstAudioTimestamp = (startEntry.Timestamp.Ticks == 0) ? (DateTime?)null : startEntry.Timestamp;
 
-                                    return false;
-                                }
-
-                                void ReportIfDifferent<T>(T var1, T var2, string nodeName) where T : class, IComparable<T>
-                                {
-                                    if (var1 != null && var2 != null && !var1.Equals(var2))
-                                    {
-                                        AddToErrorList($"Value of JSON node \"{nodeName}\" is different between section \"{LogEntry.TypeStartRecording}\" and \"{LogEntry.TypeStopRecording}\".");
-                                    }
-                                }
-
-                                var timestamp = startEvent["timestamp"]?.Value<DateTime?>();
-                                var applicationId = startEvent["applicationId"]?.Value<string>();
-                                var externalId = startEvent["externalId"]?.Value<string>();
-                                var connectionId = startEvent["connectionId"]?.Value<string>();
-                                var channelId = startEvent["channelId"]?.Value<string>();
-                                Guid? applicationConfigId = null;
-                                Guid? channelConfigId = null;
-
-                                if (Guid.TryParse(startEvent["applicationConfigId"]?.Value<string>() ?? "", out var parseResult))
-                                {
-                                    applicationConfigId = parseResult;
-                                }
-
-                                if (Guid.TryParse(startEvent["channelConfigId"]?.Value<string>() ?? "", out parseResult))
-                                {
-                                    channelConfigId = parseResult;
-                                }
-
-                                ReportIfMissing(timestamp, nameof(timestamp), LogEntry.TypeStartRecording);
-                                ReportIfMissing(applicationId, nameof(applicationId), LogEntry.TypeStartRecording);
-                                ReportIfMissing(externalId, nameof(externalId), LogEntry.TypeStartRecording);
-                                ReportIfMissing(channelId, nameof(channelId), LogEntry.TypeStartRecording);
-                                ReportIfMissing(connectionId, nameof(connectionId), LogEntry.TypeStartRecording);
-                                ReportIfMissing(applicationConfigId, nameof(applicationConfigId), LogEntry.TypeStartRecording);
-                                ReportIfMissing(channelConfigId, nameof(channelConfigId), LogEntry.TypeStartRecording);
-
-                                var timestamp2 = stopEvent["timestamp"]?.Value<DateTime?>();
-                                var applicationId2 = stopEvent["applicationId"]?.Value<string>();
-                                var externalId2 = stopEvent["externalId"]?.Value<string>();
-                                var channelId2 = stopEvent["channelId"]?.Value<string>();
-                                var connectionId2 = stopEvent["connectionId"]?.Value<string>();
-                                Guid? applicationConfigId2 = null;
-                                Guid? channelConfigId2 = null;
-
-                                if (timestamp2 != null && timestamp > timestamp2)
-                                {
-                                    AddToErrorList("Start recording timestamp must not be greater than stop recording timestamp.");
-                                }
-
-                                if (Guid.TryParse(stopEvent["applicationConfigId"]?.Value<string>() ?? "", out parseResult))
-                                {
-                                    applicationConfigId2 = parseResult;
-                                }
-
-                                if (Guid.TryParse(stopEvent["channelConfigId"]?.Value<string>() ?? "", out parseResult))
-                                {
-                                    channelConfigId2 = parseResult;
-                                }
-
-                                ReportIfMissing(applicationId2, nameof(applicationId), LogEntry.TypeStopRecording);
-                                ReportIfMissing(externalId2, nameof(externalId), LogEntry.TypeStopRecording);
-                                ReportIfMissing(channelId2, nameof(channelId), LogEntry.TypeStopRecording);
-                                ReportIfMissing(connectionId2, nameof(connectionId), LogEntry.TypeStopRecording);
-                                ReportIfMissing(applicationConfigId2, nameof(applicationConfigId), LogEntry.TypeStopRecording);
-                                ReportIfMissing(channelConfigId2, nameof(channelConfigId), LogEntry.TypeStopRecording);
-
-                                ReportIfDifferent(applicationId, applicationId2, nameof(applicationId));
-                                ReportIfDifferent(externalId, externalId2, nameof(externalId));
-                                ReportIfDifferent(channelId, channelId2, nameof(channelId));
-                                ReportIfDifferent(connectionId, connectionId2, nameof(connectionId));
-                                ReportIfDifferent(applicationConfigId?.ToString(), applicationConfigId2?.ToString(), nameof(applicationConfigId));
-                                ReportIfDifferent(channelConfigId?.ToString(), channelConfigId2?.ToString(), nameof(channelConfigId));
-
-                                var data = stopEvent["data"];
-                                audioFilePath = data?["audioFile"]?.Value<string>();
-                                videoFilePath = data?["videoFile"]?.Value<string>();
-                                firstAudioTimestamp = data?["audioFirstFrameTimestamp"]?.Value<DateTime?>();
-                                firstVideoTimestamp = data?["videoFirstFrameTimestamp"]?.Value<DateTime?>();
-                                lastAudioTimestamp = data?["audioLastFrameTimestamp"]?.Value<DateTime?>();
-                                lastVideoTimestamp = data?["videoLastFrameTimestamp"]?.Value<DateTime?>();
-
-                                addRecordStopTS = (timestamp2 == null);
-
-                                if (audioFilePath != null && !File.Exists(audioFilePath))
-                                {
-                                    AddToErrorList($"Audio file {audioFilePath} is missing.");
-                                }
-
-                                if (videoFilePath != null && !File.Exists(videoFilePath))
-                                {
-                                    AddToErrorList($"Video file {videoFilePath} is missing.");
-                                }
-
-                                if (isValid)
-                                {
-                                    var baseName = Path.GetFileNameWithoutExtension(jsonFile);
-                                    var audioPath = Path.Combine(_InputDirectory, baseName + ".mka");
-                                    var videoPath = Path.Combine(_InputDirectory, baseName + ".mkv");
-
-                                    if (data == null)
-                                    {
-                                        addDataBlock = true;
-                                    }
-
-                                    if (File.Exists(audioPath))
-                                    {
                                         if (firstAudioTimestamp == null)
                                         {
-                                            addFirstAudioTS = true;
-                                            firstAudioTimestamp = timestamp;
-
-                                            if (firstAudioTimestamp == null)
-                                            {
-                                                AddToErrorList($"JSON file has audio file but neither \"timestamp\" nor \"audioFirstFrameTimestamp\" defined in section \"{LogEntry.TypeStopRecording}\". File cannot be recovered");
-                                            }
-                                        }
-
-                                        if (audioFilePath == null)
-                                        {
-                                            addAudioPath = true;
-                                            audioFilePath = audioPath;
+                                            AddToErrorList($"JSON file has audio file but neither \"timestamp\" nor \"audioFirstFrameTimestamp\" defined in section \"{LogEntry.TypeStopRecording}\". File cannot be recovered");
                                         }
                                     }
 
-                                    if (File.Exists(videoPath))
+                                    if (audioFilePath == null)
                                     {
+                                        addAudioPath = true;
+                                        audioFilePath = audioPath;
+                                    }
+                                }
+
+                                if (File.Exists(videoPath))
+                                {
+                                    if (firstVideoTimestamp == null)
+                                    {
+                                        addFirstVideoTS = true;
+                                        firstVideoTimestamp = (startEntry.Timestamp.Ticks == 0) ? (DateTime?)null : startEntry.Timestamp;
+
                                         if (firstVideoTimestamp == null)
                                         {
-                                            addFirstVideoTS = true;
-                                            firstVideoTimestamp = timestamp;
-
-                                            if (firstVideoTimestamp == null)
-                                            {
-                                                AddToErrorList($"JSON file has audio file but neither \"timestamp\" nor \"videoFirstFrameTimestamp\" defined in section \"{LogEntry.TypeStopRecording}\". File cannot be recovered");
-                                            }
-                                        }
-
-                                        if (videoFilePath == null)
-                                        {
-                                            addVideoPath = true;
-                                            videoFilePath = videoPath;
+                                            AddToErrorList($"JSON file has audio file but neither \"timestamp\" nor \"videoFirstFrameTimestamp\" defined in section \"{LogEntry.TypeStopRecording}\". File cannot be recovered");
                                         }
                                     }
 
-                                    if (audioFilePath == null && videoFilePath == null)
+                                    if (videoFilePath == null)
                                     {
-                                        AddToErrorList($"JSON file does not have any media file referred in \"data\" block of the section \"{LogEntry.TypeStopRecording}\" and it cannot be reconstructed (no auido or video file found).");
+                                        addVideoPath = true;
+                                        videoFilePath = videoPath;
                                     }
-                                    else
-                                    {
-                                        if (audioFilePath != null && lastAudioTimestamp == null)
-                                        {
-                                            calcLastAudioTS = true;
-                                        }
+                                }
 
-                                        if (videoFilePath != null && lastVideoTimestamp == null)
-                                        {
-                                            calcLastVideoTS = true;
-                                        }
+                                if (audioFilePath == null && videoFilePath == null)
+                                {
+                                    AddToErrorList($"JSON file does not have any media file referred in \"data\" block of the section \"{LogEntry.TypeStopRecording}\" and it cannot be reconstructed (no auido or video file found).");
+                                }
+                                else
+                                {
+                                    if (audioFilePath != null && lastAudioTimestamp == null)
+                                    {
+                                        calcLastAudioTS = true;
+                                    }
+
+                                    if (videoFilePath != null && lastVideoTimestamp == null)
+                                    {
+                                        calcLastVideoTS = true;
                                     }
                                 }
                             }
+                        }
 
-                            if (isValid && (addDataBlock || addAudioPath || addVideoPath || addRecordStopTS || addFirstAudioTS || addFirstVideoTS || calcLastAudioTS || calcLastVideoTS))
+                        if (isValid && (addDataBlock || addAudioPath || addVideoPath || addRecordStopTS || addFirstAudioTS || addFirstVideoTS || calcLastAudioTS || calcLastVideoTS))
+                        {
+                            _Logger.LogDebug($"Calculating last frame durations for file {jsonFile}");
+
+                            var tempFile = jsonFile + ".tmp.$$$";
+                            var pair = Tuple.Create(jsonFile, tempFile);
+
+                            if (calcLastAudioTS)
                             {
-                                _Logger.LogDebug($"Calculating last frame durations for file {jsonFile}");
-
-                                var tempFile = jsonFile + ".tmp.$$$";
-                                var pair = Tuple.Create(jsonFile, tempFile);
-
-                                if (calcLastAudioTS)
+                                var duration = await GetDuration(audioFilePath, true).ConfigureAwait(false);
+                                if (duration != null)
                                 {
-                                    var duration = await GetDuration(audioFilePath).ConfigureAwait(false);
-                                    if (duration != null)
-                                    {
-                                        lastAudioTimestamp = firstAudioTimestamp + duration;
-                                        _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastAudioTimestamp} (duration: {duration}).");
-                                    }
-                                    else
-                                    {
-                                        lastAudioTimestamp = firstAudioTimestamp;
-                                        _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastAudioTimestamp} (duration: cannot be calculated).");
-                                    }
+                                    lastAudioTimestamp = firstAudioTimestamp + duration;
+                                    _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastAudioTimestamp} (duration: {duration}).");
                                 }
-
-                                if (calcLastVideoTS)
+                                else
                                 {
-                                    var duration = await GetDuration(videoFilePath).ConfigureAwait(false);
-                                    if (duration != null)
-                                    {
-                                        lastVideoTimestamp = firstVideoTimestamp + duration;
-                                        _Logger.LogDebug($"Calculated last video frame timestamp for file {jsonFile}: {lastVideoTimestamp} (duration: {duration}).");
-                                    }
-                                    else
-                                    {
-                                        lastVideoTimestamp = firstVideoTimestamp;
-                                        _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastVideoTimestamp} (duration: cannot be calculated).");
-                                    }
+                                    lastAudioTimestamp = firstAudioTimestamp;
+                                    _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastAudioTimestamp} (duration: cannot be calculated).");
                                 }
-
-                                using (FileStream outStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                                using (StreamWriter sw = new StreamWriter(outStream))
-                                using (JsonWriter writer = new JsonTextWriter(sw))
-                                {
-                                    try
-                                    {
-                                        var stopEventObj = stopEvent as JObject;
-                                        if (addDataBlock)
-                                        {
-                                            AddProperty(stopEventObj, "data", new JObject());
-                                        }
-
-                                        var dataObj = stopEvent["data"] as JObject;
-
-                                        if (addFirstAudioTS)
-                                        {
-                                            AddProperty(dataObj, "audioFirstFrameTimestamp", firstAudioTimestamp);
-                                        }
-
-                                        if (addFirstVideoTS)
-                                        {
-                                            AddProperty(dataObj, "videoFirstFrameTimestamp", firstVideoTimestamp);
-                                        }
-
-                                        if (addAudioPath)
-                                        {
-                                            AddProperty(dataObj, "audioFile", audioFilePath);
-                                        }
-
-                                        if (addVideoPath)
-                                        {
-                                            AddProperty(dataObj, "videoFile", videoFilePath);
-                                        }
-
-                                        if (addRecordStopTS)
-                                        {
-                                            DateTime? stopRecTimestamp;
-
-                                            if (lastAudioTimestamp != null && lastVideoTimestamp != null)
-                                            {
-                                                stopRecTimestamp = ((lastAudioTimestamp > lastVideoTimestamp) ? lastAudioTimestamp : lastVideoTimestamp);
-                                            }
-                                            else
-                                            {
-                                                stopRecTimestamp = lastAudioTimestamp ?? lastVideoTimestamp;
-                                            }
-
-                                            AddProperty(stopEventObj, "timestamp", stopRecTimestamp);
-                                        }
-
-                                        if (calcLastAudioTS && lastAudioTimestamp != null)
-                                        {
-                                            AddProperty(dataObj, "audioLastFrameTimestamp", lastAudioTimestamp);
-                                        }
-
-                                        if (calcLastVideoTS && lastVideoTimestamp != null)
-                                        {
-                                            AddProperty(dataObj, "videoLastFrameTimestamp", lastVideoTimestamp);
-                                        }
-
-                                        jsonDoc.WriteTo(writer);
-                                        writer.Flush();
-                                    }
-                                    finally
-                                    {
-                                        writer.Close();
-                                    }
-                                }
-
-                                tempFiles.Add(pair);
                             }
+
+                            if (calcLastVideoTS)
+                            {
+                                var duration = await GetDuration(videoFilePath, false).ConfigureAwait(false);
+                                if (duration != null)
+                                {
+                                    lastVideoTimestamp = firstVideoTimestamp + duration;
+                                    _Logger.LogDebug($"Calculated last video frame timestamp for file {jsonFile}: {lastVideoTimestamp} (duration: {duration}).");
+                                }
+                                else
+                                {
+                                    lastVideoTimestamp = firstVideoTimestamp;
+                                    _Logger.LogDebug($"Calculated last audio frame timestamp for file {jsonFile}: {lastVideoTimestamp} (duration: cannot be calculated).");
+                                }
+                            }
+
+                            if (addDataBlock)
+                            {
+                                stopEntry.Data = new LogEntryData();
+                            }
+
+                            if (addFirstAudioTS)
+                            {
+                                stopEntry.Data.AudioFirstFrameTimestamp = firstAudioTimestamp;
+                            }
+
+                            if (addFirstVideoTS)
+                            {
+                                stopEntry.Data.VideoFirstFrameTimestamp = firstVideoTimestamp;
+                            }
+
+                            if (addFirstAudioTS)
+                            {
+                                stopEntry.Data.AudioFirstFrameTimestamp = firstAudioTimestamp;
+                            }
+
+                            if (addFirstAudioTS)
+                            {
+                                stopEntry.Data.AudioFirstFrameTimestamp = firstAudioTimestamp;
+                            }
+
+                            if (addAudioPath)
+                            {
+                                stopEntry.Data.AudioFile = audioFilePath;
+                            }
+
+                            if (addVideoPath)
+                            {
+                                stopEntry.Data.VideoFile = videoFilePath;
+                            }
+
+                            if (addRecordStopTS)
+                            {
+                                DateTime? stopRecTimestamp;
+                                if (lastAudioTimestamp != null && lastVideoTimestamp != null)
+                                {
+                                    stopRecTimestamp = ((lastAudioTimestamp > lastVideoTimestamp) ? lastAudioTimestamp : lastVideoTimestamp);
+                                }
+                                else
+                                {
+                                    stopRecTimestamp = lastAudioTimestamp ?? lastVideoTimestamp;
+                                }
+
+                                if (stopRecTimestamp != null)
+                                {
+                                    stopEntry.Timestamp = (DateTime)stopRecTimestamp;
+                                }
+                            }
+
+                            if (calcLastAudioTS && lastAudioTimestamp != null)
+                            {
+                                stopEntry.Data.AudioLastFrameTimestamp = lastAudioTimestamp;
+                            }
+
+                            if (calcLastVideoTS && lastVideoTimestamp != null)
+                            {
+                                stopEntry.Data.VideoLastFrameTimestamp = lastVideoTimestamp;
+                            }
+
+                            File.WriteAllText(tempFile, JsonConvert.SerializeObject(logEntries, new JsonSerializerSettings
+                            {
+                                ContractResolver = new CamelCasePropertyNamesContractResolver()
+                            }));
+
+                            tempFiles.Add(pair);
                         }
-                        catch (Exception ex)
-                        {
-                            _Logger.LogError($"Exception during validation of the document {jsonFile}: {ex}");
-                            AddToErrorList($"Exception during document validation: {ex}");
-                        }
-                        finally
-                        {
-                            stream.Close();
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _Logger.LogError($"Exception during validation of the document {jsonFile}: {ex}");
+                        AddToErrorList($"Exception during document validation: {ex}");
                     }
 
                     if (errorList.Count > 0)
@@ -625,97 +582,92 @@ namespace FM.LiveSwitch.Mux
                     }
 
                     var targetJsonName = Path.Combine(Path.GetDirectoryName(sessionTracker.JsonFile), Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
+                    var logEntries = await LogUtility.GetEntries(sessionTracker.JsonFile, _Logger).ConfigureAwait(false);
+                    var startEntry = GetEvent(logEntries, LogEntry.TypeStartRecording);
 
-                    using (FileStream inStream = new FileStream(sessionTracker.JsonFile, FileMode.Open, FileAccess.Read, FileShare.None))
-                    using (FileStream outStream = new FileStream(targetJsonName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    using (StreamReader sr = new StreamReader(inStream))
-                    using (StreamWriter sw = new StreamWriter(outStream))
-                    using (JsonWriter writer = new JsonTextWriter(sw))
-                    using (JsonReader reader = new JsonTextReader(sr))
+                    if (startEntry != null)
                     {
-                        var jsonDoc = JArray.Load(reader);
-                        var startEvent = GetEvents(jsonDoc, LogEntry.TypeStartRecording).FirstOrDefault();
+                        var entryData = new LogEntryData();
+                        DateTime? lastTimestamp = null;
 
-                        if (startEvent != null)
+                        _Logger.LogDebug($"Got first frame timestamp: {startEntry.Timestamp}");
+
+                        if (audioFile != null)
                         {
-                            JObject dataObj = new JObject();
-                            DateTime? lastTimestamp = null;
+                            _Logger.LogDebug($"Calculating duration for audio file {audioFile}");
 
-                            var firstFrameTimestamp = startEvent["timestamp"].Value<DateTime>();
-                            _Logger.LogDebug($"Got first frame timestamp: {firstFrameTimestamp}");
+                            entryData.AudioFile = audioFile;
+                            entryData.AudioFirstFrameTimestamp = startEntry.Timestamp;
 
-                            if (audioFile != null)
+                            var duration = await GetDuration(audioFile, true).ConfigureAwait(false);
+                            if (duration != null)
                             {
-                                _Logger.LogDebug($"Calculating duration for audio file {audioFile}");
-
-                                AddProperty(dataObj, "audioFile", audioFile);
-                                AddProperty(dataObj, "audioFirstFrameTimestamp", firstFrameTimestamp);
-
-                                var duration = await GetDuration(audioFile).ConfigureAwait(false);
-                                if (duration != null)
-                                {
-                                    var lastFrameTimestamp = firstFrameTimestamp + duration;
-                                    lastTimestamp = lastFrameTimestamp;
-                                    AddProperty(dataObj, "audioLastFrameTimestamp", lastFrameTimestamp);
-                                    _Logger.LogDebug($"Measured duration of audio file {audioFile} is {duration}. Last frame timestamp: {lastFrameTimestamp}");
-                                }
-                                else
-                                {
-                                    _Logger.LogError($"Duration of audio file {audioFile} cannot be calculated");
-                                }
+                                var lastFrameTimestamp = startEntry.Timestamp + duration;
+                                lastTimestamp = lastFrameTimestamp;
+                                entryData.AudioLastFrameTimestamp = lastFrameTimestamp;
+                                _Logger.LogDebug($"Measured duration of audio file {audioFile} is {duration}. Last frame timestamp: {lastFrameTimestamp}");
                             }
-
-                            if (videoFile != null)
+                            else
                             {
-                                _Logger.LogDebug($"Calculating duration for video file {videoFile}");
-
-                                AddProperty(dataObj, "videoFile", videoFile);
-                                AddProperty(dataObj, "videoFirstFrameTimestamp", firstFrameTimestamp);
-
-                                var duration = await GetDuration(videoFile).ConfigureAwait(false);
-                                if (duration != null)
-                                {
-                                    var lastFrameTimestamp = firstFrameTimestamp + duration;
-                                    if (lastTimestamp == null)
-                                    {
-                                        lastTimestamp = lastFrameTimestamp;
-                                    }
-                                    else
-                                    {
-                                        lastTimestamp = (lastTimestamp > lastFrameTimestamp) ? lastTimestamp : lastFrameTimestamp;
-                                    }
-                                    AddProperty(dataObj, "videoLastFrameTimestamp", lastFrameTimestamp);
-                                    _Logger.LogDebug($"Measured duration of video file {videoFile} is {duration}. Last frame timestamp: {lastFrameTimestamp}");
-                                }
-                                else
-                                {
-                                    _Logger.LogError($"Duration of video file {videoFile} cannot be calculated");
-                                }
+                                _Logger.LogError($"Duration of audio file {audioFile} cannot be calculated");
                             }
-
-                            JObject newObj = new JObject();
-                            jsonDoc.Add(newObj);
-
-                            AddProperty(newObj, "type", "stopRecording");
-                            AddProperty(newObj, "timestamp", lastTimestamp);
-
-                            AddProperty(newObj, "applicationId", startEvent["applicationId"]);
-                            AddProperty(newObj, "applicationConfigId", startEvent["applicationConfigId"]);
-                            AddProperty(newObj, "externalId", startEvent["externalId"]);
-                            AddProperty(newObj, "channelId", startEvent["channelId"]);
-                            AddProperty(newObj, "channelConfigId", startEvent["channelConfigId"]);
-                            AddProperty(newObj, "userId", startEvent["userId"]);
-                            AddProperty(newObj, "deviceId", startEvent["deviceId"]);
-                            AddProperty(newObj, "clientId", startEvent["clientId"]);
-                            AddProperty(newObj, "connectionId", startEvent["connectionId"]);
-
-                            _Logger.LogDebug($"Copying section attributes from {sessionTracker.JsonFile} to {targetJsonName}");
-
-                            AddProperty(newObj, "data", dataObj);
-
-                            jsonDoc.WriteTo(writer);
-                            writer.Flush();
                         }
+
+                        if (videoFile != null)
+                        {
+                            _Logger.LogDebug($"Calculating duration for video file {videoFile}");
+
+                            entryData.VideoFile = videoFile;
+                            entryData.VideoFirstFrameTimestamp = startEntry.Timestamp;
+
+                            var duration = await GetDuration(videoFile, false).ConfigureAwait(false);
+                            if (duration != null)
+                            {
+                                var lastFrameTimestamp = startEntry.Timestamp + duration;
+                                if (lastTimestamp == null)
+                                {
+                                    lastTimestamp = lastFrameTimestamp;
+                                }
+                                else
+                                {
+                                    lastTimestamp = (lastTimestamp > lastFrameTimestamp) ? lastTimestamp : lastFrameTimestamp;
+                                }
+                                entryData.VideoLastFrameTimestamp = lastFrameTimestamp;
+                                _Logger.LogDebug($"Measured duration of video file {videoFile} is {duration}. Last frame timestamp: {lastFrameTimestamp}");
+                            }
+                            else
+                            {
+                                _Logger.LogError($"Duration of video file {videoFile} cannot be calculated");
+                            }
+                        }
+
+                        var stopEntry = new LogEntry();
+                        stopEntry.Type = LogEntry.TypeStopRecording;
+                        if (lastTimestamp != null)
+                        {
+                            stopEntry.Timestamp = (DateTime)lastTimestamp;
+                        }
+                        stopEntry.ApplicationId = startEntry.ApplicationId;
+                        stopEntry.ApplicationConfigId = startEntry.ApplicationConfigId;
+                        stopEntry.ExternalId = startEntry.ExternalId;
+                        stopEntry.ChannelId = startEntry.ChannelId;
+                        stopEntry.ChannelConfigId = startEntry.ChannelConfigId;
+                        stopEntry.UserId = startEntry.UserId;
+                        stopEntry.DeviceId = startEntry.DeviceId;
+                        stopEntry.ClientId = startEntry.ClientId;
+                        stopEntry.ConnectionId = startEntry.ConnectionId;
+                        stopEntry.Data = entryData;
+
+                        _Logger.LogDebug($"Copying section attributes from {sessionTracker.JsonFile} to {targetJsonName}");
+
+                        var listEntries = new List<LogEntry>(logEntries);
+                        listEntries.Add(stopEntry);
+                        var newEntries = listEntries.ToArray();
+
+                        File.WriteAllText(targetJsonName, JsonConvert.SerializeObject(newEntries, new JsonSerializerSettings
+                        {
+                            ContractResolver = new CamelCasePropertyNamesContractResolver()
+                        }));
                     }
 
                     File.Delete(sessionTracker.JsonFile);
@@ -758,22 +710,16 @@ namespace FM.LiveSwitch.Mux
             _Logger.LogDebug("Finished processing orphan sessions...");
         }
 
-        public List<JToken> GetEvents(JArray jsonDoc, string eventName)
+        public LogEntry GetEvent(LogEntry[] logEntries, string eventName)
         {
-            var list = new List<JToken>();
-            if (jsonDoc.Type == JTokenType.Array)
+            foreach (var entry in logEntries)
             {
-                foreach (var obj in jsonDoc)
+                if (entry.Type == eventName)
                 {
-                    var type = obj["type"]?.Value<string>();
-                    if (type == eventName)
-                    {
-                        list.Add(obj);
-                    }
+                    return entry;
                 }
             }
-
-            return list;
+            return null;
         }
 
         private void AddProperty(JObject obj, string propertyName, JToken token)
@@ -789,12 +735,45 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
-        private async Task<TimeSpan?> GetDuration(string filePath)
+        private async Task<TimeSpan?> GetDuration(string filePath, bool audio)
         {
             try
             {
-                var ffmpegUtil = new FfmpegUtility(_Logger);
-                return await ffmpegUtil.GetDuration(filePath).ConfigureAwait(false);
+                var ffmpegUtil = new Utility(_Logger);
+                var type = audio ? "a" : "v";
+                var lines = await ffmpegUtil.FFprobe($"-v quiet -select_streams {type}:0 -show_frames -show_entries frame=pkt_pts_time -print_format csv=item_sep=|:nokey=1:print_section=0 {filePath}").ConfigureAwait(false);
+
+                TimeSpan? duration = null;
+                double? firstSeconds = null;
+                foreach (var line in lines)
+                {
+                    var parts = line.Split('|');
+                    if (parts.Length >= 1)
+                    {
+                        var readSeconds = double.TryParse(parts[0], out var seconds);
+                        if (readSeconds)
+                        {
+                            if (firstSeconds == null)
+                            {
+                                firstSeconds = seconds;
+                            }
+                            else
+                            {
+                                duration = TimeSpan.FromSeconds(seconds - firstSeconds.Value);
+                            }
+                        }
+                        else
+                        {
+                            _Logger.LogError("Could not parse ffprobe output: {Line}", line);
+                        }
+                    }
+                    else
+                    {
+                        _Logger.LogError("Unexpected ffprobe output: {Line}", line);
+                    }
+                }
+
+                return duration;
             }
             catch (Exception ex)
             {

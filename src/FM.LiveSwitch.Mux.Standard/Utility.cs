@@ -7,51 +7,13 @@ using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
-    public class FfmpegUtility
+    public class Utility
     {
         private readonly ILogger _Logger;
 
-        public FfmpegUtility(ILogger logger)
+        public Utility(ILogger logger)
         {
             _Logger = logger;
-        }
-
-        public async Task<TimeSpan?> GetDuration(string fileName)
-        {
-            var option = Path.GetExtension(fileName) == ".mka" ? "a" : "v";
-            var lines = await FFprobe($"-v quiet -select_streams {option}:0 -show_frames -show_entries frame=pkt_pts_time -print_format csv=item_sep=|:nokey=1:print_section=0 {fileName}").ConfigureAwait(false);
-
-            TimeSpan? duration = null;
-            double? firstSeconds = null;
-            foreach (var line in lines)
-            {
-                var parts = line.Split('|');
-                if (parts.Length >= 1)
-                {
-                    var readSeconds = double.TryParse(parts[0], out var seconds);
-                    if (readSeconds)
-                    {
-                        if (firstSeconds == null)
-                        {
-                            firstSeconds = seconds;
-                        }
-                        else
-                        {
-                            duration = TimeSpan.FromSeconds(seconds - firstSeconds.Value);
-                        }
-                    }
-                    else
-                    {
-                        _Logger.LogError("Could not parse ffprobe output: {Line}", line);
-                    }
-                }
-                else
-                {
-                    _Logger.LogError("Unexpected ffprobe output: {Line}", line);
-                }
-            }
-
-            return duration;
         }
 
         public Task<string[]> FFmpeg(string arguments)

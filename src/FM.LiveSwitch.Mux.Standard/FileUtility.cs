@@ -60,7 +60,7 @@ namespace FM.LiveSwitch.Mux
 
         public static bool Exists(string path)
         {
-            return path != null && File.Exists(path);
+            return path != null && File.Exists(path) && new FileInfo(path).Length > 0;
         }
     }
 }

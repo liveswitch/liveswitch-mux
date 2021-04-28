@@ -162,7 +162,7 @@ namespace FM.LiveSwitch.Mux
         }
 
         private readonly ILogger _Logger;
-        private readonly FfmpegUtility _FfmpegUtility;
+        private readonly Utility _FfmpegUtility;
 
         public Session(string channelId, string applicationId, Client[] completedClients, ILoggerFactory loggerFactory)
         {
@@ -172,7 +172,7 @@ namespace FM.LiveSwitch.Mux
             LoggerFactory = loggerFactory;
 
             _Logger = loggerFactory.CreateLogger(nameof(Session));
-            _FfmpegUtility = new FfmpegUtility(_Logger);
+            _FfmpegUtility = new Utility(_Logger);
         }
 
         public async Task<bool> Mux(MuxOptions options)
