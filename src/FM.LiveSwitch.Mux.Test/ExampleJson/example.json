@@ -1,0 +1,117 @@
+[
+  {
+    "type": "updateRecording",
+    "timestamp": "2020-05-24T18:20:17.82634",
+    "applicationId": "app-id",
+    "applicationConfigId": "1a170fc7-eb90-457a-864b-7e787b13a795",
+    "externalId": "abc",
+    "channelId": "audio-video",
+    "channelConfigId": "afbe3d08-cc19-432e-9c19-f3592a1f10d6",
+    "userId": "11ee50df58ab4c558659101dc2a97b46",
+    "deviceId": "f71152e4c2d247dfa4882da124d03a3c",
+    "clientId": "b30b91854dca48f5913aa4a63a3801b9",
+    "connectionId": "9360c8d8a19b474283c500fd2c1abcff",
+    "data": {
+      "connectionTag": "9ySNcrWNzKMEFSBT6K",
+      "audioMuted": true,
+      "audioDisabled": false,
+      "videoMuted": true,
+      "videoDisabled": false
+    }
+  },
+  {
+    "type": "stopRecording",
+    "timestamp": "2020-05-24T18:16:42.597",
+    "applicationId": "app-id",
+    "externalId": "abc",
+    "applicationConfigId": "1a170fc7-eb90-457a-864b-7e787b13a795",
+    "channelId": "audio-video",
+    "channelConfigId": "afbe3d08-cc19-432e-9c19-f3592a1f10d6",
+    "userId": "11ee50df58ab4c558659101dc2a97b46",
+    "deviceId": "f71152e4c2d247dfa4882da124d03a3c",
+    "clientId": "b30b91854dca48f5913aa4a63a3801b9",
+    "connectionId": "9360c8d8a19b474283c500fd2c1abcff",
+    "data": {
+      "audioFile": "--AudioFile--",
+      "audioFirstFrameTimestamp": "2020-05-24T18:16:17.826",
+      "audioLastFrameTimestamp": "2020-05-24T18:16:42.58345",
+      "videoFile": "--VideoFile--",
+      "videoFirstFrameTimestamp": "2020-05-24T18:16:22.924",
+      "videoLastFrameTimestamp": "2020-05-24T18:16:42.59",
+      "videoDelay": "2.103"
+    }
+  },
+  {
+    "type": "updateRecording",
+    "timestamp": "2020-05-24T18:20:17.82634",
+    "applicationId": "app-id",
+    "applicationConfigId": "1a170fc7-eb90-457a-864b-7e787b13a795",
+    "externalId": "abc",
+    "channelId": "audio-video",
+    "channelConfigId": "afbe3d08-cc19-432e-9c19-f3592a1f10d6",
+    "userId": "11ee50df58ab4c558659101dc2a97b46",
+    "deviceId": "f71152e4c2d247dfa4882da124d03a3c",
+    "clientId": "b30b91854dca48f5913aa4a63a3801b9",
+    "connectionId": "9360c8d8a19b474283c500fd2c1abcff",
+    "data": {
+      "connectionTag": "9ySNcrWNzKMEFSBT6K",
+      "audioMuted": true,
+      "audioDisabled": false,
+      "videoMuted": true,
+      "videoDisabled": false
+    }
+  },
+  {
+    "type": "updateRecording",
+    "timestamp": "2020-05-24T18:22:45.43254",
+    "applicationId": "app-id",
+    "applicationConfigId": "1a170fc7-eb90-457a-864b-7e787b13a795",
+    "externalId": "abc",
+    "channelId": "audio-video",
+    "channelConfigId": "afbe3d08-cc19-432e-9c19-f3592a1f10d6",
+    "userId": "11ee50df58ab4c558659101dc2a97b46",
+    "deviceId": "f71152e4c2d247dfa4882da124d03a3c",
+    "clientId": "b30b91854dca48f5913aa4a63a3801b9",
+    "connectionId": "9360c8d8a19b474283c500fd2c1abcff",
+    "data": {
+      "connectionTag": "9ySNcrWNzKMEFSBT6K",
+      "audioMuted": true,
+      "audioDisabled": true,
+      "videoMuted": false,
+      "videoDisabled": false
+    }
+  },
+  {
+    "type": "startRecording",
+    "timestamp": "2020-05-24T18:16:17.826",
+    "applicationId": "app-id",
+    "externalId": "abc",
+    "applicationConfigId": "1a170fc7-eb90-457a-864b-7e787b13a795",
+    "channelId": "audio-video",
+    "channelConfigId": "afbe3d08-cc19-432e-9c19-f3592a1f10d6",
+    "userId": "11ee50df58ab4c558659101dc2a97b46",
+    "deviceId": "f71152e4c2d247dfa4882da124d03a3c",
+    "clientId": "b30b91854dca48f5913aa4a63a3801b9",
+    "connectionId": "9360c8d8a19b474283c500fd2c1abcff"
+  },
+  {
+    "type": "updateRecording",
+    "timestamp": "2020-05-24T18:24:42.09831",
+    "applicationId": "app-id",
+    "applicationConfigId": "1a170fc7-eb90-457a-864b-7e787b13a795",
+    "externalId": "abc",
+    "channelId": "audio-video",
+    "channelConfigId": "afbe3d08-cc19-432e-9c19-f3592a1f10d6",
+    "userId": "11ee50df58ab4c558659101dc2a97b46",
+    "deviceId": "f71152e4c2d247dfa4882da124d03a3c",
+    "clientId": "b30b91854dca48f5913aa4a63a3801b9",
+    "connectionId": "9360c8d8a19b474283c500fd2c1abcff",
+    "data": {
+      "connectionTag": "9ySNcrWNzKMEFSBT6K",
+      "audioMuted": true,
+      "audioDisabled": true,
+      "videoMuted": false,
+      "videoDisabled": false
+    }
+  }
+]

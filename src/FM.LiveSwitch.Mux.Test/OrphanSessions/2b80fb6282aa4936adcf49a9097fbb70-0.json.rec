@@ -1,0 +1,15 @@
+[
+	{
+		"type": "startRecording",
+		"timestamp": "5020-09-08T17:30:05.8350843Z",
+		"applicationId": "203e0af8-034d-49bc-b7b7-995c2fef04f0",
+		"applicationConfigId": "94c49b61-fdeb-41c1-9c11-d060ffe5421f",
+		"externalId": "63461c4f-5b13-470f-a523-28dc75f9d0bb",
+		"channelId": "rec-z27luu-fi9kuyl-9yaXsnmGEH6G4mWna8-attendees-bb435ec1d56d6a6bc36c20056bebe71291ff4bdeae1d24b5d9e3b24e1b55b429",
+		"channelConfigId": "534baca4-7403-453b-987b-cf5451b48506",
+		"userId": "fi9kuyl@9tW6rWhKXTVeP5smY4",
+		"deviceId": "ve-9tW6rWhKXTVeP5smY4",
+		"clientId": "28b18ad277694c26b4b121efd75f2110",
+		"connectionId": "2b80fb6282aa4936adcf49a9097fbb70"
+	}
+]

@@ -34,6 +34,9 @@ namespace FM.LiveSwitch.Mux
         [Option('f', "frame-rate", Default = 30, HelpText = "The frames per second of the output video.")]
         public int FrameRate { get; set; }
 
+        [Option("min-orphan-duration", Default = 120, HelpText = "Minimum duration (in minutes) of waiting for incomplete media files to have file size unchanged for the media to be considered orphaned.")]
+        public int MinimumOrphanDuration { get; set; }
+
         [Option("background-color", Default = "000000", HelpText = "The background colour.")]
         public string BackgroundColor { get; set; }
 

@@ -102,6 +102,10 @@ namespace FM.LiveSwitch.Mux
                         Options.InputFileNames = string.Join(",", Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
                     }
 
+                    var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath);
+                    preprocessor.MinimumOrphanDuration = Options.MinimumOrphanDuration;
+                    await preprocessor.ProcessDirectory();
+
                     var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
                     if (logEntries == null)
                     {
