@@ -12,8 +12,6 @@ namespace FM.LiveSwitch.Mux
 
         public string ApplicationId { get; set; }
 
-        public string ExternalId { get; set; }
-
         public string ChannelId { get; set; }
 
         public string UserId { get; set; }
@@ -23,10 +21,6 @@ namespace FM.LiveSwitch.Mux
         public string ClientId { get; set; }
 
         public string ConnectionId { get; set; }
-
-        public string ApplicationConfigId { get; set; }
-
-        public string ChannelConfigId { get; set; }
 
         public DateTime Timestamp { get; set; } // ISO-8601
 

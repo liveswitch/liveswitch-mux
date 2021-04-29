@@ -131,25 +131,16 @@ namespace FM.LiveSwitch.Mux
 
                             ReportIfMissing((startEntry.Timestamp.Ticks == 0) ? (DateTime?)null : startEntry.Timestamp, nameof(startEntry.Timestamp), LogEntry.TypeStartRecording);
                             ReportIfMissing(startEntry.ApplicationId, nameof(startEntry.ApplicationId), LogEntry.TypeStartRecording);
-                            ReportIfMissing(startEntry.ExternalId, nameof(startEntry.ExternalId), LogEntry.TypeStartRecording);
                             ReportIfMissing(startEntry.ChannelId, nameof(startEntry.ChannelId), LogEntry.TypeStartRecording);
                             ReportIfMissing(startEntry.ConnectionId, nameof(startEntry.ConnectionId), LogEntry.TypeStartRecording);
-                            ReportIfMissing(startEntry.ApplicationConfigId, nameof(startEntry.ApplicationConfigId), LogEntry.TypeStartRecording);
-                            ReportIfMissing(startEntry.ChannelConfigId, nameof(startEntry.ChannelConfigId), LogEntry.TypeStartRecording);
 
                             ReportIfMissing(stopEntry.ApplicationId, nameof(stopEntry.ApplicationId), LogEntry.TypeStopRecording);
-                            ReportIfMissing(stopEntry.ExternalId, nameof(stopEntry.ExternalId), LogEntry.TypeStopRecording);
                             ReportIfMissing(stopEntry.ChannelId, nameof(stopEntry.ChannelId), LogEntry.TypeStopRecording);
                             ReportIfMissing(stopEntry.ConnectionId, nameof(stopEntry.ConnectionId), LogEntry.TypeStopRecording);
-                            ReportIfMissing(stopEntry.ApplicationConfigId, nameof(stopEntry.ApplicationConfigId), LogEntry.TypeStopRecording);
-                            ReportIfMissing(stopEntry.ChannelConfigId, nameof(stopEntry.ChannelConfigId), LogEntry.TypeStopRecording);
 
                             ReportIfDifferent(startEntry.ApplicationId, stopEntry.ApplicationId, nameof(stopEntry.ApplicationId));
-                            ReportIfDifferent(startEntry.ExternalId, stopEntry.ExternalId, nameof(stopEntry.ExternalId));
                             ReportIfDifferent(startEntry.ChannelId, stopEntry.ChannelId, nameof(stopEntry.ChannelId));
                             ReportIfDifferent(startEntry.ConnectionId, stopEntry.ConnectionId, nameof(stopEntry.ConnectionId));
-                            ReportIfDifferent(startEntry.ApplicationConfigId, stopEntry.ApplicationConfigId, nameof(stopEntry.ApplicationConfigId));
-                            ReportIfDifferent(startEntry.ChannelConfigId, stopEntry.ChannelConfigId, nameof(stopEntry.ChannelConfigId));
 
                             var data = stopEntry.Data;
                             if (data != null)
@@ -638,10 +629,7 @@ namespace FM.LiveSwitch.Mux
                             stopEntry.Timestamp = (DateTime)lastTimestamp;
                         }
                         stopEntry.ApplicationId = startEntry.ApplicationId;
-                        stopEntry.ApplicationConfigId = startEntry.ApplicationConfigId;
-                        stopEntry.ExternalId = startEntry.ExternalId;
                         stopEntry.ChannelId = startEntry.ChannelId;
-                        stopEntry.ChannelConfigId = startEntry.ChannelConfigId;
                         stopEntry.UserId = startEntry.UserId;
                         stopEntry.DeviceId = startEntry.DeviceId;
                         stopEntry.ClientId = startEntry.ClientId;
