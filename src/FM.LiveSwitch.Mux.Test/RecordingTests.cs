@@ -351,7 +351,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Assert.True(result, "Muxer run failed");
                 Assert.True(!File.Exists(jsonFilePath + ".fail"));
 
-                foreach (var field in new[] { "timestamp", "applicationId", "externalId", "channelId", "connectionId", "applicationConfigId", "channelConfigId" })
+                foreach (var field in new[] { "timestamp", "applicationId", "channelId", "connectionId" })
                 {
                     jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
                     var jsonBlob = File.ReadAllText(jsonFilePath);
@@ -364,10 +364,13 @@ namespace FM.LiveSwitch.Mux.Test
                     Assert.True(File.Exists(jsonFilePath + ".fail"));
                 }
 
-                foreach (var pair in new Dictionary<string, string> { { "timestamp", "1000-09-25T09:08:22.752223Z" }, { "applicationId", "app" }, { "channelId", "channel" },
-                                                                  { "connectionId", "ca2f89d2-1d2e-6bf9-81a2-23fa39142aaa" }, { "externalId", "BBBBBBBB" },
-                                                                  { "applicationConfigId", "caaff9d2-112e-6b09-8fa2-23fa391421f0" },
-                                                                  { "channelConfigId", "ff84a09d-b436-9af2-01f5-ec53cbbdfa37" } })
+                foreach (var pair in new Dictionary<string, string>
+                {
+                    { "timestamp", "1000-09-25T09:08:22.752223Z" },
+                    { "applicationId", "app" },
+                    { "channelId", "channel" },
+                    { "connectionId", "ca2f89d2-1d2e-6bf9-81a2-23fa39142aaa" },
+                })
                 {
                     jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
                     var jsonBlob = File.ReadAllText(jsonFilePath);
