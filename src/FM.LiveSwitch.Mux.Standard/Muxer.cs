@@ -109,9 +109,12 @@ namespace FM.LiveSwitch.Mux
                         Options.InputFilePaths = string.Join(",", Options.InputFilePaths).Split(',').Where(filePath => filePath.Length > 0);
                     }
 
-                    var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath);
-                    preprocessor.MinimumOrphanDuration = Options.MinimumOrphanDuration;
-                    await preprocessor.ProcessDirectory();
+                    if (Options.InputFileNames.Count() == 0 && Options.InputFilePaths.Count() == 0)
+                    {
+                        var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath);
+                        preprocessor.MinimumOrphanDuration = Options.MinimumOrphanDuration;
+                        await preprocessor.ProcessDirectory().ConfigureAwait(false);
+                    }
 
                     var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
                     if (logEntries == null)
@@ -170,7 +173,7 @@ namespace FM.LiveSwitch.Mux
 
                                 try
                                 {
-                                    if (await session.Mux(Options))
+                                    if (await session.Mux(Options).ConfigureAwait(false))
                                     {
                                         _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
                                             application.Id,
@@ -326,7 +329,7 @@ namespace FM.LiveSwitch.Mux
                             return null;
                         }
 
-                        return await LogUtility.GetEntries(logFilePath, _Logger);
+                        return await LogUtility.GetEntries(logFilePath, _Logger).ConfigureAwait(false);
                     }
                 case StrategyType.Flat:
                     {
@@ -358,7 +361,7 @@ namespace FM.LiveSwitch.Mux
                             {
                                 try
                                 {
-                                    logEntries.AddRange(await LogUtility.GetEntries(filePath, _Logger));
+                                    logEntries.AddRange(await LogUtility.GetEntries(filePath, _Logger).ConfigureAwait(false));
                                 }
                                 catch (FileNotFoundException)
                                 {
