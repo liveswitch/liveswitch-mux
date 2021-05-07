@@ -2,11 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
+    public enum StandardStream
+    {
+        Output = 1,
+        Error = 2
+    }
+
     public class Utility
     {
         private readonly ILogger _Logger;
@@ -16,17 +21,73 @@ namespace FM.LiveSwitch.Mux
             _Logger = logger;
         }
 
+        /// <summary>
+        /// Call FFmpeg while capturing and logging the standard error stream.
+        /// </summary>
+        /// <param name="arguments">The FFmpeg arguments.</param>
+        /// <returns>The lines written to the standard error stream.</returns>
         public Task<string[]> FFmpeg(string arguments)
         {
-            return Execute("ffmpeg", arguments, true, true);
+            return FFmpeg(arguments, StandardStream.Error);
         }
 
+        /// <summary>
+        /// Call FFmpeg while capturing and logging the standard error or output stream.
+        /// </summary>
+        /// <param name="arguments">The FFmpeg arguments.</param>
+        /// <param name="standardStream">The standard stream to read.</param>
+        /// <returns>The lines written to the standard error or output stream.</returns>
+        public Task<string[]> FFmpeg(string arguments, StandardStream standardStream)
+        {
+            return FFmpeg(arguments, standardStream, true);
+        }
+
+        /// <summary>
+        /// Call FFmpeg while capturing and optionally logging the standard error or output stream.
+        /// </summary>
+        /// <param name="arguments">The FFmpeg arguments.</param>
+        /// <param name="standardStream">The standard stream to read.</param>
+        /// <param name="logOutput">Whether to log output from the standard stream.</param>
+        /// <returns>The lines written to the standard error or output stream.</returns>
+        public Task<string[]> FFmpeg(string arguments, StandardStream standardStream, bool logOutput)
+        {
+            return Execute("ffmpeg", arguments, standardStream, logOutput);
+        }
+
+        /// <summary>
+        /// Call FFprobe while capturing and logging the standard output stream.
+        /// </summary>
+        /// <param name="arguments">The FFprobe arguments.</param>
+        /// <returns>The lines written to the standard output stream.</returns>
         public Task<string[]> FFprobe(string arguments)
         {
-            return Execute("ffprobe", arguments, false, false);
+            return FFprobe(arguments, StandardStream.Output);
         }
 
-        private async Task<string[]> Execute(string command, string arguments, bool useStandardError, bool logOutput)
+        /// <summary>
+        /// Call FFprobe while capturing and logging the standard output or error stream.
+        /// </summary>
+        /// <param name="arguments">The FFprobe arguments.</param>
+        /// <param name="standardStream">The standard stream to read.</param>
+        /// <returns>The lines written to the standard output or error stream.</returns>
+        public Task<string[]> FFprobe(string arguments, StandardStream standardStream)
+        {
+            return FFprobe(arguments, standardStream, false);
+        }
+
+        /// <summary>
+        /// Call FFprobe while capturing and optionally logging the standard output or error stream.
+        /// </summary>
+        /// <param name="arguments">The FFprobe arguments.</param>
+        /// <param name="standardStream">The standard stream to read.</param>
+        /// <param name="logOutput">Whether to log output from the standard stream.</param>
+        /// <returns>The lines written to the standard output or error stream.</returns>
+        public Task<string[]> FFprobe(string arguments, StandardStream standardStream, bool logOutput)
+        {
+            return Execute("ffprobe", arguments, standardStream, logOutput);
+        }
+
+        private async Task<string[]> Execute(string command, string arguments, StandardStream standardStream, bool logOutput)
         {
             // prep the process arguments
             var processStartInfo = new ProcessStartInfo
@@ -36,7 +97,7 @@ namespace FM.LiveSwitch.Mux
                 Arguments = arguments
             };
 
-            if (useStandardError)
+            if (standardStream == StandardStream.Error)
             {
                 processStartInfo.RedirectStandardError = true;
             }
@@ -55,7 +116,7 @@ namespace FM.LiveSwitch.Mux
 
                 // process each line
                 var lines = new List<string>();
-                var stream = useStandardError ? process.StandardError : process.StandardOutput;
+                var stream = standardStream == StandardStream.Error ? process.StandardError : process.StandardOutput;
                 while (!stream.EndOfStream)
                 {
                     var line = await stream.ReadLineAsync();
