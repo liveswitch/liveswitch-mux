@@ -106,16 +106,8 @@ namespace FM.LiveSwitch.Mux
 
                 if (ActiveRecording.AudioFile != null)
                 {
-                    if (logEntry.Data?.AudioFirstFrameTimestamp != null && logEntry.Data?.AudioLastFrameTimestamp != null)
-                    {
-                        ActiveRecording.AudioStartTimestamp = logEntry.Data?.AudioFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
-                        ActiveRecording.AudioStopTimestamp = logEntry.Data?.AudioLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
-                    }
-                    else
-                    {
-                        ActiveRecording.AudioStartTimestamp = null;
-                        ActiveRecording.AudioStopTimestamp = null;
-                    }
+                    ActiveRecording.AudioStartTimestamp = logEntry.Data?.AudioFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
+                    ActiveRecording.AudioStopTimestamp = logEntry.Data?.AudioLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
 
                     if (!Path.IsPathRooted(ActiveRecording.AudioFile))
                     {
@@ -125,16 +117,8 @@ namespace FM.LiveSwitch.Mux
 
                 if (ActiveRecording.VideoFile != null)
                 {
-                    if (logEntry.Data?.VideoFirstFrameTimestamp != null && logEntry.Data?.VideoLastFrameTimestamp != null)
-                    {
-                        ActiveRecording.VideoStartTimestamp = logEntry.Data?.VideoFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
-                        ActiveRecording.VideoStopTimestamp = logEntry.Data?.VideoLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
-                    }
-                    else
-                    {
-                        ActiveRecording.VideoStartTimestamp = null;
-                        ActiveRecording.VideoStopTimestamp = null;
-                    }
+                    ActiveRecording.VideoStartTimestamp = logEntry.Data?.VideoFirstFrameTimestamp ?? ActiveRecording.StartTimestamp;
+                    ActiveRecording.VideoStopTimestamp = logEntry.Data?.VideoLastFrameTimestamp ?? ActiveRecording.StopTimestamp;
 
                     if (!Path.IsPathRooted(ActiveRecording.VideoFile))
                     {
@@ -152,11 +136,12 @@ namespace FM.LiveSwitch.Mux
                 // ensure consistency on start/stop timestamps
                 var audioStartTimestampTicks = long.MaxValue;
                 var audioStopTimestampTicks = long.MinValue;
-                if (ActiveRecording.AudioFile != null)
+                if (ActiveRecording.AudioFile != null && ActiveRecording.AudioStartTimestamp.HasValue && ActiveRecording.AudioStopTimestamp.HasValue)
                 {
                     audioStartTimestampTicks = ActiveRecording.AudioStartTimestamp.Value.Ticks;
                     audioStopTimestampTicks = ActiveRecording.AudioStopTimestamp.Value.Ticks;
                 }
+
                 var videoStartTimestampTicks = long.MaxValue;
                 var videoStopTimestampTicks = long.MinValue;
                 if (ActiveRecording.VideoFile != null && ActiveRecording.VideoStartTimestamp.HasValue && ActiveRecording.VideoStopTimestamp.HasValue)
