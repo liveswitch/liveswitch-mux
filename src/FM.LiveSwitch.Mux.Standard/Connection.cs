@@ -25,6 +25,9 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public string ApplicationId { get; private set; }
 
+        [JsonIgnore]
+        public string ExternalId { get; private set; }
+
         public DateTime? StartTimestamp { get; private set; }
 
         public DateTime? StopTimestamp { get; private set; }
@@ -46,7 +49,7 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public Client Client { get; set; }
 
-        public Connection(string id, string clientId, string deviceId, string userId, string channelId, string applicationId)
+        public Connection(string id, string clientId, string deviceId, string userId, string channelId, string applicationId, string externalId)
         {
             Id = id;
             ClientId = clientId;
@@ -54,6 +57,7 @@ namespace FM.LiveSwitch.Mux
             UserId = userId;
             ChannelId = channelId;
             ApplicationId = applicationId;
+            ExternalId = externalId;
         }
 
         public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)

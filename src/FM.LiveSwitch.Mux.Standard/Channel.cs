@@ -11,6 +11,8 @@ namespace FM.LiveSwitch.Mux
 
         public string ApplicationId { get; private set; }
 
+        public string ExternalId { get; private set; }
+
         public DateTime? StartTimestamp
         {
             get
@@ -54,10 +56,11 @@ namespace FM.LiveSwitch.Mux
 
         private readonly List<Session> _CompletedSessions = new List<Session>();
 
-        public Channel(string id, string applicationId)
+        public Channel(string id, string applicationId, string externalId)
         {
             Id = id;
             ApplicationId = applicationId;
+            ExternalId = externalId;
         }
 
         public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options, ILoggerFactory loggerFactory)
@@ -70,14 +73,14 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Clients.TryGetValue(clientId, out var client))
             {
-                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId);
+                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId);
             }
 
             var result = client.ProcessLogEntry(logEntry, options);
 
             if (Completed)
             {
-                _CompletedSessions.Add(new Session(Id, ApplicationId, CompletedClients, loggerFactory));
+                _CompletedSessions.Add(new Session(Id, ApplicationId, ExternalId, CompletedClients, loggerFactory));
                 _Clients = new Dictionary<string, Client>();
             }
 

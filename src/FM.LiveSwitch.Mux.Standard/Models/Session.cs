@@ -10,6 +10,8 @@ namespace FM.LiveSwitch.Mux.Models
 
         public string ApplicationId { get; set; }
 
+        public string ExternalId { get; set; }
+
         public DateTime StartTimestamp { get; set; }
 
         public DateTime StopTimestamp { get; set; }

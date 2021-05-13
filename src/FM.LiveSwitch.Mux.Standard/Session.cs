@@ -40,6 +40,8 @@ namespace FM.LiveSwitch.Mux
 
         public string ApplicationId { get; private set; }
 
+        public string ExternalId { get; private set; }
+
         public DateTime StartTimestamp { get { return CompletedClients.Select(x => x.StartTimestamp).Min().Value; } }
 
         public DateTime StopTimestamp { get { return CompletedClients.Select(x => x.StopTimestamp).Max().Value; } }
@@ -164,10 +166,11 @@ namespace FM.LiveSwitch.Mux
         private readonly ILogger _Logger;
         private readonly Utility _FfmpegUtility;
 
-        public Session(string channelId, string applicationId, Client[] completedClients, ILoggerFactory loggerFactory)
+        public Session(string channelId, string applicationId, string externalId, Client[] completedClients, ILoggerFactory loggerFactory)
         {
             ChannelId = channelId;
             ApplicationId = applicationId;
+            ExternalId = externalId;
             CompletedClients = completedClients.OrderBy(x => x.StartTimestamp).ToArray();
             LoggerFactory = loggerFactory;
 
@@ -966,6 +969,7 @@ namespace FM.LiveSwitch.Mux
             return new Models.Session
             {
                 Id = Id,
+                ExternalId = ExternalId,
                 ApplicationId = ApplicationId,
                 ChannelId = ChannelId,
                 StartTimestamp = StartTimestamp,

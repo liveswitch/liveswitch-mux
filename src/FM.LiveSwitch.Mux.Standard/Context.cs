@@ -24,7 +24,7 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Applications.TryGetValue(applicationId, out var application))
             {
-                _Applications[applicationId] = application = new Application(applicationId);
+                _Applications[applicationId] = application = new Application(applicationId, logEntry.ExternalId);
             }
 
             return application.ProcessLogEntry(logEntry, options, loggerFactory);
