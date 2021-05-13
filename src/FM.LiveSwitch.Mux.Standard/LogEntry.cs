@@ -10,6 +10,8 @@ namespace FM.LiveSwitch.Mux
 
         public string Type { get; set; }
 
+        public string ExternalId { get; set; }
+
         public string ApplicationId { get; set; }
 
         public string ChannelId { get; set; }
@@ -32,6 +34,7 @@ namespace FM.LiveSwitch.Mux
         {
             return other != null &&
                 other.Type == Type &&
+                other.ExternalId == ExternalId &&
                 other.ApplicationId == ApplicationId &&
                 other.ChannelId == ChannelId &&
                 other.ClientId == ClientId &&

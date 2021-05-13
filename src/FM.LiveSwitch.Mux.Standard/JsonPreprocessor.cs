@@ -138,6 +138,7 @@ namespace FM.LiveSwitch.Mux
                             ReportIfMissing(stopEntry.ChannelId, nameof(stopEntry.ChannelId), LogEntry.TypeStopRecording);
                             ReportIfMissing(stopEntry.ConnectionId, nameof(stopEntry.ConnectionId), LogEntry.TypeStopRecording);
 
+                            ReportIfDifferent(startEntry.ExternalId, stopEntry.ExternalId, nameof(stopEntry.ExternalId));
                             ReportIfDifferent(startEntry.ApplicationId, stopEntry.ApplicationId, nameof(stopEntry.ApplicationId));
                             ReportIfDifferent(startEntry.ChannelId, stopEntry.ChannelId, nameof(stopEntry.ChannelId));
                             ReportIfDifferent(startEntry.ConnectionId, stopEntry.ConnectionId, nameof(stopEntry.ConnectionId));
@@ -628,6 +629,7 @@ namespace FM.LiveSwitch.Mux
                         {
                             stopEntry.Timestamp = (DateTime)lastTimestamp;
                         }
+                        stopEntry.ExternalId = startEntry.ExternalId;
                         stopEntry.ApplicationId = startEntry.ApplicationId;
                         stopEntry.ChannelId = startEntry.ChannelId;
                         stopEntry.UserId = startEntry.UserId;
