@@ -19,6 +19,7 @@ namespace FM.LiveSwitch.Mux.Test
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
             var stop = start.AddMinutes(1);
 
+            var externalId = "externalId";
             var applicationId = "applicationId";
             var channelId = "channelId";
             var clientId = "clientId";
@@ -31,6 +32,7 @@ namespace FM.LiveSwitch.Mux.Test
             var context = new Context();
             context.ProcessLogEntry(new LogEntry
             {
+                ExternalId = externalId,
                 ApplicationId = applicationId,
                 ChannelId = channelId,
                 ClientId = clientId,
@@ -42,6 +44,7 @@ namespace FM.LiveSwitch.Mux.Test
             }, options, loggerFactory);
             context.ProcessLogEntry(new LogEntry
             {
+                ExternalId = externalId,
                 ApplicationId = applicationId,
                 ChannelId = channelId,
                 ClientId = clientId,
@@ -77,6 +80,7 @@ namespace FM.LiveSwitch.Mux.Test
 
             var application = context.Applications.Single();
 
+            Assert.Equal(externalId, application.ExternalId);
             Assert.Equal(applicationId, application.Id);
             Assert.Single(application.Channels);
 
@@ -84,6 +88,7 @@ namespace FM.LiveSwitch.Mux.Test
 
             Assert.False(channel.Active);
             Assert.Empty(channel.ActiveClients);
+            Assert.Equal(externalId, channel.ExternalId);
             Assert.Equal(applicationId, channel.ApplicationId);
             Assert.Single(channel.CompletedSessions);
             Assert.Empty(channel.CompletedClients);
@@ -93,6 +98,7 @@ namespace FM.LiveSwitch.Mux.Test
 
             var session = channel.CompletedSessions.Single();
 
+            Assert.Equal(externalId, session.ExternalId);
             Assert.Equal(applicationId, session.ApplicationId);
             Assert.Equal(channelId, session.ChannelId);
             Assert.Single(session.CompletedClients);
@@ -107,6 +113,7 @@ namespace FM.LiveSwitch.Mux.Test
             Assert.False(client.Active);
             Assert.Empty(client.ActiveConnections);
             Assert.Empty(client.ActiveRecordings);
+            Assert.Equal(externalId, client.ExternalId);
             Assert.Equal(applicationId, client.ApplicationId);
             Assert.Equal(channelId, client.ChannelId);
             Assert.Single(client.CompletedConnections);
@@ -122,6 +129,7 @@ namespace FM.LiveSwitch.Mux.Test
             Assert.Equal(connection, client.CompletedConnections.Single());
             Assert.False(connection.Active);
             Assert.Null(connection.ActiveRecording);
+            Assert.Equal(externalId, connection.ExternalId);
             Assert.Equal(applicationId, connection.ApplicationId);
             Assert.Equal(channelId, connection.ChannelId);
             Assert.Equal(client, connection.Client);
