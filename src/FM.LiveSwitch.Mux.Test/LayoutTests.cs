@@ -11,7 +11,7 @@ namespace FM.LiveSwitch.Mux.Test
         {
             var connectionId = Guid.NewGuid().ToString();
 
-            var layout = Layout.Calculate(LayoutType.JS, new[]
+            var layout = Layout.Calculate(LayoutType.JS, 1, 1, new[]
             {
                 new LayoutInput
                 {

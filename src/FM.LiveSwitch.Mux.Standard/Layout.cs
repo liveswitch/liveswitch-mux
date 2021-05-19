@@ -14,7 +14,7 @@ namespace FM.LiveSwitch.Mux
 
         public Dictionary<string, LayoutView> Views { get; private set; }
 
-        public static Layout Calculate(LayoutType type, LayoutInput[] inputs, LayoutOutput output, string javascriptFile)
+        public static Layout Calculate(LayoutType type, int cameraWeight, int screenWeight, LayoutInput[] inputs, LayoutOutput output, string javascriptFile)
         {
             var layout = new Layout
             {
@@ -23,7 +23,7 @@ namespace FM.LiveSwitch.Mux
             };
 
             // get frames
-            var frames = layout.CalculateFrames(type, inputs, output, javascriptFile);
+            var frames = layout.CalculateFrames(type, cameraWeight, screenWeight, inputs, output, javascriptFile);
 
             // set bounds
             var views = new Dictionary<string, LayoutView>();
@@ -36,7 +36,106 @@ namespace FM.LiveSwitch.Mux
             return layout;
         }
 
-        private Rectangle[] CalculateFrames(LayoutType type, LayoutInput[] inputs, LayoutOutput output, string javascriptFile)
+        private Rectangle[] CalculateFrames(LayoutType type, int cameraWeight, int screenWeight, LayoutInput[] inputs, LayoutOutput output, string javascriptFile)
+        {
+            if (type == LayoutType.JS)
+            {
+                return CalculateJSFrames(inputs, output, javascriptFile);
+            }
+
+            // separate screen vs. camera content
+            var screenInputs = inputs.Where(input => input.VideoContent == VideoContent.Screen).ToArray();
+            var cameraInputs = inputs.Except(screenInputs).ToArray();
+
+            // single-content case
+            if (inputs.Length == screenInputs.Length ||
+                inputs.Length == cameraInputs.Length)
+            {
+                return CalculateFrames(type, inputs);
+            }
+
+            // sanity check
+            if (cameraWeight < 1 || screenWeight < 1)
+            {
+                throw new ArgumentException("Camera weight and/or screen weight must be positive integers.");
+            }
+
+            Rectangle[] cameraFrames;
+            Rectangle[] screenFrames;
+            if (type == LayoutType.HStack || type == LayoutType.HGrid)
+            {
+                var usableWidth = Size.Width - Margin;
+                var usableHeight = Size.Height;
+
+                var cameraWidth = (int)Math.Floor((double)cameraWeight * usableWidth / (cameraWeight + screenWeight));
+                cameraFrames = new Layout
+                {
+                    Margin = Margin,
+                    Size = new Size(cameraWidth, usableHeight)
+                }.CalculateFrames(type, cameraInputs);
+
+                var screenWidth = usableWidth - cameraWidth;
+                screenFrames = new Layout
+                {
+                    Margin = Margin,
+                    Size = new Size(screenWidth, usableHeight)
+                }.CalculateFrames(type, screenInputs);
+
+                // camera content to the right
+                for (var i = 0; i < cameraFrames.Length; i++)
+                {
+                    var cameraFrame = cameraFrames[i];
+                    var cameraFrameOrigin = cameraFrame.Origin;
+                    cameraFrames[i] = new Rectangle(new Point(screenWidth + Margin + cameraFrameOrigin.X, cameraFrameOrigin.Y), cameraFrame.Size);
+                }
+            }
+            else
+            {
+                var usableWidth = Size.Width;
+                var usableHeight = Size.Height - Margin;
+
+                var cameraHeight = (int)Math.Floor((double)cameraWeight * usableHeight / (cameraWeight + screenWeight));
+                cameraFrames = new Layout
+                {
+                    Margin = Margin,
+                    Size = new Size(usableWidth, cameraHeight)
+                }.CalculateFrames(type, cameraInputs);
+
+                var screenHeight = usableHeight - cameraHeight;
+                screenFrames = new Layout
+                {
+                    Margin = Margin,
+                    Size = new Size(usableWidth, screenHeight)
+                }.CalculateFrames(type, screenInputs);
+
+                // camera content to the bottom
+                for (var i = 0; i < cameraFrames.Length; i++)
+                {
+                    var cameraFrame = cameraFrames[i];
+                    var cameraFrameOrigin = cameraFrame.Origin;
+                    cameraFrames[i] = new Rectangle(new Point(cameraFrameOrigin.X, screenHeight + Margin + cameraFrameOrigin.Y), cameraFrame.Size);
+                }
+            }
+
+            // maintain ordering
+            var cameraIndex = 0;
+            var screenIndex = 0;
+            var frames = new Rectangle[inputs.Length];
+            for (var i = 0; i < frames.Length; i++)
+            {
+                if (inputs[i].VideoContent == VideoContent.Screen)
+                {
+                    frames[i] = screenFrames[screenIndex++];
+                }
+                else
+                {
+                    frames[i] = cameraFrames[cameraIndex++];
+                }
+            }
+            return frames;
+        }
+
+        private Rectangle[] CalculateFrames(LayoutType type, LayoutInput[] inputs)
         {
             switch (type)
             {
@@ -48,8 +147,6 @@ namespace FM.LiveSwitch.Mux
                     return CalculateGridFrames(true, inputs);
                 case LayoutType.VGrid:
                     return CalculateGridFrames(false, inputs);
-                case LayoutType.JS:
-                    return CalculateJSFrames(inputs, output, javascriptFile);
                 default:
                     throw new InvalidOperationException($"Unexpected layout type '{type}'.");
             }
@@ -141,8 +238,6 @@ namespace FM.LiveSwitch.Mux
             return frames;
         }
 
-        // the below code is minimally modified from LayoutPreset in IceLink/LiveSwitch.
-
         private static Rectangle[] CalculateInlineFrames(Rectangle layout, int count, bool horizontal, int margin)
         {
             var frames = new List<Rectangle>();
@@ -152,8 +247,6 @@ namespace FM.LiveSwitch.Mux
             var rowCount = table.RowCount;
             var cellWidth = table.CellSize.Width;
             var cellHeight = table.CellSize.Height;
-
-            // DO NOT TOUCH THIS
 
             var inlineMargin_2 = DivideByTwo(margin);
             if (horizontal)

@@ -58,6 +58,12 @@ namespace FM.LiveSwitch.Mux
         [Option("crop", HelpText = "Crop video in order to use all available layout space.")]
         public bool Crop { get; set; }
 
+        [Option("camera-weight", Default = 1, HelpText = "How much layout space to use for camera content relative to other content. Ignored for JS layout.")]
+        public int CameraWeight { get; set; }
+
+        [Option("screen-weight", Default = 5, HelpText = "How much layout space to use for screen content relative to other content. Ignored for JS layout.")]
+        public int ScreenWeight { get; set; }
+
         [Option("no-audio", HelpText = "Do not mux audio.")]
         public bool NoAudio { get; set; }
 

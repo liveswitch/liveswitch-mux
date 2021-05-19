@@ -102,6 +102,12 @@ lsmux [options]
 
   --crop                   Crop video in order to use all available layout space.
 
+  --camera-weight          (Default: 1) How much layout space to use for camera content relative
+                           to other content. Ignored for JS layout.
+
+  --screen-weight          (Default: 5) How much layout space to use for screen content relative
+                           to other content. Ignored for JS layout.
+
   --no-audio               Do not mux audio.
 
   --no-video               Do not mux video.
