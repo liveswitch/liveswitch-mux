@@ -25,10 +25,10 @@ namespace FM.LiveSwitch.Mux
         [Option('m', "margin", Default = 0, HelpText = "The margin, in pixels, to insert between videos in the layout.")]
         public int Margin { get; set; }
 
-        [Option('w', "width", Default = 1920, HelpText = "The pixel width of the output video.")]
+        [Option('w', "width", Default = 1280, HelpText = "The pixel width of the output video.")]
         public int Width { get; set; }
 
-        [Option('h', "height", Default = 1080, HelpText = "The pixel height of the output video.")]
+        [Option('h', "height", Default = 720, HelpText = "The pixel height of the output video.")]
         public int Height { get; set; }
 
         [Option('f', "frame-rate", Default = 30, HelpText = "The frames per second of the output video.")]
@@ -43,7 +43,7 @@ namespace FM.LiveSwitch.Mux
         [Option("audio-codec", Default = "libopus", HelpText = "The output audio codec and options.")]
         public string AudioCodec { get; set; }
 
-        [Option("video-codec", Default = "libvpx -auto-alt-ref 0", HelpText = "The output video codec and options.")]
+        [Option("video-codec", Default = "libvpx -crf 10 -b:v 2M -auto-alt-ref 0", HelpText = "The output video codec and options.")]
         public string VideoCodec { get; set; }
 
         [Option("audio-container", Default = "mka", HelpText = "The output audio container (file extension).")]
