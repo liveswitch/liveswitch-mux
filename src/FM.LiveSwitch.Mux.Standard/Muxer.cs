@@ -95,6 +95,20 @@ namespace FM.LiveSwitch.Mux
                         Options.Height = minHeight;
                     }
 
+                    var minCameraWeight = 1;
+                    if (Options.CameraWeight < minCameraWeight)
+                    {
+                        _Logger.LogInformation("Camera weight updated from {CameraWeight} to the minimum value of {MinCameraWeight}.", Options.CameraWeight, minCameraWeight);
+                        Options.CameraWeight = minCameraWeight;
+                    }
+
+                    var minScreenWeight = 1;
+                    if (Options.ScreenWeight < minScreenWeight)
+                    {
+                        _Logger.LogInformation("Screen weight updated from {ScreenWeight} to the minimum value of {MinScreenWeight}.", Options.ScreenWeight, minScreenWeight);
+                        Options.ScreenWeight = minScreenWeight;
+                    }
+
                     if (Options.InputFileNames.Count() > 0)
                     {
                         // CommandLine.Parser returns empty strings when there is a space after the separator.

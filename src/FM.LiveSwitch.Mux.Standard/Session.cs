@@ -563,7 +563,7 @@ namespace FM.LiveSwitch.Mux
                     {
                         StartTimestamp = chunks.Last().StopTimestamp,
                         StopTimestamp = @event.Timestamp,
-                        Layout = Layout.Calculate(options.Layout, new LayoutInput[0], layoutOutput, options.JavaScriptFile),
+                        Layout = Layout.Calculate(options.Layout, options.CameraWeight, options.ScreenWeight, new LayoutInput[0], layoutOutput, options.JavaScriptFile),
                         Segments = new VideoSegment[0]
                     });
                 }
@@ -588,11 +588,11 @@ namespace FM.LiveSwitch.Mux
                     // calculate the layout
                     if (options.Dynamic)
                     {
-                        chunk.Layout = Layout.Calculate(options.Layout, chunk.Segments.Select(x => x.GetLayoutInput()).ToArray(), layoutOutput, options.JavaScriptFile);
+                        chunk.Layout = Layout.Calculate(options.Layout, options.CameraWeight, options.ScreenWeight, chunk.Segments.Select(x => x.GetLayoutInput()).ToArray(), layoutOutput, options.JavaScriptFile);
                     }
                     else
                     {
-                        chunk.Layout = Layout.Calculate(options.Layout, staticLayoutInputs.ToArray(), layoutOutput, options.JavaScriptFile);
+                        chunk.Layout = Layout.Calculate(options.Layout, options.CameraWeight, options.ScreenWeight, staticLayoutInputs.ToArray(), layoutOutput, options.JavaScriptFile);
                     }
 
                     chunks.Add(chunk);
@@ -608,7 +608,7 @@ namespace FM.LiveSwitch.Mux
                 {
                     StartTimestamp = StartTimestamp,
                     StopTimestamp = chunks[0].StartTimestamp,
-                    Layout = Layout.Calculate(options.Layout, new LayoutInput[0], layoutOutput, options.JavaScriptFile),
+                    Layout = Layout.Calculate(options.Layout, options.CameraWeight, options.ScreenWeight, new LayoutInput[0], layoutOutput, options.JavaScriptFile),
                     Segments = new VideoSegment[0]
                 });
             }
