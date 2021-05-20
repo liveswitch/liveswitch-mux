@@ -19,7 +19,7 @@ namespace FM.LiveSwitch.Mux
         private readonly ILogger _Logger;
         private readonly string _InputDirectory;
 
-        private static readonly string OrphanSessionsFileName = ".orphan-sessions.stored.$$$";
+        private static readonly string OrphanSessionsFileName = ".orphan-sessions";
 
         public JsonPreprocessor(ILogger Logger, string InputDirectory)
         {

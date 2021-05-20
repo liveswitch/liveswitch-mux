@@ -59,7 +59,7 @@ Note that command-line arguments always take precedence over environment variabl
 lsmux [options]
 ```
 
-```shell
+```
   -i, --input-path         The input path, i.e. the recording path used by the media server.
                            Defaults to the current directory.
 
@@ -77,9 +77,9 @@ lsmux [options]
   -m, --margin             (Default: 0) The margin, in pixels, to insert between videos in the
                            layout.
 
-  -w, --width              (Default: 1920) The pixel width of the output video.
+  -w, --width              (Default: 1280) The pixel width of the output video.
 
-  -h, --height             (Default: 1080) The pixel height of the output video.
+  -h, --height             (Default: 720) The pixel height of the output video.
 
   -f, --frame-rate         (Default: 30) The frames per second of the output video.
 
@@ -91,7 +91,8 @@ lsmux [options]
 
   --audio-codec            (Default: libopus) The output audio codec and options.
 
-  --video-codec            (Default: libvpx -auto-alt-ref 0) The output video codec and options.
+  --video-codec            (Default: libvpx -crf 10 -b:v 2M -auto-alt-ref 0) The output video
+                           codec and options.
 
   --audio-container        (Default: mka) The output audio container (file extension).
 
@@ -300,7 +301,7 @@ interface Size {
 
 General log output is written to `stderr`, while `stdout` is reserved for a list of JSON metadata files - one for each session, e.g.:
 
-```shell
+```
 /path/to/my/recordings/session_2019-12-25_07-59-37_to_2019-12-25_09-08-43_1758af02-c9bc-dc5a-1eef-41c1130a8c41.json
 /path/to/my/recordings/session_2019-12-25_08-02-34_to_2019-12-25_09-03-38_1758af02-c9bc-dc5a-1eef-41c1130a8c41.json
 ```
