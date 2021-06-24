@@ -28,9 +28,31 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public string ExternalId { get; private set; }
 
-        public DateTime? StartTimestamp { get; private set; }
+        public DateTime? StartTimestamp
+        {
+            get
+            {
+                var startTimestamps = CompletedRecordings.Select(x => x.StartTimestamp);
+                if (startTimestamps.Count() == 0)
+                {
+                    return null;
+                }
+                return startTimestamps.Min();
+            }
+        }
 
-        public DateTime? StopTimestamp { get; private set; }
+        public DateTime? StopTimestamp
+        {
+            get
+            {
+                var stopTimestamps = CompletedRecordings.Select(x => x.StopTimestamp);
+                if (stopTimestamps.Count() == 0)
+                {
+                    return null;
+                }
+                return stopTimestamps.Max();
+            }
+        }
 
         [JsonIgnore]
         public Recording ActiveRecording { get; private set; }
@@ -76,11 +98,6 @@ namespace FM.LiveSwitch.Mux
                     StartTimestamp = logEntry.Timestamp,
                     LogFile = logEntry.FilePath
                 };
-
-                if (StartTimestamp == null)
-                {
-                    StartTimestamp = logEntry.Timestamp;
-                }
 
                 ActiveRecording.Update(logEntry);
             }
@@ -154,8 +171,8 @@ namespace FM.LiveSwitch.Mux
                     videoStopTimestampTicks = ActiveRecording.VideoStopTimestamp.Value.Ticks;
                 }
 
-                StartTimestamp = ActiveRecording.StartTimestamp = new DateTime(Math.Min(audioStartTimestampTicks, videoStartTimestampTicks));
-                StopTimestamp = ActiveRecording.StopTimestamp = new DateTime(Math.Max(audioStopTimestampTicks, videoStopTimestampTicks));
+                ActiveRecording.StartTimestamp = new DateTime(Math.Min(audioStartTimestampTicks, videoStartTimestampTicks));
+                ActiveRecording.StopTimestamp = new DateTime(Math.Max(audioStopTimestampTicks, videoStopTimestampTicks));
 
                 _Recordings.Add(ActiveRecording);
                 ActiveRecording = null;
