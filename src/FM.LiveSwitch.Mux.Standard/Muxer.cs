@@ -125,9 +125,7 @@ namespace FM.LiveSwitch.Mux
 
                     if (Options.InputFileNames.Count() == 0 && Options.InputFilePaths.Count() == 0)
                     {
-                        var preprocessor = new JsonPreprocessor(_Logger, Options.InputPath);
-                        preprocessor.MinimumOrphanDuration = Options.MinimumOrphanDuration;
-                        await preprocessor.ProcessDirectory().ConfigureAwait(false);
+                        await new JsonPreprocessor(_Logger, Options).ProcessDirectory().ConfigureAwait(false);
                     }
 
                     var logEntries = await GetLogEntries(Options).ConfigureAwait(false);

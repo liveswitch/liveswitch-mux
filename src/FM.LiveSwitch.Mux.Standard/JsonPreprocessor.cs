@@ -14,34 +14,38 @@ namespace FM.LiveSwitch.Mux
 {
     public class JsonPreprocessor
     {
-        public int MinimumOrphanDuration { get; set; } = 120;
-
         private readonly ILogger _Logger;
-        private readonly string _InputDirectory;
+        private readonly MuxOptions _Options;
 
         private static readonly string OrphanSessionsFileName = ".orphan-sessions";
 
-        public JsonPreprocessor(ILogger Logger, string InputDirectory)
+        public JsonPreprocessor(ILogger logger, MuxOptions options)
         {
-            _Logger = Logger;
-            _InputDirectory = InputDirectory;
+            _Logger = logger;
+            _Options = options;
         }
 
         public async Task ProcessDirectory()
         {
-            for (var i = 0; i < 3; i++)
+            if (!_Options.DisableJsonIntegrityCheck)
             {
-                if (await JsonIntegrityCheck().ConfigureAwait(false))
+                for (var i = 0; i < 3; i++)
                 {
-                    break;
-                }
-                else
-                {
-                    Thread.Sleep(3000);
+                    if (await JsonIntegrityCheck().ConfigureAwait(false))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Thread.Sleep(3000);
+                    }
                 }
             }
 
-            await ProcessOrphanSessions().ConfigureAwait(false);
+            if (!_Options.DisableOrphanSessionDetection)
+            {
+                await ProcessOrphanSessions().ConfigureAwait(false);
+            }
         }
 
         private async Task<bool> JsonIntegrityCheck()
@@ -49,9 +53,9 @@ namespace FM.LiveSwitch.Mux
             var tempFiles = new List<Tuple<string, string>>();
             var noErrors = true;
 
-            _Logger.LogDebug($"Starting integrity check of the directory {_InputDirectory}");
+            _Logger.LogDebug($"Starting integrity check of the directory {_Options.InputPath}");
 
-            foreach (var jsonFile in Directory.EnumerateFiles(_InputDirectory, "*.json", SearchOption.TopDirectoryOnly))
+            foreach (var jsonFile in Directory.EnumerateFiles(_Options.InputPath, "*.json", SearchOption.TopDirectoryOnly))
             {
                 _Logger.LogDebug($"JsonIntegrityCheck starting processing file {jsonFile}");
 
@@ -174,8 +178,8 @@ namespace FM.LiveSwitch.Mux
                             if (isValid)
                             {
                                 var baseName = Path.GetFileNameWithoutExtension(jsonFile);
-                                var audioPath = Path.Combine(_InputDirectory, baseName + ".mka");
-                                var videoPath = Path.Combine(_InputDirectory, baseName + ".mkv");
+                                var audioPath = Path.Combine(_Options.InputPath, baseName + ".mka");
+                                var videoPath = Path.Combine(_Options.InputPath, baseName + ".mkv");
 
                                 if (data == null)
                                 {
@@ -393,7 +397,7 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
-            _Logger.LogDebug($"Finishing integrity check of the directory {_InputDirectory}");
+            _Logger.LogDebug($"Finishing integrity check of the directory {_Options.InputPath}");
 
             return noErrors;
         }
@@ -404,7 +408,7 @@ namespace FM.LiveSwitch.Mux
             _Logger.LogDebug("Starting cleaning up missing files...");
 
             Dictionary<string, SessionTracker> orphanSessions = new Dictionary<string, SessionTracker>();
-            var orphanFileName = Path.Combine(_InputDirectory, OrphanSessionsFileName);
+            var orphanFileName = Path.Combine(_Options.InputPath, OrphanSessionsFileName);
 
             if (File.Exists(orphanFileName))
             {
@@ -438,7 +442,7 @@ namespace FM.LiveSwitch.Mux
 
             _Logger.LogDebug("Finishing cleaning up missing files...");
 
-            foreach (var jsonFile in Directory.EnumerateFiles(_InputDirectory, "*.json.rec", SearchOption.TopDirectoryOnly))
+            foreach (var jsonFile in Directory.EnumerateFiles(_Options.InputPath, "*.json.rec", SearchOption.TopDirectoryOnly))
             {
                 _Logger.LogDebug($"ProcessOrphanSessions starting analysis of the file {jsonFile}");
 
@@ -466,32 +470,32 @@ namespace FM.LiveSwitch.Mux
                         continue;
                     }
 
-                    var mediaFile = Path.Combine(_InputDirectory, $"{baseName}.mka");
+                    var mediaFile = Path.Combine(_Options.InputPath, $"{baseName}.mka");
                     if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Audio file {mediaFile} for {connectionId} is found.");
                         sessionTracker.AudioFile = mediaFile;
                     }
 
-                    mediaFile = Path.Combine(_InputDirectory, $"{baseName}.mkv");
+                    mediaFile = Path.Combine(_Options.InputPath, $"{baseName}.mkv");
                     if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Video file {mediaFile} for {connectionId} is found.");
                         sessionTracker.VideoFile = mediaFile;
                     }
 
-                    mediaFile = Path.Combine(_InputDirectory, $"{connectionId}.mka.rec");
+                    mediaFile = Path.Combine(_Options.InputPath, $"{connectionId}.mka.rec");
                     if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Incomplete audio file {mediaFile} for {connectionId} is found.");
-                        sessionTracker.AudioSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDuration);
+                        sessionTracker.AudioSizeMeasurement = new FileSizeMeasurement(mediaFile, _Options.MinimumOrphanDuration);
                     }
 
-                    mediaFile = Path.Combine(_InputDirectory, $"{connectionId}.mkv.rec");
+                    mediaFile = Path.Combine(_Options.InputPath, $"{connectionId}.mkv.rec");
                     if (File.Exists(mediaFile))
                     {
                         _Logger.LogDebug($"Incomplete video file {mediaFile} for {connectionId} is found.");
-                        sessionTracker.VideoSizeMeasurement = new FileSizeMeasurement(mediaFile, MinimumOrphanDuration);
+                        sessionTracker.VideoSizeMeasurement = new FileSizeMeasurement(mediaFile, _Options.MinimumOrphanDuration);
                     }
 
                     if (sessionTracker.AudioSizeMeasurement != null || sessionTracker.VideoSizeMeasurement != null)
