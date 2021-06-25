@@ -37,6 +37,12 @@ namespace FM.LiveSwitch.Mux
         [Option("min-orphan-duration", Default = 120, HelpText = "Minimum duration (in minutes) of waiting for incomplete media files to have file size unchanged for the media to be considered orphaned.")]
         public int MinimumOrphanDuration { get; set; }
 
+        [Option("disable-json-integrity-check", Default = false, HelpText = "Disable JSON integrity checks on the input path.")]
+        public bool DisableJsonIntegrityCheck { get; set; }
+
+        [Option("disable-orphan-session-detection", Default = false, HelpText = "Disable orphan session detection on the input path.")]
+        public bool DisableOrphanSessionDetection { get; set; }
+
         [Option("background-color", Default = "000000", HelpText = "The background colour.")]
         public string BackgroundColor { get; set; }
 
