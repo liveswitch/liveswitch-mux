@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -68,7 +70,9 @@ namespace FM.LiveSwitch.Mux
 
         private readonly Dictionary<string, Connection> _Connections = new Dictionary<string, Connection>();
 
-        public Client(string id, string deviceId, string userId, string channelId, string applicationId, string externalId)
+        private readonly ILoggerFactory _LoggerFactory;
+
+        public Client(string id, string deviceId, string userId, string channelId, string applicationId, string externalId, ILoggerFactory loggerFactory)
         {
             Id = id;
             DeviceId = deviceId;
@@ -76,9 +80,11 @@ namespace FM.LiveSwitch.Mux
             ChannelId = channelId;
             ApplicationId = applicationId;
             ExternalId = externalId;
+
+            _LoggerFactory = loggerFactory;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options)
+        public async Task<bool> ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var connectionId = logEntry.ConnectionId;
             if (connectionId == null)
@@ -88,13 +94,13 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Connections.TryGetValue(connectionId, out var connection))
             {
-                _Connections[connectionId] = connection = new Connection(connectionId, Id, DeviceId, UserId, ChannelId, ApplicationId, ExternalId)
+                _Connections[connectionId] = connection = new Connection(connectionId, Id, DeviceId, UserId, ChannelId, ApplicationId, ExternalId, _LoggerFactory)
                 {
                     Client = this
                 };
             }
 
-            return connection.ProcessLogEntry(logEntry, options);
+            return await connection.ProcessLogEntry(logEntry, options).ConfigureAwait(false);
         }
 
         public Models.Client ToModel()

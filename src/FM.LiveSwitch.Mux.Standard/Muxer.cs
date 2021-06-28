@@ -145,7 +145,7 @@ namespace FM.LiveSwitch.Mux
                     _Logger.LogDebug("Found {Count} log entries.", logEntries.Count());
 
                     // process each log entry
-                    var context = new Context();
+                    var context = new Context(LoggerFactory);
                     foreach (var logEntry in logEntries)
                     {
                         _Logger.LogDebug("Processing log entry for application ID '{ApplicationId}', channel ID '{ChannelId}', client ID '{ClientId}', and connection ID '{ConnectionId}'.",
@@ -153,7 +153,7 @@ namespace FM.LiveSwitch.Mux
                             logEntry.ChannelId,
                             logEntry.ClientId,
                             logEntry.ConnectionId);
-                        context.ProcessLogEntry(logEntry, Options, LoggerFactory);
+                        await context.ProcessLogEntry(logEntry, Options).ConfigureAwait(false);
                     }
 
                     // process the results

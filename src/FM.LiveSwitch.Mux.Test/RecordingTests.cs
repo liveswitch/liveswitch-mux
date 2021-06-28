@@ -471,24 +471,12 @@ namespace FM.LiveSwitch.Mux.Test
                     Assert.Equal(jsonVideoFile, newVideoFile);
 
                     var firstVideoTimestamp = data["videoFirstFrameTimestamp"]?.Value<DateTime>();
-                    var lastVideoTimestamp = data["videoLastFrameTimestamp"]?.Value<DateTime>();
                     var firstAudioTimestamp = data["audioFirstFrameTimestamp"]?.Value<DateTime>();
-                    var lastAudioTimestamp = data["audioLastFrameTimestamp"]?.Value<DateTime>();
 
                     Assert.NotNull(firstVideoTimestamp);
-                    Assert.NotNull(lastVideoTimestamp);
                     Assert.NotNull(firstAudioTimestamp);
-                    Assert.NotNull(lastAudioTimestamp);
                     Assert.Equal(firstAudioTimestamp, timestamp1);
                     Assert.Equal(firstVideoTimestamp, timestamp1);
-                    Assert.True(firstVideoTimestamp <= lastVideoTimestamp);
-                    Assert.True(firstAudioTimestamp <= lastAudioTimestamp);
-
-                    var audioDuration = (lastAudioTimestamp - firstAudioTimestamp)?.Seconds;
-                    var videoDuration = (lastVideoTimestamp - firstVideoTimestamp)?.Seconds;
-
-                    Assert.Equal(16, audioDuration);
-                    Assert.Equal(9, videoDuration);
                 }
             }
             finally

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -17,13 +18,17 @@ namespace FM.LiveSwitch.Mux
 
         private readonly Dictionary<string, Channel> _Channels = new Dictionary<string, Channel>();
 
-        public Application(string id, string externalId)
+        private readonly ILoggerFactory _LoggerFactory;
+
+        public Application(string id, string externalId, ILoggerFactory loggerFactory)
         {
             Id = id;
             ExternalId = externalId;
+
+            _LoggerFactory = loggerFactory;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options, ILoggerFactory loggerFactory)
+        public async Task<bool> ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var channelId = logEntry.ChannelId;
             if (channelId == null)
@@ -33,10 +38,10 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Channels.TryGetValue(channelId, out var channel))
             {
-                _Channels[channelId] = channel = new Channel(channelId, Id, ExternalId);
+                _Channels[channelId] = channel = new Channel(channelId, Id, ExternalId, _LoggerFactory);
             }
 
-            return channel.ProcessLogEntry(logEntry, options, loggerFactory);
+            return await channel.ProcessLogEntry(logEntry, options).ConfigureAwait(false);
         }
     }
 }

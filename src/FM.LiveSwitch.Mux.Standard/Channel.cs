@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
@@ -56,14 +57,18 @@ namespace FM.LiveSwitch.Mux
 
         private readonly List<Session> _CompletedSessions = new List<Session>();
 
-        public Channel(string id, string applicationId, string externalId)
+        private readonly ILoggerFactory _LoggerFactory;
+
+        public Channel(string id, string applicationId, string externalId, ILoggerFactory loggerFactory)
         {
             Id = id;
             ApplicationId = applicationId;
             ExternalId = externalId;
+
+            _LoggerFactory = loggerFactory;
         }
 
-        public bool ProcessLogEntry(LogEntry logEntry, MuxOptions options, ILoggerFactory loggerFactory)
+        public async Task<bool> ProcessLogEntry(LogEntry logEntry, MuxOptions options)
         {
             var clientId = logEntry.ClientId;
             if (clientId == null)
@@ -73,14 +78,14 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Clients.TryGetValue(clientId, out var client))
             {
-                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId);
+                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId, _LoggerFactory);
             }
 
-            var result = client.ProcessLogEntry(logEntry, options);
+            var result = await client.ProcessLogEntry(logEntry, options).ConfigureAwait(false);
 
             if (Completed)
             {
-                _CompletedSessions.Add(new Session(Id, ApplicationId, ExternalId, CompletedClients, loggerFactory));
+                _CompletedSessions.Add(new Session(Id, ApplicationId, ExternalId, CompletedClients, _LoggerFactory));
                 _Clients = new Dictionary<string, Client>();
             }
 

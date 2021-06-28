@@ -164,7 +164,7 @@ namespace FM.LiveSwitch.Mux
         }
 
         private readonly ILogger _Logger;
-        private readonly Utility _FfmpegUtility;
+        private readonly Utility _Utility;
 
         public Session(string channelId, string applicationId, string externalId, Client[] completedClients, ILoggerFactory loggerFactory)
         {
@@ -175,7 +175,7 @@ namespace FM.LiveSwitch.Mux
             LoggerFactory = loggerFactory;
 
             _Logger = loggerFactory.CreateLogger(nameof(Session));
-            _FfmpegUtility = new Utility(_Logger);
+            _Utility = new Utility(_Logger);
         }
 
         public async Task<bool> Mux(MuxOptions options)
@@ -242,7 +242,7 @@ namespace FM.LiveSwitch.Mux
             }
 
             // run it
-            await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+            await _Utility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
             return FileExists;
         }
@@ -374,7 +374,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // run it
-                await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+                await _Utility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
                 return AudioFileExists;
             }
@@ -687,7 +687,7 @@ namespace FM.LiveSwitch.Mux
                     }
 
                     // run it
-                    await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+                    await _Utility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -745,7 +745,7 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // run it
-                await _FfmpegUtility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
+                await _Utility.FFmpeg(string.Join(" ", arguments)).ConfigureAwait(false);
 
                 return VideoFileExists;
             }
@@ -853,7 +853,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<string> GetAudioCodec(Recording recording)
         {
-            var lines = await _FfmpegUtility.FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}").ConfigureAwait(false);
+            var lines = await _Utility.FFprobe($"-v quiet -select_streams a:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.AudioFile}").ConfigureAwait(false);
             if (lines.Length == 0)
             {
                 return null;
@@ -863,7 +863,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<string> GetVideoCodec(Recording recording)
         {
-            var lines = await _FfmpegUtility.FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}").ConfigureAwait(false);
+            var lines = await _Utility.FFprobe($"-v quiet -select_streams v:0 -show_entries stream=codec_name -print_format csv=print_section=0 {recording.VideoFile}").ConfigureAwait(false);
             if (lines.Length == 0)
             {
                 return null;
@@ -873,7 +873,7 @@ namespace FM.LiveSwitch.Mux
 
         public async Task<VideoSegment[]> ParseVideoSegments(Recording recording)
         {
-            var lines = await _FfmpegUtility.FFprobe($"-v quiet -select_streams v:0 -show_frames -show_entries frame=pkt_pts_time,width,height -print_format csv=item_sep=|:nokey=1:print_section=0 {recording.VideoFile}").ConfigureAwait(false);
+            var lines = await _Utility.FFprobe($"-v quiet -select_streams v:0 -show_frames -show_entries frame=pkt_pts_time,width,height -print_format csv=item_sep=|:nokey=1:print_section=0 {recording.VideoFile}").ConfigureAwait(false);
 
             var currentSize = Size.Empty;
             var segments = new List<VideoSegment>();

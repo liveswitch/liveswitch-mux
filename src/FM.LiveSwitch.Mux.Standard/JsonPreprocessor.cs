@@ -570,11 +570,9 @@ namespace FM.LiveSwitch.Mux
                     var targetJsonName = Path.Combine(Path.GetDirectoryName(sessionTracker.JsonFile), Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
                     var logEntries = await LogUtility.GetEntries(sessionTracker.JsonFile, _Logger).ConfigureAwait(false);
                     var startEntry = GetEvent(logEntries, LogEntry.TypeStartRecording);
-
                     if (startEntry != null)
                     {
                         var entryData = new LogEntryData();
-                        DateTime? lastTimestamp = null;
 
                         _Logger.LogDebug($"Got first frame timestamp: {startEntry.Timestamp}");
 
@@ -584,19 +582,6 @@ namespace FM.LiveSwitch.Mux
 
                             entryData.AudioFile = audioFile;
                             entryData.AudioFirstFrameTimestamp = startEntry.Timestamp;
-
-                            var duration = await GetDuration(audioFile, true).ConfigureAwait(false);
-                            if (duration != null)
-                            {
-                                var lastFrameTimestamp = startEntry.Timestamp + duration;
-                                lastTimestamp = lastFrameTimestamp;
-                                entryData.AudioLastFrameTimestamp = lastFrameTimestamp;
-                                _Logger.LogDebug($"Measured duration of audio file {audioFile} is {duration}. Last frame timestamp: {lastFrameTimestamp}");
-                            }
-                            else
-                            {
-                                _Logger.LogError($"Duration of audio file {audioFile} cannot be calculated");
-                            }
                         }
 
                         if (videoFile != null)
@@ -605,42 +590,21 @@ namespace FM.LiveSwitch.Mux
 
                             entryData.VideoFile = videoFile;
                             entryData.VideoFirstFrameTimestamp = startEntry.Timestamp;
-
-                            var duration = await GetDuration(videoFile, false).ConfigureAwait(false);
-                            if (duration != null)
-                            {
-                                var lastFrameTimestamp = startEntry.Timestamp + duration;
-                                if (lastTimestamp == null)
-                                {
-                                    lastTimestamp = lastFrameTimestamp;
-                                }
-                                else
-                                {
-                                    lastTimestamp = (lastTimestamp > lastFrameTimestamp) ? lastTimestamp : lastFrameTimestamp;
-                                }
-                                entryData.VideoLastFrameTimestamp = lastFrameTimestamp;
-                                _Logger.LogDebug($"Measured duration of video file {videoFile} is {duration}. Last frame timestamp: {lastFrameTimestamp}");
-                            }
-                            else
-                            {
-                                _Logger.LogError($"Duration of video file {videoFile} cannot be calculated");
-                            }
                         }
 
-                        var stopEntry = new LogEntry();
-                        stopEntry.Type = LogEntry.TypeStopRecording;
-                        if (lastTimestamp != null)
+                        var stopEntry = new LogEntry
                         {
-                            stopEntry.Timestamp = (DateTime)lastTimestamp;
-                        }
-                        stopEntry.ExternalId = startEntry.ExternalId;
-                        stopEntry.ApplicationId = startEntry.ApplicationId;
-                        stopEntry.ChannelId = startEntry.ChannelId;
-                        stopEntry.UserId = startEntry.UserId;
-                        stopEntry.DeviceId = startEntry.DeviceId;
-                        stopEntry.ClientId = startEntry.ClientId;
-                        stopEntry.ConnectionId = startEntry.ConnectionId;
-                        stopEntry.Data = entryData;
+                            Type = LogEntry.TypeStopRecording,
+                            ExternalId = startEntry.ExternalId,
+                            ApplicationId = startEntry.ApplicationId,
+                            ChannelId = startEntry.ChannelId,
+                            UserId = startEntry.UserId,
+                            DeviceId = startEntry.DeviceId,
+                            ClientId = startEntry.ClientId,
+                            ConnectionId = startEntry.ConnectionId,
+                            Timestamp = logEntries.OrderBy(x => x.Timestamp).Last().Timestamp,
+                            Data = entryData,
+                        };
 
                         _Logger.LogDebug($"Copying section attributes from {sessionTracker.JsonFile} to {targetJsonName}");
 
