@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace FM.LiveSwitch.Mux.Test
@@ -13,7 +14,7 @@ namespace FM.LiveSwitch.Mux.Test
         [InlineData(0)]
         [InlineData(-1)]
         [InlineData(1)]
-        public void VideoDelayUpdatesSession(double videoDelay)
+        public async Task VideoDelayUpdatesSession(double videoDelay)
         {
             using var loggerFactory = LoggerFactory.Create(builder => { });
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
@@ -29,8 +30,8 @@ namespace FM.LiveSwitch.Mux.Test
 
             var options = new MuxOptions();
 
-            var context = new Context();
-            context.ProcessLogEntry(new LogEntry
+            var context = new Context(loggerFactory);
+            await context.ProcessLogEntry(new LogEntry
             {
                 ExternalId = externalId,
                 ApplicationId = applicationId,
@@ -41,8 +42,8 @@ namespace FM.LiveSwitch.Mux.Test
                 Type = LogEntry.TypeStartRecording,
                 Timestamp = start,
                 UserId = userId,
-            }, options, loggerFactory);
-            context.ProcessLogEntry(new LogEntry
+            }, options).ConfigureAwait(false);
+            await context.ProcessLogEntry(new LogEntry
             {
                 ExternalId = externalId,
                 ApplicationId = applicationId,
@@ -63,7 +64,7 @@ namespace FM.LiveSwitch.Mux.Test
                 Type = LogEntry.TypeStopRecording,
                 Timestamp = stop,
                 UserId = userId,
-            }, options, loggerFactory);
+            }, options).ConfigureAwait(false);
 
             var audioStart = start;
             var videoStart = start;
