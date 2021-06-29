@@ -233,7 +233,9 @@ namespace FM.LiveSwitch.Mux
                 ClientId = ClientId,
                 DeviceId = DeviceId,
                 UserId = UserId,
-                Size = new Size(CompletedRecordings.SelectMany(x => x.VideoSegments).Max(x => x.Size.Width), CompletedRecordings.SelectMany(x => x.VideoSegments).Max(x => x.Size.Height))
+                Size = new Size(
+                    CompletedRecordings.SelectMany(x => x.VideoSegments ?? new VideoSegment[0]).Max(x => x.Size.Width),
+                    CompletedRecordings.SelectMany(x => x.VideoSegments ?? new VideoSegment[0]).Max(x => x.Size.Height))
             };
         }
 
