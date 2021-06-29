@@ -250,40 +250,48 @@ namespace FM.LiveSwitch.Mux
 
         private async Task<TimeSpan?> GetDuration(bool audio, string file)
         {
-            var type = audio ? "a" : "v";
-            var lines = await _Utility.FFprobe($"-v quiet -select_streams {type}:0 -show_frames -show_entries frame=pkt_pts_time -print_format csv=item_sep=|:nokey=1:print_section=0 {file}").ConfigureAwait(false);
-
-            TimeSpan? duration = null;
-            double? firstSeconds = null;
-            foreach (var line in lines)
+            try
             {
-                var parts = line.Split('|');
-                if (parts.Length >= 1)
+                var type = audio ? "a" : "v";
+                var lines = await _Utility.FFprobe($"-v quiet -select_streams {type}:0 -show_frames -show_entries frame=pkt_pts_time -print_format csv=item_sep=|:nokey=1:print_section=0 {file}").ConfigureAwait(false);
+
+                TimeSpan? duration = null;
+                double? firstSeconds = null;
+                foreach (var line in lines)
                 {
-                    var readSeconds = double.TryParse(parts[0], out var seconds);
-                    if (readSeconds)
+                    var parts = line.Split('|');
+                    if (parts.Length >= 1)
                     {
-                        if (firstSeconds == null)
+                        var readSeconds = double.TryParse(parts[0], out var seconds);
+                        if (readSeconds)
                         {
-                            firstSeconds = seconds;
+                            if (firstSeconds == null)
+                            {
+                                firstSeconds = seconds;
+                            }
+                            else
+                            {
+                                duration = TimeSpan.FromSeconds(seconds - firstSeconds.Value);
+                            }
                         }
                         else
                         {
-                            duration = TimeSpan.FromSeconds(seconds - firstSeconds.Value);
+                            _Logger.LogError("Could not parse ffprobe output: {Line}", line);
                         }
                     }
                     else
                     {
-                        _Logger.LogError("Could not parse ffprobe output: {Line}", line);
+                        _Logger.LogError("Unexpected ffprobe output: {Line}", line);
                     }
                 }
-                else
-                {
-                    _Logger.LogError("Unexpected ffprobe output: {Line}", line);
-                }
-            }
 
-            return duration;
+                return duration;
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, "Unexpected ffprobe failure.");
+                return null;
+            }
         }
     }
 }
