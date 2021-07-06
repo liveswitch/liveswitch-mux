@@ -57,14 +57,16 @@ namespace FM.LiveSwitch.Mux
 
         private readonly List<Session> _CompletedSessions = new List<Session>();
 
+        private readonly IFileUtility _FileUtility;
         private readonly ILoggerFactory _LoggerFactory;
 
-        public Channel(string id, string applicationId, string externalId, ILoggerFactory loggerFactory)
+        public Channel(string id, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             Id = id;
             ApplicationId = applicationId;
             ExternalId = externalId;
 
+            _FileUtility = fileUtility;
             _LoggerFactory = loggerFactory;
         }
 
@@ -78,14 +80,14 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Clients.TryGetValue(clientId, out var client))
             {
-                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId, _LoggerFactory);
+                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId, _FileUtility, _LoggerFactory);
             }
 
             var result = await client.ProcessLogEntry(logEntry, options).ConfigureAwait(false);
 
             if (Completed)
             {
-                _CompletedSessions.Add(new Session(Id, ApplicationId, ExternalId, CompletedClients, _LoggerFactory));
+                _CompletedSessions.Add(new Session(Id, ApplicationId, ExternalId, CompletedClients, _FileUtility, _LoggerFactory));
                 _Clients = new Dictionary<string, Client>();
             }
 

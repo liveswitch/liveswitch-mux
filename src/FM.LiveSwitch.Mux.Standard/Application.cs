@@ -18,13 +18,15 @@ namespace FM.LiveSwitch.Mux
 
         private readonly Dictionary<string, Channel> _Channels = new Dictionary<string, Channel>();
 
+        private readonly IFileUtility _FileUtility;
         private readonly ILoggerFactory _LoggerFactory;
 
-        public Application(string id, string externalId, ILoggerFactory loggerFactory)
+        public Application(string id, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             Id = id;
             ExternalId = externalId;
 
+            _FileUtility = fileUtility;
             _LoggerFactory = loggerFactory;
         }
 
@@ -38,7 +40,7 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Channels.TryGetValue(channelId, out var channel))
             {
-                _Channels[channelId] = channel = new Channel(channelId, Id, ExternalId, _LoggerFactory);
+                _Channels[channelId] = channel = new Channel(channelId, Id, ExternalId, _FileUtility, _LoggerFactory);
             }
 
             return await channel.ProcessLogEntry(logEntry, options).ConfigureAwait(false);

@@ -70,9 +70,10 @@ namespace FM.LiveSwitch.Mux
 
         private readonly Dictionary<string, Connection> _Connections = new Dictionary<string, Connection>();
 
+        private readonly IFileUtility _FileUtility;
         private readonly ILoggerFactory _LoggerFactory;
 
-        public Client(string id, string deviceId, string userId, string channelId, string applicationId, string externalId, ILoggerFactory loggerFactory)
+        public Client(string id, string deviceId, string userId, string channelId, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             Id = id;
             DeviceId = deviceId;
@@ -81,6 +82,7 @@ namespace FM.LiveSwitch.Mux
             ApplicationId = applicationId;
             ExternalId = externalId;
 
+            _FileUtility = fileUtility;
             _LoggerFactory = loggerFactory;
         }
 
@@ -94,7 +96,7 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Connections.TryGetValue(connectionId, out var connection))
             {
-                _Connections[connectionId] = connection = new Connection(connectionId, Id, DeviceId, UserId, ChannelId, ApplicationId, ExternalId, _LoggerFactory)
+                _Connections[connectionId] = connection = new Connection(connectionId, Id, DeviceId, UserId, ChannelId, ApplicationId, ExternalId, _FileUtility, _LoggerFactory)
                 {
                     Client = this
                 };

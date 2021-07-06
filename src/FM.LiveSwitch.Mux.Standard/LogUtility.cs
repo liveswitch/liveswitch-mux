@@ -6,11 +6,18 @@ using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
-    public static class LogUtility
+    public class LogUtility
     {
-        public static async Task<LogEntry[]> GetEntries(string filePath, ILogger logger)
+        private readonly IFileUtility _FileUtility;
+
+        public LogUtility(IFileUtility fileUtility)
         {
-            var json = await FileUtility.GetContents(filePath);
+            _FileUtility = fileUtility;
+        }
+
+        public async Task<LogEntry[]> GetEntries(string filePath, ILogger logger)
+        {
+            var json = await _FileUtility.GetContents(filePath);
             if (json != null && json.StartsWith("["))
             {
                 try
@@ -30,9 +37,9 @@ namespace FM.LiveSwitch.Mux
             return new LogEntry[0]; // not a log file
         }
 
-        public static async Task<LogEntry> GetEntry(string filePath)
+        public async Task<LogEntry> GetEntry(string filePath)
         {
-            var json = await FileUtility.GetContents(filePath);
+            var json = await _FileUtility.GetContents(filePath);
             var entry = JsonConvert.DeserializeObject<LogEntry>(json);
             entry.FilePath = filePath;
             return entry;

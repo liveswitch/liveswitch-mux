@@ -10,20 +10,23 @@ namespace FM.LiveSwitch.Mux
 {
     public class Muxer
     {
-        public MuxOptions Options { get; private set; }
-
-        public ILoggerFactory LoggerFactory { get; private set; }
+        private readonly MuxOptions _Options;
+        private readonly IFileUtility _FileUtility;
+        private readonly ILoggerFactory _LoggerFactory;
 
         private readonly ILogger _Logger;
+        private readonly LogUtility _LogUtility;
 
         const string HierarchicalLogFileName = "log.json";
 
-        public Muxer(MuxOptions options, ILoggerFactory loggerFactory)
+        public Muxer(MuxOptions options, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
-            Options = options;
-            LoggerFactory = loggerFactory;
+            _Options = options;
+            _FileUtility = fileUtility;
+            _LoggerFactory = loggerFactory;
 
-            _Logger = LoggerFactory.CreateLogger(nameof(Muxer));
+            _Logger = _LoggerFactory.CreateLogger(nameof(Muxer));
+            _LogUtility = new LogUtility(_FileUtility);
         }
 
         public async Task<bool> Run()
@@ -35,100 +38,100 @@ namespace FM.LiveSwitch.Mux
             {
                 try
                 {
-                    if (Options.InputPath == null)
+                    if (_Options.InputPath == null)
                     {
-                        Options.InputPath = Environment.CurrentDirectory;
-                        _Logger.LogInformation("Input path defaulting to: {InputPath}", Options.InputPath);
+                        _Options.InputPath = Environment.CurrentDirectory;
+                        _Logger.LogInformation("Input path defaulting to: {InputPath}", _Options.InputPath);
                     }
 
-                    if (Options.OutputPath == null)
+                    if (_Options.OutputPath == null)
                     {
-                        Options.OutputPath = Options.InputPath;
-                        _Logger.LogInformation("Output path defaulting to: {OutputPath}", Options.OutputPath);
+                        _Options.OutputPath = _Options.InputPath;
+                        _Logger.LogInformation("Output path defaulting to: {OutputPath}", _Options.OutputPath);
                     }
 
-                    if (Options.TempPath == null)
+                    if (_Options.TempPath == null)
                     {
-                        Options.TempPath = Options.InputPath;
-                        _Logger.LogInformation("Temp path defaulting to: {TempPath}", Options.TempPath);
+                        _Options.TempPath = _Options.InputPath;
+                        _Logger.LogInformation("Temp path defaulting to: {TempPath}", _Options.TempPath);
                     }
 
-                    if (Options.MoveInputs && Options.MovePath == null)
+                    if (_Options.MoveInputs && _Options.MovePath == null)
                     {
-                        Options.MovePath = Options.OutputPath;
-                        _Logger.LogInformation("Move path defaulting to: {MovePath}", Options.MovePath);
+                        _Options.MovePath = _Options.OutputPath;
+                        _Logger.LogInformation("Move path defaulting to: {MovePath}", _Options.MovePath);
                     }
 
-                    if (Options.Layout == LayoutType.JS)
+                    if (_Options.Layout == LayoutType.JS)
                     {
-                        if (Options.JavaScriptFile == null)
+                        if (_Options.JavaScriptFile == null)
                         {
-                            Options.JavaScriptFile = Path.Combine(Options.InputPath, "layout.js");
-                            _Logger.LogInformation("JavaScript file defaulting to: {JavaScriptFile}", Options.JavaScriptFile);
+                            _Options.JavaScriptFile = Path.Combine(_Options.InputPath, "layout.js");
+                            _Logger.LogInformation("JavaScript file defaulting to: {JavaScriptFile}", _Options.JavaScriptFile);
                         }
 
-                        if (!FileUtility.Exists(Options.JavaScriptFile))
+                        if (!_FileUtility.Exists(_Options.JavaScriptFile))
                         {
-                            _Logger.LogError("Cannot find {JavaScriptFile}.", Options.JavaScriptFile);
+                            _Logger.LogError("Cannot find {JavaScriptFile}.", _Options.JavaScriptFile);
                             return false;
                         }
                     }
 
                     var minMargin = 0;
-                    if (Options.Margin < minMargin)
+                    if (_Options.Margin < minMargin)
                     {
-                        _Logger.LogInformation("Margin updated from {Margin} to the minimum value of {MinMargin}.", Options.Margin, minMargin);
-                        Options.Margin = minMargin;
+                        _Logger.LogInformation("Margin updated from {Margin} to the minimum value of {MinMargin}.", _Options.Margin, minMargin);
+                        _Options.Margin = minMargin;
                     }
 
                     var minWidth = 160;
-                    if (Options.Width < minWidth)
+                    if (_Options.Width < minWidth)
                     {
-                        _Logger.LogInformation("Width updated from {Width} to the minimum value of {MinWidth}.", Options.Width, minWidth);
-                        Options.Width = minWidth;
+                        _Logger.LogInformation("Width updated from {Width} to the minimum value of {MinWidth}.", _Options.Width, minWidth);
+                        _Options.Width = minWidth;
                     }
 
                     var minHeight = 120;
-                    if (Options.Height < minHeight)
+                    if (_Options.Height < minHeight)
                     {
-                        _Logger.LogInformation("Height updated from {Height} to the minimum value of {MinHeight}.", Options.Height, minHeight);
-                        Options.Height = minHeight;
+                        _Logger.LogInformation("Height updated from {Height} to the minimum value of {MinHeight}.", _Options.Height, minHeight);
+                        _Options.Height = minHeight;
                     }
 
                     var minCameraWeight = 1;
-                    if (Options.CameraWeight < minCameraWeight)
+                    if (_Options.CameraWeight < minCameraWeight)
                     {
-                        _Logger.LogInformation("Camera weight updated from {CameraWeight} to the minimum value of {MinCameraWeight}.", Options.CameraWeight, minCameraWeight);
-                        Options.CameraWeight = minCameraWeight;
+                        _Logger.LogInformation("Camera weight updated from {CameraWeight} to the minimum value of {MinCameraWeight}.", _Options.CameraWeight, minCameraWeight);
+                        _Options.CameraWeight = minCameraWeight;
                     }
 
                     var minScreenWeight = 1;
-                    if (Options.ScreenWeight < minScreenWeight)
+                    if (_Options.ScreenWeight < minScreenWeight)
                     {
-                        _Logger.LogInformation("Screen weight updated from {ScreenWeight} to the minimum value of {MinScreenWeight}.", Options.ScreenWeight, minScreenWeight);
-                        Options.ScreenWeight = minScreenWeight;
+                        _Logger.LogInformation("Screen weight updated from {ScreenWeight} to the minimum value of {MinScreenWeight}.", _Options.ScreenWeight, minScreenWeight);
+                        _Options.ScreenWeight = minScreenWeight;
                     }
 
-                    if (Options.InputFileNames.Count() > 0)
-                    {
-                        // CommandLine.Parser returns empty strings when there is a space after the separator.
-                        // Also, CommandLine.Parser leaves the separator in the string sometimes.
-                        Options.InputFileNames = string.Join(",", Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
-                    }
-
-                    if (Options.InputFilePaths.Count() > 0)
+                    if (_Options.InputFileNames.Count() > 0)
                     {
                         // CommandLine.Parser returns empty strings when there is a space after the separator.
                         // Also, CommandLine.Parser leaves the separator in the string sometimes.
-                        Options.InputFilePaths = string.Join(",", Options.InputFilePaths).Split(',').Where(filePath => filePath.Length > 0);
+                        _Options.InputFileNames = string.Join(",", _Options.InputFileNames).Split(',').Where(fileName => fileName.Length > 0);
                     }
 
-                    if (Options.InputFileNames.Count() == 0 && Options.InputFilePaths.Count() == 0)
+                    if (_Options.InputFilePaths.Count() > 0)
                     {
-                        await new JsonPreprocessor(_Logger, Options).ProcessDirectory().ConfigureAwait(false);
+                        // CommandLine.Parser returns empty strings when there is a space after the separator.
+                        // Also, CommandLine.Parser leaves the separator in the string sometimes.
+                        _Options.InputFilePaths = string.Join(",", _Options.InputFilePaths).Split(',').Where(filePath => filePath.Length > 0);
                     }
 
-                    var logEntries = await GetLogEntries(Options).ConfigureAwait(false);
+                    if (_Options.InputFileNames.Count() == 0 && _Options.InputFilePaths.Count() == 0)
+                    {
+                        await new JsonPreprocessor(_FileUtility, _Logger, _Options).ProcessDirectory().ConfigureAwait(false);
+                    }
+
+                    var logEntries = await GetLogEntries(_Options).ConfigureAwait(false);
                     if (logEntries == null)
                     {
                         _Logger.LogInformation($"No recordings found. Log file(s) not found.");
@@ -145,7 +148,7 @@ namespace FM.LiveSwitch.Mux
                     _Logger.LogDebug("Found {Count} log entries.", logEntries.Count());
 
                     // process each log entry
-                    var context = new Context(LoggerFactory);
+                    var context = new Context(_FileUtility, _LoggerFactory);
                     foreach (var logEntry in logEntries)
                     {
                         _Logger.LogDebug("Processing log entry for application ID '{ApplicationId}', channel ID '{ChannelId}', client ID '{ClientId}', and connection ID '{ConnectionId}'.",
@@ -153,26 +156,26 @@ namespace FM.LiveSwitch.Mux
                             logEntry.ChannelId,
                             logEntry.ClientId,
                             logEntry.ConnectionId);
-                        await context.ProcessLogEntry(logEntry, Options).ConfigureAwait(false);
+                        await context.ProcessLogEntry(logEntry, _Options).ConfigureAwait(false);
                     }
 
                     // process the results
                     var metadataFiles = new List<string>();
                     foreach (var application in context.Applications)
                     {
-                        if (Options.ApplicationId != null && Options.ApplicationId != application.Id)
+                        if (_Options.ApplicationId != null && _Options.ApplicationId != application.Id)
                         {
                             continue;
                         }
                         foreach (var channel in application.Channels)
                         {
-                            if (Options.ChannelId != null && Options.ChannelId != channel.Id)
+                            if (_Options.ChannelId != null && _Options.ChannelId != channel.Id)
                             {
                                 continue;
                             }
                             foreach (var session in channel.CompletedSessions)
                             {
-                                if (Options.SessionId != null && Options.SessionId != session.Id)
+                                if (_Options.SessionId != null && _Options.SessionId != session.Id)
                                 {
                                     continue;
                                 }
@@ -185,7 +188,7 @@ namespace FM.LiveSwitch.Mux
 
                                 try
                                 {
-                                    if (await session.Mux(Options).ConfigureAwait(false))
+                                    if (await session.Mux(_Options).ConfigureAwait(false))
                                     {
                                         _Logger.LogInformation("Session with application ID '{ApplicationId}' and channel ID '{ChannelId}' has been muxed ({StartTimestamp} to {StopTimestamp}).",
                                             application.Id,
@@ -193,47 +196,47 @@ namespace FM.LiveSwitch.Mux
                                             session.StartTimestamp,
                                             session.StopTimestamp);
 
-                                        if (Options.MoveInputs)
+                                        if (_Options.MoveInputs)
                                         {
-                                            if (Options.InputPath != Options.MovePath)
+                                            if (_Options.InputPath != _Options.MovePath)
                                             {
                                                 foreach (var recording in session.CompletedRecordings)
                                                 {
                                                     if (recording.AudioFileExists)
                                                     {
-                                                        recording.AudioFile = Move(recording.AudioFile, Options);
+                                                        recording.AudioFile = Move(recording.AudioFile, _Options);
                                                     }
                                                     if (recording.VideoFileExists)
                                                     {
-                                                        recording.VideoFile = Move(recording.VideoFile, Options);
+                                                        recording.VideoFile = Move(recording.VideoFile, _Options);
                                                     }
                                                     if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
                                                     {
-                                                        recording.LogFile = Move(recording.LogFile, Options);
+                                                        recording.LogFile = Move(recording.LogFile, _Options);
                                                     }
                                                 }
                                             }
                                         }
-                                        else if (Options.DeleteInputs)
+                                        else if (_Options.DeleteInputs)
                                         {
                                             foreach (var recording in session.CompletedRecordings)
                                             {
                                                 if (recording.AudioFileExists)
                                                 {
-                                                    Delete(recording.AudioFile, Options);
+                                                    Delete(recording.AudioFile, _Options);
                                                 }
                                                 if (recording.VideoFileExists)
                                                 {
-                                                    Delete(recording.VideoFile, Options);
+                                                    Delete(recording.VideoFile, _Options);
                                                 }
                                                 if (recording.LogFileExists && Path.GetFileName(recording.LogFile) != HierarchicalLogFileName)
                                                 {
-                                                    Delete(recording.LogFile, Options);
+                                                    Delete(recording.LogFile, _Options);
                                                 }
                                             }
                                         }
 
-                                        if (session.WriteMetadata(Options))
+                                        if (session.WriteMetadata(_Options))
                                         {
                                             metadataFiles.Add(session.MetadataFile);
                                         }
@@ -247,7 +250,7 @@ namespace FM.LiveSwitch.Mux
                                         session.StartTimestamp,
                                         session.StopTimestamp);
 
-                                    if (!Options.ContinueOnFailure)
+                                    if (!_Options.ContinueOnFailure)
                                     {
                                         return false;
                                     }
@@ -341,30 +344,30 @@ namespace FM.LiveSwitch.Mux
                             return null;
                         }
 
-                        return await LogUtility.GetEntries(logFilePath, _Logger).ConfigureAwait(false);
+                        return await _LogUtility.GetEntries(logFilePath, _Logger).ConfigureAwait(false);
                     }
                 case StrategyType.Flat:
                     {
                         var logEntries = new List<LogEntry>();
                         IEnumerable<string> filePaths;
 
-                        if (Options.InputFilePaths.Count() > 0)
+                        if (_Options.InputFilePaths.Count() > 0)
                         {
-                            filePaths = Options.InputFilePaths;
+                            filePaths = _Options.InputFilePaths;
                         }
-                        else if (Options.InputFileNames.Count() > 0)
+                        else if (_Options.InputFileNames.Count() > 0)
                         {
-                            filePaths = Options.InputFileNames.Select(inputFileName => Path.Combine(Options.InputPath, inputFileName));
+                            filePaths = _Options.InputFileNames.Select(inputFileName => Path.Combine(_Options.InputPath, inputFileName));
                         }
                         else
                         {
-                            filePaths = Directory.EnumerateFiles(Options.InputPath, "*.*", SearchOption.TopDirectoryOnly);
+                            filePaths = Directory.EnumerateFiles(_Options.InputPath, "*.*", SearchOption.TopDirectoryOnly);
                         }
 
                         foreach (var filePath in filePaths)
                         {
                             // filter the input files if a filter is provided.
-                            if (Options.InputFilter != null && !Regex.Match(Path.GetFileName(filePath), Options.InputFilter).Success)
+                            if (_Options.InputFilter != null && !Regex.Match(Path.GetFileName(filePath), _Options.InputFilter).Success)
                             {
                                 continue;
                             }
@@ -373,7 +376,7 @@ namespace FM.LiveSwitch.Mux
                             {
                                 try
                                 {
-                                    logEntries.AddRange(await LogUtility.GetEntries(filePath, _Logger).ConfigureAwait(false));
+                                    logEntries.AddRange(await _LogUtility.GetEntries(filePath, _Logger).ConfigureAwait(false));
                                 }
                                 catch (FileNotFoundException)
                                 {

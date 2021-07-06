@@ -11,7 +11,7 @@ namespace FM.LiveSwitch.Mux
     public class Connection
     {
         public string Id { get; private set; }
-        
+
         [JsonIgnore]
         public string ClientId { get; private set; }
 
@@ -73,11 +73,12 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public Client Client { get; set; }
 
+        private readonly IFileUtility _FileUtility;
         private readonly ILoggerFactory _LoggerFactory;
         private readonly ILogger _Logger;
         private readonly Utility _Utility;
 
-        public Connection(string id, string clientId, string deviceId, string userId, string channelId, string applicationId, string externalId, ILoggerFactory loggerFactory)
+        public Connection(string id, string clientId, string deviceId, string userId, string channelId, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             Id = id;
             ClientId = clientId;
@@ -87,6 +88,7 @@ namespace FM.LiveSwitch.Mux
             ApplicationId = applicationId;
             ExternalId = externalId;
 
+            _FileUtility = fileUtility;
             _LoggerFactory = loggerFactory;
             _Logger = loggerFactory.CreateLogger(nameof(Connection));
             _Utility = new Utility(_Logger);
@@ -102,7 +104,7 @@ namespace FM.LiveSwitch.Mux
                     return false;
                 }
 
-                ActiveRecording = new Recording
+                ActiveRecording = new Recording(_FileUtility)
                 {
                     Connection = this,
                     StartTimestamp = logEntry.Timestamp,
@@ -151,12 +153,35 @@ namespace FM.LiveSwitch.Mux
                             _Logger.LogInformation("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' has a duration of {DurationSeconds} seconds.", Id, ActiveRecording.StartTimestamp, audioDuration.Value.TotalSeconds);
                             ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStartTimestamp.Value.Add(audioDuration.Value);
                         }
-
-                        if (!ActiveRecording.AudioStopTimestamp.HasValue)
+                        else
                         {
-                            _Logger.LogWarning("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is missing a stop timestamp.", Id, ActiveRecording.StartTimestamp);
-                            ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStartTimestamp;
+                            _Logger.LogInformation("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' needs repair.", Id, ActiveRecording.StartTimestamp);
+
+                            audioDuration = await TryRepair(true, ActiveRecording.AudioFile).ConfigureAwait(false);
+                            if (audioDuration.HasValue)
+                            {
+                                _Logger.LogInformation("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' has been repaired and has a duration of {DurationSeconds} seconds.", Id, ActiveRecording.StartTimestamp, audioDuration.Value.TotalSeconds);
+                                ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStartTimestamp.Value.Add(audioDuration.Value);
+                            }
+                            else
+                            {
+                                if (_FileUtility.GetLength(ActiveRecording.AudioFile) == 0)
+                                {
+                                    _Logger.LogWarning("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is empty.", Id, ActiveRecording.StartTimestamp);
+                                }
+                                else
+                                {
+                                    _Logger.LogWarning("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' could not be repaired.", Id, ActiveRecording.StartTimestamp);
+                                    _FileUtility.Copy(ActiveRecording.AudioFile, ActiveRecording.AudioFile + ".corrupt", true);
+                                }
+                                _FileUtility.Write(ActiveRecording.AudioFile, EmbeddedResource.Read("empty.mka"));
+                                ActiveRecording.AudioStopTimestamp = ActiveRecording.AudioStartTimestamp.Value.Add(TimeSpan.FromMilliseconds(20));
+                            }
                         }
+                    }
+                    else
+                    {
+                        _Logger.LogError("Audio recording with connection ID '{ConnectionId}' has no start timestamp. Is the JSON log file corrupt?", Id);
                     }
                 }
 
@@ -178,12 +203,35 @@ namespace FM.LiveSwitch.Mux
                             _Logger.LogInformation("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' has a duration of {DurationSeconds} seconds.", Id, ActiveRecording.StartTimestamp, videoDuration.Value.TotalSeconds);
                             ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStartTimestamp.Value.Add(videoDuration.Value);
                         }
-
-                        if (!ActiveRecording.VideoStopTimestamp.HasValue)
+                        else
                         {
-                            _Logger.LogWarning("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is missing a stop timestamp.", Id, ActiveRecording.StartTimestamp);
-                            ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStartTimestamp;
+                            _Logger.LogInformation("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' needs repair.", Id, ActiveRecording.StartTimestamp);
+
+                            videoDuration = await TryRepair(false, ActiveRecording.VideoFile).ConfigureAwait(false);
+                            if (videoDuration.HasValue)
+                            {
+                                _Logger.LogInformation("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' has been repaired and has a duration of {DurationSeconds} seconds.", Id, ActiveRecording.StartTimestamp, videoDuration.Value.TotalSeconds);
+                                ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStartTimestamp.Value.Add(videoDuration.Value);
+                            }
+                            else
+                            {
+                                if (_FileUtility.GetLength(ActiveRecording.VideoFile) == 0)
+                                {
+                                    _Logger.LogWarning("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is empty.", Id, ActiveRecording.StartTimestamp);
+                                }
+                                else
+                                {
+                                    _Logger.LogWarning("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' could not be repaired.", Id, ActiveRecording.StartTimestamp);
+                                    _FileUtility.Copy(ActiveRecording.VideoFile, ActiveRecording.VideoFile + ".corrupt", true);
+                                }
+                                _FileUtility.Write(ActiveRecording.VideoFile, EmbeddedResource.Read("empty.mkv"));
+                                ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStartTimestamp.Value.Add(TimeSpan.FromMilliseconds(1));
+                            }
                         }
+                    }
+                    else
+                    {
+                        _Logger.LogError("Video recording with connection ID '{ConnectionId}' has no start timestamp. Is the JSON log file corrupt?", Id);
                     }
                 }
 
@@ -250,12 +298,31 @@ namespace FM.LiveSwitch.Mux
             };
         }
 
+        private async Task<TimeSpan?> TryRepair(bool audio, string file)
+        {
+            var fileFixed = $"{file}.fixed";
+
+            await _Utility.FFmpeg($"-err_detect ignore_err -i {file} -c copy {fileFixed}").ConfigureAwait(false);
+
+            var duration = await GetDuration(audio, fileFixed).ConfigureAwait(false);
+            if (duration.HasValue)
+            {
+                _FileUtility.Copy(fileFixed, file, true);
+            }
+            if (_FileUtility.Exists(fileFixed))
+            {
+                _FileUtility.Delete(fileFixed);
+            }
+            return duration;
+        }
+
         private async Task<TimeSpan?> GetDuration(bool audio, string file)
         {
             try
             {
                 var type = audio ? "a" : "v";
-                var lines = await _Utility.FFprobe($"-v quiet -select_streams {type}:0 -show_frames -show_entries frame=pkt_pts_time -print_format csv=item_sep=|:nokey=1:print_section=0 {file}").ConfigureAwait(false);
+                var entries = audio ? "pkt_pts_time,pkt_duration" : "pkt_pts_time";
+                var lines = await _Utility.FFprobe($"-v quiet -select_streams {type}:0 -show_frames -show_entries frame={entries} -print_format csv=item_sep=|:nokey=1:print_section=0 {file}").ConfigureAwait(false);
 
                 TimeSpan? duration = null;
                 double? firstSeconds = null;
@@ -271,14 +338,31 @@ namespace FM.LiveSwitch.Mux
                             {
                                 firstSeconds = seconds;
                             }
+
+                            duration = TimeSpan.FromSeconds(seconds - firstSeconds.Value);
+
+                            // if the frame duration is present (i.e. for audio), add that to time estimate
+                            if (parts.Length >= 2)
+                            {
+                                var readDurationMillis = int.TryParse(parts[1], out var durationMillis);
+                                if (readDurationMillis)
+                                {
+                                    duration = duration.Value.Add(TimeSpan.FromMilliseconds(durationMillis));
+                                }
+                                else
+                                {
+                                    _Logger.LogError("Could not parse ffprobe 'pkt_duration' output: {Line}", line);
+                                }
+                            }
                             else
                             {
-                                duration = TimeSpan.FromSeconds(seconds - firstSeconds.Value);
+                                // for video, a frame has to last at least one millisecond
+                                duration = duration.Value.Add(TimeSpan.FromMilliseconds(1));
                             }
                         }
                         else
                         {
-                            _Logger.LogError("Could not parse ffprobe output: {Line}", line);
+                            _Logger.LogError("Could not parse ffprobe 'pkt_pts_time' output: {Line}", line);
                         }
                     }
                     else
