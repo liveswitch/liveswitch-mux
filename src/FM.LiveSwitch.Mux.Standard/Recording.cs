@@ -73,19 +73,19 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public bool AudioFileExists
         {
-            get { return FileUtility.Exists(AudioFile); }
+            get { return _FileUtility.Exists(AudioFile); }
         }
 
         [JsonIgnore]
         public bool VideoFileExists
         {
-            get { return FileUtility.Exists(VideoFile); }
+            get { return _FileUtility.Exists(VideoFile); }
         }
 
         [JsonIgnore]
         public bool LogFileExists
         {
-            get { return FileUtility.Exists(LogFile); }
+            get { return _FileUtility.Exists(LogFile); }
         }
 
         public VideoSegment[] VideoSegments { get; set; }
@@ -165,6 +165,13 @@ namespace FM.LiveSwitch.Mux
         public LogEntry[] LogEntries { get { return _LogEntries.ToArray(); } }
 
         private readonly List<LogEntry> _LogEntries = new List<LogEntry>();
+
+        private readonly IFileUtility _FileUtility;
+
+        public Recording(IFileUtility fileUtility)
+        {
+            _FileUtility = fileUtility;
+        }
 
         public void Update(LogEntry logEntry)
         {

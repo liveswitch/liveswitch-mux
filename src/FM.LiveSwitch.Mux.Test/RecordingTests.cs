@@ -1,6 +1,7 @@
 using CommandLine;
 using Divergic.Logging.Xunit;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -29,8 +30,11 @@ namespace FM.LiveSwitch.Mux.Test
         [InlineData(true, true)]
         public void SetVideoSegments(bool dryRun, bool withUpdates)
         {
+            var fileUtilityMock = new Mock<IFileUtility>();
+            fileUtilityMock.Setup(fu => fu.Exists(It.IsAny<string>())).Returns(true);
+
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
-            var recording = new Recording
+            var recording = new Recording(fileUtilityMock.Object)
             {
                 StartTimestamp = start,
                 StopTimestamp = start.AddMinutes(5)
@@ -346,7 +350,7 @@ namespace FM.LiveSwitch.Mux.Test
             try
             {
                 var jsonFilePath = CreateTempFileFromExample(destinationPath: dirPath);
-                var result = await RunMuxer(dirPath).ConfigureAwait(false);
+                var result = await RunMuxer(dirPath, new FileUtility()).ConfigureAwait(false);
 
                 Assert.True(result, "Muxer run failed");
                 Assert.True(!File.Exists(jsonFilePath + ".fail"));
@@ -358,7 +362,7 @@ namespace FM.LiveSwitch.Mux.Test
 
                     jsonBlob = Regex.Replace(jsonBlob, $"\"{field}\"\\s*:\\s*\".*\"\\s*,?", "");
                     File.WriteAllText(jsonFilePath, jsonBlob);
-                    result = await RunMuxer(dirPath).ConfigureAwait(false);
+                    result = await RunMuxer(dirPath, new FileUtility()).ConfigureAwait(false);
 
                     Assert.True(result, "Muxer run failed");
                     Assert.True(File.Exists(jsonFilePath + ".fail"));
@@ -377,7 +381,7 @@ namespace FM.LiveSwitch.Mux.Test
 
                     jsonBlob = new Regex($"\"{pair.Key}\"([^,]*)(,)?").Replace(jsonBlob, $"\"{pair.Key}\":\"{pair.Value}\"$2", 2);
                     File.WriteAllText(jsonFilePath, jsonBlob);
-                    result = await RunMuxer(dirPath).ConfigureAwait(false);
+                    result = await RunMuxer(dirPath, new FileUtility()).ConfigureAwait(false);
 
                     Assert.True(result, "Muxer run failed");
                     Assert.True(File.Exists(jsonFilePath + ".fail"));
@@ -434,7 +438,7 @@ namespace FM.LiveSwitch.Mux.Test
                 var baseName = Path.GetFileNameWithoutExtension(newJsonFile);
                 var newAudioFile = Path.Combine(tempPath, baseName) + ".mka";
                 var newVideoFile = Path.Combine(tempPath, baseName) + ".mkv";
-                var result = await RunMuxer(tempPath).ConfigureAwait(false);
+                var result = await RunMuxer(tempPath, new FileUtility()).ConfigureAwait(false);
 
                 Assert.True(result, "Muxer run failed");
                 Assert.False(File.Exists(jsonFile));
@@ -511,7 +515,7 @@ namespace FM.LiveSwitch.Mux.Test
             return tempFilePath;
         }
 
-        private async Task<bool> RunMuxer(string inputPath)
+        private async Task<bool> RunMuxer(string inputPath, IFileUtility fileUtility)
         {
             var outPath = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
             var parseOptions = new MuxOptions();
@@ -530,7 +534,7 @@ namespace FM.LiveSwitch.Mux.Test
                     $"-o{outPath}"
                 }).WithParsed(options => parseOptions = options);
 
-                success = await new Muxer(parseOptions, _LoggerFactory).Run().ConfigureAwait(false);
+                success = await new Muxer(parseOptions, fileUtility, _LoggerFactory).Run().ConfigureAwait(false);
             }
             finally
             {

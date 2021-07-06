@@ -61,25 +61,25 @@ namespace FM.LiveSwitch.Mux
         [JsonIgnore]
         public bool FileExists
         {
-            get { return FileUtility.Exists(File); }
+            get { return _FileUtility.Exists(File); }
         }
 
         [JsonIgnore]
         public bool AudioFileExists
         {
-            get { return FileUtility.Exists(AudioFile); }
+            get { return _FileUtility.Exists(AudioFile); }
         }
 
         [JsonIgnore]
         public bool VideoFileExists
         {
-            get { return FileUtility.Exists(VideoFile); }
+            get { return _FileUtility.Exists(VideoFile); }
         }
 
         [JsonIgnore]
         public bool MetadataFileExists
         {
-            get { return FileUtility.Exists(MetadataFile); }
+            get { return _FileUtility.Exists(MetadataFile); }
         }
 
         [JsonIgnore]
@@ -163,10 +163,11 @@ namespace FM.LiveSwitch.Mux
             return filterChains.ToArray();
         }
 
+        private readonly IFileUtility _FileUtility;
         private readonly ILogger _Logger;
         private readonly Utility _Utility;
 
-        public Session(string channelId, string applicationId, string externalId, Client[] completedClients, ILoggerFactory loggerFactory)
+        public Session(string channelId, string applicationId, string externalId, Client[] completedClients, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             ChannelId = channelId;
             ApplicationId = applicationId;
@@ -174,6 +175,7 @@ namespace FM.LiveSwitch.Mux
             CompletedClients = completedClients.OrderBy(x => x.StartTimestamp).ToArray();
             LoggerFactory = loggerFactory;
 
+            _FileUtility = fileUtility;
             _Logger = loggerFactory.CreateLogger(nameof(Session));
             _Utility = new Utility(_Logger);
         }

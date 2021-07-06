@@ -45,7 +45,7 @@ namespace FM.LiveSwitch.Mux
             {
                 Task.Run(async () =>
                 {
-                    await new Muxer(options, loggerFactory).Run();
+                    await new Muxer(options, new FileUtility(), loggerFactory).Run();
                 }).GetAwaiter().GetResult();
             });
 

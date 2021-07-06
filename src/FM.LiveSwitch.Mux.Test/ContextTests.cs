@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Moq;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -16,9 +17,12 @@ namespace FM.LiveSwitch.Mux.Test
         [InlineData(1)]
         public async Task VideoDelayUpdatesSession(double videoDelay)
         {
+            var fileUtilityMock = new Mock<IFileUtility>();
+            fileUtilityMock.Setup(fu => fu.Exists(It.IsAny<string>())).Returns(true);
+
             using var loggerFactory = LoggerFactory.Create(builder => { });
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
-            var stop = start.AddMinutes(1);
+            var stop = start.AddMilliseconds(20);
 
             var externalId = "externalId";
             var applicationId = "applicationId";
@@ -30,7 +34,7 @@ namespace FM.LiveSwitch.Mux.Test
 
             var options = new MuxOptions();
 
-            var context = new Context(loggerFactory);
+            var context = new Context(fileUtilityMock.Object, loggerFactory);
             await context.ProcessLogEntry(new LogEntry
             {
                 ExternalId = externalId,
@@ -55,10 +59,8 @@ namespace FM.LiveSwitch.Mux.Test
                 {
                     AudioFile = $"/null/{connectionId}.mka",
                     AudioFirstFrameTimestamp = start,
-                    AudioLastFrameTimestamp = stop,
                     VideoFile = $"/null/{connectionId}.mkv",
                     VideoFirstFrameTimestamp = start,
-                    VideoLastFrameTimestamp = stop,
                     VideoDelay = videoDelay
                 },
                 Type = LogEntry.TypeStopRecording,
@@ -68,8 +70,8 @@ namespace FM.LiveSwitch.Mux.Test
 
             var audioStart = start;
             var videoStart = start;
-            var audioStop = stop;
-            var videoStop = stop;
+            var audioStop = audioStart.AddMilliseconds(20);
+            var videoStop = videoStart.AddMilliseconds(1);
 
             videoStart = videoStart.AddSeconds(videoDelay);
             videoStop = videoStop.AddSeconds(videoDelay);

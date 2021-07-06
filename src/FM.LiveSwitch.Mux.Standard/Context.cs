@@ -14,10 +14,12 @@ namespace FM.LiveSwitch.Mux
 
         private readonly Dictionary<string, Application> _Applications = new Dictionary<string, Application>();
 
+        private readonly IFileUtility _FileUtility;
         private readonly ILoggerFactory _LoggerFactory;
 
-        public Context(ILoggerFactory loggerFactory)
+        public Context(IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
+            _FileUtility = fileUtility;
             _LoggerFactory = loggerFactory;
         }
 
@@ -31,7 +33,7 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Applications.TryGetValue(applicationId, out var application))
             {
-                _Applications[applicationId] = application = new Application(applicationId, logEntry.ExternalId, _LoggerFactory);
+                _Applications[applicationId] = application = new Application(applicationId, logEntry.ExternalId, _FileUtility, _LoggerFactory);
             }
 
             return await application.ProcessLogEntry(logEntry, options).ConfigureAwait(false);

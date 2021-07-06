@@ -17,12 +17,16 @@ namespace FM.LiveSwitch.Mux
         private readonly ILogger _Logger;
         private readonly MuxOptions _Options;
 
+        private readonly LogUtility _LogUtility;
+
         private static readonly string OrphanSessionsFileName = ".orphan-sessions";
 
-        public JsonPreprocessor(ILogger logger, MuxOptions options)
+        public JsonPreprocessor(IFileUtility fileUtility, ILogger logger, MuxOptions options)
         {
             _Logger = logger;
             _Options = options;
+
+            _LogUtility = new LogUtility(fileUtility);
         }
 
         public async Task ProcessDirectory()
@@ -67,7 +71,7 @@ namespace FM.LiveSwitch.Mux
                         continue;
                     }
 
-                    var logEntries = await LogUtility.GetEntries(jsonFile, _Logger).ConfigureAwait(false);
+                    var logEntries = await _LogUtility.GetEntries(jsonFile, _Logger).ConfigureAwait(false);
                     if (logEntries == null)
                     {
                         continue;
@@ -568,7 +572,7 @@ namespace FM.LiveSwitch.Mux
                     }
 
                     var targetJsonName = Path.Combine(Path.GetDirectoryName(sessionTracker.JsonFile), Path.GetFileNameWithoutExtension(sessionTracker.JsonFile));
-                    var logEntries = await LogUtility.GetEntries(sessionTracker.JsonFile, _Logger).ConfigureAwait(false);
+                    var logEntries = await _LogUtility.GetEntries(sessionTracker.JsonFile, _Logger).ConfigureAwait(false);
                     var startEntry = GetEvent(logEntries, LogEntry.TypeStartRecording);
                     if (startEntry != null)
                     {

@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace FM.LiveSwitch.Mux
 {
-    public static class FileUtility
+    public class FileUtility : IFileUtility
     {
-        public static async Task<string> GetContents(string path)
+        public async Task<string> GetContents(string path)
         {
             using (var file = await GetStream(path, FileAccess.Read).ConfigureAwait(false))
             {
@@ -19,7 +19,7 @@ namespace FM.LiveSwitch.Mux
         private const int GetFileStreamRetryDelay = 200;
         private const int GetFileStreamRetryAttempts = 30000 / GetFileStreamRetryDelay;
 
-        public static async Task<FileStream> GetStream(string path, FileAccess access)
+        public async Task<FileStream> GetStream(string path, FileAccess access)
         {
             var delay = 0;
 
@@ -47,7 +47,7 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
-        private static bool IsLocked(IOException ex)
+        private bool IsLocked(IOException ex)
         {
             return !(ex is DirectoryNotFoundException ||
                      ex is DriveNotFoundException ||
@@ -58,9 +58,33 @@ namespace FM.LiveSwitch.Mux
                     );
         }
 
-        public static bool Exists(string path)
+        public bool Exists(string path)
         {
-            return path != null && File.Exists(path) && new FileInfo(path).Length > 0;
+            return path != null && File.Exists(path);
+        }
+
+        public void Copy(string sourcePath, string destinationPath, bool overwrite)
+        {
+            File.Copy(sourcePath, destinationPath, overwrite);
+        }
+
+        public void Delete(string path)
+        {
+            File.Delete(path);
+        }
+
+        public void Write(string path, byte[] bytes)
+        {
+            File.WriteAllBytes(path, bytes);
+        }
+
+        public long GetLength(string path)
+        {
+            if (!Exists(path))
+            {
+                return 0;
+            }
+            return new FileInfo(path).Length;
         }
     }
 }
