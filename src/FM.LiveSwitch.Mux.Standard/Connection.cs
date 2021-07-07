@@ -302,7 +302,14 @@ namespace FM.LiveSwitch.Mux
         {
             var fileFixed = $"{file}.fixed";
 
-            await _Utility.FFmpeg($"-err_detect ignore_err -i {file} -c copy {fileFixed}").ConfigureAwait(false);
+            try
+            {
+                await _Utility.FFmpeg($"-err_detect ignore_err -i {file} -c copy {fileFixed}").ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, $"Could not repair {file}.");
+            }
 
             var duration = await GetDuration(audio, fileFixed).ConfigureAwait(false);
             if (duration.HasValue)
