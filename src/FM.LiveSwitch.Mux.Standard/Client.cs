@@ -11,6 +11,8 @@ namespace FM.LiveSwitch.Mux
     {
         public string Id { get; private set; }
 
+        public string Protocol { get; private set; }
+
         public string DeviceId { get; private set; }
 
         public string UserId { get; private set; }
@@ -73,9 +75,10 @@ namespace FM.LiveSwitch.Mux
         private readonly IFileUtility _FileUtility;
         private readonly ILoggerFactory _LoggerFactory;
 
-        public Client(string id, string deviceId, string userId, string channelId, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
+        public Client(string id, string protocol, string deviceId, string userId, string channelId, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             Id = id;
+            Protocol = protocol;
             DeviceId = deviceId;
             UserId = userId;
             ChannelId = channelId;
@@ -96,7 +99,7 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Connections.TryGetValue(connectionId, out var connection))
             {
-                _Connections[connectionId] = connection = new Connection(connectionId, Id, DeviceId, UserId, ChannelId, ApplicationId, ExternalId, _FileUtility, _LoggerFactory)
+                _Connections[connectionId] = connection = new Connection(connectionId, logEntry.ConnectionType, Id, DeviceId, UserId, ChannelId, ApplicationId, ExternalId, _FileUtility, _LoggerFactory)
                 {
                     Client = this
                 };
@@ -112,6 +115,7 @@ namespace FM.LiveSwitch.Mux
                 Id = Id,
                 UserId = UserId,
                 DeviceId = DeviceId,
+                Protocol = Protocol,
                 StartTimestamp = StartTimestamp,
                 StopTimestamp = StopTimestamp,
                 Connections = CompletedConnections.Select(connection => connection.ToModel()).ToArray()

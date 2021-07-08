@@ -36,6 +36,8 @@ namespace FM.LiveSwitch.Mux
             } 
         }
 
+        public string Tag { get; private set; }
+
         public string ChannelId { get; private set; }
 
         public string ApplicationId { get; private set; }
@@ -167,8 +169,9 @@ namespace FM.LiveSwitch.Mux
         private readonly ILogger _Logger;
         private readonly Utility _Utility;
 
-        public Session(string channelId, string applicationId, string externalId, Client[] completedClients, IFileUtility fileUtility, ILoggerFactory loggerFactory)
+        public Session(string tag, string channelId, string applicationId, string externalId, Client[] completedClients, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
+            Tag = tag;
             ChannelId = channelId;
             ApplicationId = applicationId;
             ExternalId = externalId;
@@ -971,6 +974,7 @@ namespace FM.LiveSwitch.Mux
             return new Models.Session
             {
                 Id = Id,
+                Tag = Tag,
                 ExternalId = ExternalId,
                 ApplicationId = ApplicationId,
                 ChannelId = ChannelId,

@@ -10,6 +10,8 @@ namespace FM.LiveSwitch.Mux.Models
 
         public Guid? VideoId { get; set; }
 
+        public string Tag { get; set; }
+
         public DateTime StartTimestamp { get; set; }
 
         public DateTime StopTimestamp { get; set; }

@@ -6,6 +6,8 @@ namespace FM.LiveSwitch.Mux.Models
     {
         public string Id { get; set; }
 
+        public string Protocol { get; set; }
+
         public string DeviceId { get; set; }
 
         public string UserId { get; set; }

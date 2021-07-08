@@ -22,7 +22,13 @@ namespace FM.LiveSwitch.Mux
 
         public string ClientId { get; set; }
 
+        public string ClientProtocol { get; set; }
+
         public string ConnectionId { get; set; }
+
+        public string ConnectionType { get; set; }
+
+        public string Tag { get; set; }
 
         public DateTime Timestamp { get; set; } // ISO-8601
 
@@ -38,7 +44,10 @@ namespace FM.LiveSwitch.Mux
                 other.ApplicationId == ApplicationId &&
                 other.ChannelId == ChannelId &&
                 other.ClientId == ClientId &&
+                other.ClientProtocol == ClientProtocol &&
                 other.ConnectionId == ConnectionId &&
+                other.ConnectionType == ConnectionType &&
+                other.Tag == Tag &&
                 other.Timestamp == Timestamp &&
                 (
                     other.Data == Data || (other.Data != null && other.Data.IsEquivalent(Data))
