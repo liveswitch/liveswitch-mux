@@ -12,6 +12,8 @@ namespace FM.LiveSwitch.Mux
     {
         public string Id { get; private set; }
 
+        public string Type { get; private set; }
+
         [JsonIgnore]
         public string ClientId { get; private set; }
 
@@ -78,9 +80,10 @@ namespace FM.LiveSwitch.Mux
         private readonly ILogger _Logger;
         private readonly Utility _Utility;
 
-        public Connection(string id, string clientId, string deviceId, string userId, string channelId, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
+        public Connection(string id, string type, string clientId, string deviceId, string userId, string channelId, string applicationId, string externalId, IFileUtility fileUtility, ILoggerFactory loggerFactory)
         {
             Id = id;
+            Type = type;
             ClientId = clientId;
             DeviceId = deviceId;
             UserId = userId;
@@ -104,7 +107,7 @@ namespace FM.LiveSwitch.Mux
                     return false;
                 }
 
-                ActiveRecording = new Recording(_FileUtility)
+                ActiveRecording = new Recording(logEntry.Tag, _FileUtility)
                 {
                     Connection = this,
                     StartTimestamp = logEntry.Timestamp,
@@ -167,7 +170,11 @@ namespace FM.LiveSwitch.Mux
                             {
                                 if (_FileUtility.GetLength(ActiveRecording.AudioFile) == 0)
                                 {
-                                    _Logger.LogWarning("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is empty.", Id, ActiveRecording.StartTimestamp);
+                                    _Logger.LogInformation("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is empty.", Id, ActiveRecording.StartTimestamp);
+                                }
+                                else if (_FileUtility.GetLength(ActiveRecording.AudioFile) < 150)
+                                {
+                                    _Logger.LogInformation("Audio recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' has no media.", Id, ActiveRecording.StartTimestamp);
                                 }
                                 else
                                 {
@@ -217,7 +224,11 @@ namespace FM.LiveSwitch.Mux
                             {
                                 if (_FileUtility.GetLength(ActiveRecording.VideoFile) == 0)
                                 {
-                                    _Logger.LogWarning("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is empty.", Id, ActiveRecording.StartTimestamp);
+                                    _Logger.LogInformation("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' is empty.", Id, ActiveRecording.StartTimestamp);
+                                }
+                                else if (_FileUtility.GetLength(ActiveRecording.VideoFile) < 150)
+                                {
+                                    _Logger.LogInformation("Video recording with connection ID '{ConnectionId}' and start timestamp '{StartTimestamp}' has no media.", Id, ActiveRecording.StartTimestamp);
                                 }
                                 else
                                 {
@@ -292,6 +303,7 @@ namespace FM.LiveSwitch.Mux
             return new Models.Connection
             {
                 Id = Id,
+                Type = Type,
                 StartTimestamp = StartTimestamp,
                 StopTimestamp = StopTimestamp,
                 Recordings = CompletedRecordings.Select(recording => recording.ToModel()).ToArray()

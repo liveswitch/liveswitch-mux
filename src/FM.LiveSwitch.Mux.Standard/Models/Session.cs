@@ -6,6 +6,8 @@ namespace FM.LiveSwitch.Mux.Models
     {
         public Guid Id { get; set; }
 
+        public string Tag { get; set; }
+
         public string ChannelId { get; set; }
 
         public string ApplicationId { get; set; }

@@ -34,7 +34,7 @@ namespace FM.LiveSwitch.Mux.Test
             fileUtilityMock.Setup(fu => fu.Exists(It.IsAny<string>())).Returns(true);
 
             var start = new DateTime(1970, 1, 1, 0, 0, 0);
-            var recording = new Recording(fileUtilityMock.Object)
+            var recording = new Recording(null, fileUtilityMock.Object)
             {
                 StartTimestamp = start,
                 StopTimestamp = start.AddMinutes(5)

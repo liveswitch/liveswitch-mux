@@ -80,14 +80,14 @@ namespace FM.LiveSwitch.Mux
 
             if (!_Clients.TryGetValue(clientId, out var client))
             {
-                _Clients[clientId] = client = new Client(clientId, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId, _FileUtility, _LoggerFactory);
+                _Clients[clientId] = client = new Client(clientId, logEntry.ClientProtocol, logEntry.DeviceId, logEntry.UserId, Id, ApplicationId, ExternalId, _FileUtility, _LoggerFactory);
             }
 
             var result = await client.ProcessLogEntry(logEntry, options).ConfigureAwait(false);
 
             if (Completed)
             {
-                _CompletedSessions.Add(new Session(Id, ApplicationId, ExternalId, CompletedClients, _FileUtility, _LoggerFactory));
+                _CompletedSessions.Add(new Session(logEntry.Tag, Id, ApplicationId, ExternalId, CompletedClients, _FileUtility, _LoggerFactory));
                 _Clients = new Dictionary<string, Client>();
             }
 

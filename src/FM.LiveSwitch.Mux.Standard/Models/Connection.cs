@@ -6,6 +6,8 @@ namespace FM.LiveSwitch.Mux.Models
     {
         public string Id { get; set; }
 
+        public string Type { get; set; }
+
         public DateTime? StartTimestamp { get; set; }
 
         public DateTime? StopTimestamp { get; set; }

@@ -45,6 +45,8 @@ namespace FM.LiveSwitch.Mux
             }
         }
 
+        public string Tag { get; set; }
+
         public DateTime StartTimestamp { get; set; }
 
         public DateTime StopTimestamp { get; set; }
@@ -168,8 +170,10 @@ namespace FM.LiveSwitch.Mux
 
         private readonly IFileUtility _FileUtility;
 
-        public Recording(IFileUtility fileUtility)
+        public Recording(string tag, IFileUtility fileUtility)
         {
+            Tag = tag;
+
             _FileUtility = fileUtility;
         }
 
@@ -357,6 +361,7 @@ namespace FM.LiveSwitch.Mux
                 Id = Id,
                 AudioId = AudioId,
                 VideoId = VideoId,
+                Tag = Tag,
                 StartTimestamp = StartTimestamp,
                 StopTimestamp = StopTimestamp,
                 AudioStartTimestamp = AudioStartTimestamp,
