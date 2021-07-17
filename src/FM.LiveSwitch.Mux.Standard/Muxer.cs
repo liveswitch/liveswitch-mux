@@ -134,12 +134,26 @@ namespace FM.LiveSwitch.Mux
                     var logEntries = await GetLogEntries(_Options).ConfigureAwait(false);
                     if (logEntries == null)
                     {
-                        _Logger.LogInformation($"No recordings found. Log file(s) not found.");
+                        if (string.IsNullOrEmpty(_Options.InputPath))
+                        {
+                            _Logger.LogInformation($"No recordings found. Log file(s) not found.");
+                        }
+                        else
+                        {
+                            _Logger.LogInformation($"No recordings found at {_Options.InputPath}. Log file(s) not found.");
+                        }
                         return true;
                     }
                     if (logEntries.Length == 0)
                     {
-                        _Logger.LogInformation($"No recordings found.");
+                        if (string.IsNullOrEmpty(_Options.InputPath))
+                        {
+                            _Logger.LogInformation($"No recordings found.");
+                        }
+                        else
+                        {
+                            _Logger.LogInformation($"No recordings found at {_Options.InputPath}.");
+                        }
                         return true;
                     }
 
