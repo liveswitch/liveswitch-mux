@@ -94,7 +94,8 @@ namespace FM.LiveSwitch.Mux
             {
                 WindowStyle = ProcessWindowStyle.Hidden,
                 FileName = command,
-                Arguments = arguments
+                Arguments = arguments,
+                UseShellExecute = false
             };
 
             if (standardStream == StandardStream.Error)
