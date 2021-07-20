@@ -615,7 +615,7 @@ namespace FM.LiveSwitch.Mux
                             ChannelId = startEntry.ChannelId,
                             UserId = startEntry.UserId,
                             DeviceId = startEntry.DeviceId,
-                            ClientId = startEntry.ClientId, 
+                            ClientId = startEntry.ClientId,
                             ConnectionId = startEntry.ConnectionId,
                             Timestamp = logEntries.OrderBy(x => x.Timestamp).Last().Timestamp,
                             Data = entryData,
