@@ -21,6 +21,12 @@ namespace FM.LiveSwitch.Mux
 
         private static readonly string OrphanSessionsFileName = ".orphan-sessions";
 
+        private static readonly JsonSerializerSettings _JsonSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore
+        };
+
         public JsonPreprocessor(IFileUtility fileUtility, ILogger logger, MuxOptions options)
         {
             _Logger = logger;
@@ -141,15 +147,21 @@ namespace FM.LiveSwitch.Mux
                             ReportIfMissing(startEntry.ApplicationId, nameof(startEntry.ApplicationId), LogEntry.TypeStartRecording);
                             ReportIfMissing(startEntry.ChannelId, nameof(startEntry.ChannelId), LogEntry.TypeStartRecording);
                             ReportIfMissing(startEntry.ConnectionId, nameof(startEntry.ConnectionId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ApplicationConfigId, nameof(startEntry.ApplicationConfigId), LogEntry.TypeStartRecording);
+                            ReportIfMissing(startEntry.ChannelConfigId, nameof(startEntry.ChannelConfigId), LogEntry.TypeStartRecording);
 
                             ReportIfMissing(stopEntry.ApplicationId, nameof(stopEntry.ApplicationId), LogEntry.TypeStopRecording);
                             ReportIfMissing(stopEntry.ChannelId, nameof(stopEntry.ChannelId), LogEntry.TypeStopRecording);
                             ReportIfMissing(stopEntry.ConnectionId, nameof(stopEntry.ConnectionId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ApplicationConfigId, nameof(stopEntry.ApplicationConfigId), LogEntry.TypeStopRecording);
+                            ReportIfMissing(stopEntry.ChannelConfigId, nameof(stopEntry.ChannelConfigId), LogEntry.TypeStopRecording);
 
                             ReportIfDifferent(startEntry.ExternalId, stopEntry.ExternalId, nameof(stopEntry.ExternalId));
                             ReportIfDifferent(startEntry.ApplicationId, stopEntry.ApplicationId, nameof(stopEntry.ApplicationId));
                             ReportIfDifferent(startEntry.ChannelId, stopEntry.ChannelId, nameof(stopEntry.ChannelId));
                             ReportIfDifferent(startEntry.ConnectionId, stopEntry.ConnectionId, nameof(stopEntry.ConnectionId));
+                            ReportIfDifferent(startEntry.ApplicationConfigId, stopEntry.ApplicationConfigId, nameof(stopEntry.ApplicationConfigId));
+                            ReportIfDifferent(startEntry.ChannelConfigId, stopEntry.ChannelConfigId, nameof(stopEntry.ChannelConfigId));
 
                             var data = stopEntry.Data;
                             if (data != null)
@@ -339,10 +351,7 @@ namespace FM.LiveSwitch.Mux
                                 stopEntry.Data.VideoLastFrameTimestamp = lastVideoTimestamp;
                             }
 
-                            File.WriteAllText(tempFile, JsonConvert.SerializeObject(logEntries, new JsonSerializerSettings
-                            {
-                                ContractResolver = new CamelCasePropertyNamesContractResolver()
-                            }));
+                            File.WriteAllText(tempFile, JsonConvert.SerializeObject(logEntries, _JsonSettings));
 
                             tempFiles.Add(pair);
                         }
@@ -601,6 +610,8 @@ namespace FM.LiveSwitch.Mux
                             Type = LogEntry.TypeStopRecording,
                             ExternalId = startEntry.ExternalId,
                             ApplicationId = startEntry.ApplicationId,
+                            ApplicationConfigId = startEntry.ApplicationConfigId,
+                            ChannelConfigId = startEntry.ChannelConfigId,
                             ChannelId = startEntry.ChannelId,
                             UserId = startEntry.UserId,
                             DeviceId = startEntry.DeviceId,
@@ -616,10 +627,7 @@ namespace FM.LiveSwitch.Mux
                         listEntries.Add(stopEntry);
                         var newEntries = listEntries.ToArray();
 
-                        File.WriteAllText(targetJsonName, JsonConvert.SerializeObject(newEntries, new JsonSerializerSettings
-                        {
-                            ContractResolver = new CamelCasePropertyNamesContractResolver()
-                        }));
+                        File.WriteAllText(targetJsonName, JsonConvert.SerializeObject(newEntries, _JsonSettings));
                     }
 
                     File.Delete(sessionTracker.JsonFile);
