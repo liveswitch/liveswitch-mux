@@ -26,6 +26,10 @@ namespace FM.LiveSwitch.Mux
 
         public string ConnectionId { get; set; }
 
+        public string ApplicationConfigId { get; set; }
+
+        public string ChannelConfigId { get; set; }
+
         public string ConnectionType { get; set; }
 
         public string Tag { get; set; }
