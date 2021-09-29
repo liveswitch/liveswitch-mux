@@ -129,5 +129,8 @@ namespace FM.LiveSwitch.Mux
 
         [Option("input-file-paths", Separator = ',', HelpText = "A comma separated list of input file paths to target instead of scanning the directory. Overrides --input-path and --input-file-names.")]
         public IEnumerable<string> InputFilePaths { get; set; }
+
+        [Option("skip-length-verification", HelpText = "Skip verification and repair of stream length metadata")]
+        public bool SkipLengthVerification { get; set; }
     }
 }
