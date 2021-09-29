@@ -148,7 +148,7 @@ namespace FM.LiveSwitch.Mux
                         ActiveRecording.AudioFile = Path.Combine(options.InputPath, ActiveRecording.AudioFile);
                     }
 
-                    if (ActiveRecording.AudioStartTimestamp.HasValue)
+                    if (ActiveRecording.AudioStartTimestamp.HasValue && !options.NoVerifyLength)
                     {
                         var audioDuration = await GetDuration(true, ActiveRecording.AudioFile).ConfigureAwait(false);
                         if (audioDuration.HasValue)
@@ -186,7 +186,7 @@ namespace FM.LiveSwitch.Mux
                             }
                         }
                     }
-                    else
+                    else if (!options.NoVerifyLength)
                     {
                         _Logger.LogError("Audio recording with connection ID '{ConnectionId}' has no start timestamp. Is the JSON log file corrupt?", Id);
                     }
@@ -202,7 +202,7 @@ namespace FM.LiveSwitch.Mux
                         ActiveRecording.VideoFile = Path.Combine(options.InputPath, ActiveRecording.VideoFile);
                     }
 
-                    if (ActiveRecording.VideoStartTimestamp.HasValue)
+                    if (ActiveRecording.VideoStartTimestamp.HasValue && !options.NoVerifyLength)
                     {
                         var videoDuration = await GetDuration(false, ActiveRecording.VideoFile).ConfigureAwait(false);
                         if (videoDuration.HasValue)
@@ -240,7 +240,7 @@ namespace FM.LiveSwitch.Mux
                             }
                         }
                     }
-                    else
+                    else if(!options.NoVerifyLength)
                     {
                         _Logger.LogError("Video recording with connection ID '{ConnectionId}' has no start timestamp. Is the JSON log file corrupt?", Id);
                     }
