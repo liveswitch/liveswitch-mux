@@ -131,6 +131,6 @@ namespace FM.LiveSwitch.Mux
         public IEnumerable<string> InputFilePaths { get; set; }
 
         [Option("skip-length-verification", HelpText = "Skip verification and repair of stream length metadata")]
-        public bool SkipVerification { get; set; }
+        public bool SkipLengthVerification { get; set; }
     }
 }
