@@ -42,6 +42,8 @@ Images are also hosted on [DockerHub](https://hub.docker.com/r/frozenmountain/li
 ```shell
 docker run --rm frozenmountain/liveswitch-mux [verb] [options]
 ```
+## FFmpeg Version
+lsmux has been developed and tested with FFmpeg v4.2.1. It is recommended to use this version when using lsmux.
 
 ## Environment Variables
 
