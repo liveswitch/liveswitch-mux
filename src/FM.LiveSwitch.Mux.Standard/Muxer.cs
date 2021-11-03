@@ -157,13 +157,20 @@ namespace FM.LiveSwitch.Mux
                         return true;
                     }
 
-                    // sort log entries by timestamp
-                    logEntries = logEntries.OrderBy(x => x.Timestamp).ToArray();
-                    _Logger.LogDebug("Found {Count} log entries.", logEntries.Count());
+                    var validEntries =
+                        (from entry in logEntries
+                         group entry by (entry.ApplicationId, entry.ChannelId, entry.ClientId, entry.ConnectionId) into grouped
+                         where IsSetValid(grouped)
+                         from validEntry in grouped
+                         select validEntry)
+                         .OrderBy(x => x.Timestamp)
+                        .ToList();
+
+                    _Logger.LogDebug("Found {Count} log entries.", validEntries.Count());
 
                     // process each log entry
                     var context = new Context(_FileUtility, _LoggerFactory);
-                    foreach (var logEntry in logEntries)
+                    foreach (var logEntry in validEntries)
                     {
                         _Logger.LogDebug("Processing log entry for application ID '{ApplicationId}', channel ID '{ChannelId}', client ID '{ClientId}', and connection ID '{ConnectionId}'.",
                             logEntry.ApplicationId,
@@ -331,6 +338,23 @@ namespace FM.LiveSwitch.Mux
                         continue;
                 }
             }
+        }
+
+        private bool IsSetValid(IEnumerable<LogEntry> entries)
+        {
+            if(!entries.Any())
+            {
+                return true;
+            }
+
+            var firstEntry = entries.OrderBy(x => x.Timestamp).First();
+            var valid = firstEntry.Type == LogEntry.TypeStartRecording;
+
+            if(!valid)
+            {
+                _Logger.LogWarning($"Log set did not begin with a start event; skipping: {(firstEntry.ApplicationId, firstEntry.ChannelId, firstEntry.ClientId, firstEntry.ConnectionId)}");
+            }
+            return valid;
         }
 
         private async Task<LogEntry[]> GetLogEntries(MuxOptions options)
