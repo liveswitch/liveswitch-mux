@@ -11,7 +11,7 @@ namespace FM.LiveSwitch.Mux.Test
 {
     public class ContextTests
     {
-        [Theory]
+        [Theory (Skip = "video delay is no longer being applied to the start timestamps")]
         [InlineData(0)]
         [InlineData(-1)]
         [InlineData(1)]
