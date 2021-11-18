@@ -246,12 +246,14 @@ namespace FM.LiveSwitch.Mux
                     }
                 }
 
-                // No longer adding the video delay to the video timestamp
-                // The video/audio start timestamps are set from when the server processed the relevant
-                // frame while the delay is calculated from the rtp/rtcp packet timestamps.
-                // This means there is no relationship between the start timestamps in the event
-                // log and the delay. The event timestamps should already account for the necessary delay
-                // between the streams when muxing.
+                var videoDelay = logEntry.Data?.VideoDelay ?? 0D;
+                if (videoDelay != 0 &&
+                    ActiveRecording.VideoStartTimestamp.HasValue &&
+                    ActiveRecording.VideoStopTimestamp.HasValue)
+                {
+                    ActiveRecording.VideoStartTimestamp = ActiveRecording.VideoStartTimestamp.Value.AddSeconds(videoDelay);
+                    ActiveRecording.VideoStopTimestamp = ActiveRecording.VideoStopTimestamp.Value.AddSeconds(videoDelay);
+                }
 
                 // ensure consistency on start/stop timestamps
                 var audioStartTimestampTicks = long.MaxValue;
