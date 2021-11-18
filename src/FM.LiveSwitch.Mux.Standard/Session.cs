@@ -796,7 +796,7 @@ namespace FM.LiveSwitch.Mux
                 // initialize tag
                 var colorTag = $"[vcolor_{chunkIndex}]";
                 var colorFpsTag = $"[vfps_{chunkIndex}]";
-               
+
                 // color
                 chunkFilterChains.Add(chunk.GetColorFilterChain(options.BackgroundColor, colorTag));
                 var chunkTag = colorTag;
