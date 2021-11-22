@@ -604,10 +604,9 @@ namespace FM.LiveSwitch.Mux
                 }
             }
 
-            var ONE_MS = new TimeSpan(10000);                       // 1 Tick = 100ns, 10000 Ticks = 1ms
-
+            var minChunkDuration = TimeSpan.FromSeconds(1.0 / options.FrameRate);
             // insert blank chunk if needed
-            if (chunks.Count > 0 && (chunks[0].StartTimestamp - StartTimestamp).Duration() >= ONE_MS)
+            if (chunks.Count > 0 && (chunks[0].StartTimestamp - StartTimestamp).Duration() >= minChunkDuration)
             {
                 chunks.Insert(0, new VideoChunk
                 {
@@ -618,7 +617,7 @@ namespace FM.LiveSwitch.Mux
                 });
             }
             
-            chunks.RemoveAll(chunk => chunk.Duration < ONE_MS);
+            chunks.RemoveAll(chunk => chunk.Duration < minChunkDuration);
 
             // build filter chains
             var filterChainsAndTags = GetVideoFilterChainsAndTags(chunks.ToArray(), options);
@@ -796,10 +795,16 @@ namespace FM.LiveSwitch.Mux
 
                 // initialize tag
                 var colorTag = $"[vcolor_{chunkIndex}]";
-                var chunkTag = colorTag;
+                var colorFpsTag = $"[vfps_{chunkIndex}]";
 
                 // color
                 chunkFilterChains.Add(chunk.GetColorFilterChain(options.BackgroundColor, colorTag));
+                var chunkTag = colorTag;
+
+                // fps
+                chunkFilterChains.Add(chunk.GetFpsFilterChain(options.FrameRate, chunkTag, colorFpsTag));
+                chunkTag = colorFpsTag;
+
 
                 // process each chunk segment
                 var segments = chunk.Segments;
