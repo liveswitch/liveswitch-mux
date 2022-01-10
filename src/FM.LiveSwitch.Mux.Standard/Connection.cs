@@ -256,16 +256,16 @@ namespace FM.LiveSwitch.Mux
                 }
 
                 // ensure consistency on start/stop timestamps
-                var audioStartTimestampTicks = long.MaxValue;
-                var audioStopTimestampTicks = long.MinValue;
+                var audioStartTimestampTicks = DateTime.MaxValue.Ticks;
+                var audioStopTimestampTicks = DateTime.MinValue.Ticks;
                 if (ActiveRecording.AudioFile != null && ActiveRecording.AudioStartTimestamp.HasValue && ActiveRecording.AudioStopTimestamp.HasValue)
                 {
                     audioStartTimestampTicks = ActiveRecording.AudioStartTimestamp.Value.Ticks;
                     audioStopTimestampTicks = ActiveRecording.AudioStopTimestamp.Value.Ticks;
                 }
 
-                var videoStartTimestampTicks = long.MaxValue;
-                var videoStopTimestampTicks = long.MinValue;
+                var videoStartTimestampTicks = DateTime.MaxValue.Ticks;
+                var videoStopTimestampTicks = DateTime.MinValue.Ticks;
                 if (ActiveRecording.VideoFile != null && ActiveRecording.VideoStartTimestamp.HasValue && ActiveRecording.VideoStopTimestamp.HasValue)
                 {
                     videoStartTimestampTicks = ActiveRecording.VideoStartTimestamp.Value.Ticks;
