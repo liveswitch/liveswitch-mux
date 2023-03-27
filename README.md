@@ -1,6 +1,12 @@
-# LiveSwitch Mux CLI
+# DEPRECATED - LiveSwitch Mux CLI
 
 ![build](https://github.com/liveswitch/liveswitch-mux/workflows/build/badge.svg) ![code quality](https://app.codacy.com/project/badge/Grade/9a3b33b63b254b118fcdd80e807cba8c) ![license](https://img.shields.io/badge/License-MIT-yellow.svg) ![release](https://img.shields.io/github/v/release/liveswitch/liveswitch-mux.svg)
+
+This project has been deprecated and will no longer be supported. As of June 2022 when LiveSwitch 1.16.0 was released, the LiveSwitch Server & Cloud services have a recording muxing solution built-in. Below are some helpful documents covering the new recording services.
+
+- [LiveSwitch Server Components](https://developer.liveswitch.io/liveswitch-server/server/install/installation.html)
+- [Recording Services Description](https://developer.liveswitch.io/liveswitch-server/server/configuration/configuration-console.html#recording-monitor)
+- [Configuring Recording Services](https://developer.liveswitch.io/liveswitch-server/server/configuration/deployment-configuration.html#recording-management)
 
 The LiveSwitch Mux CLI combines your individual LiveSwitch Media Server recordings together into single files - one per session.
 
